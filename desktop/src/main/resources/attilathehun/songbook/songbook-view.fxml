@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.*?>
+<?import org.controlsfx.control.*?>
+
+<AnchorPane minHeight="720.0" minWidth="1280.0" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="attilathehun.songbook.SongbookController">
+   <children>
+      <SplitPane dividerPositions="0.8" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <items>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+               <children>
+                  <WebView fx:id="webview" prefHeight="398.0" prefWidth="475.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+               </children></AnchorPane>
+          <AnchorPane maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" SplitPane.resizableWithParent="false">
+               <children>
+                  <Label text="Song Collection" />
+                  <Button fx:id="editCollectionButton" layoutX="1.0" layoutY="17.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="122.0" text="Edit" />
+                  <Button fx:id="loadDataButton" layoutX="1.0" layoutY="42.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="122.0" text="Load" />
+                  <Button fx:id="saveDataButton" layoutX="1.0" layoutY="67.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="122.0" text="Save" />
+                  <Separator layoutX="0" layoutY="116.0" prefHeight="11.0" prefWidth="126.0" />
+                  <Label layoutX="2.0" layoutY="119.0" text="Song 1" />
+                  <TextField fx:id="songOneIdField" layoutX="4.0" layoutY="136.0" prefHeight="25.0" prefWidth="81.0" />
+                  <Button fx:id="applySongOneId" layoutX="76.0" layoutY="136.0" mnemonicParsing="false" text="Apply" />
+                  <Button fx:id="editSongOneHTML" layoutX="1.0" layoutY="165.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Edit HTML" />
+                  <Separator layoutX="0" layoutY="190.0" prefHeight="11.0" prefWidth="126.0" />
+                  <Label layoutX="2.0" layoutY="193.0" text="Song 2" />
+                  <Button fx:id="applySongTwoId" layoutX="76.0" layoutY="210.0" mnemonicParsing="false" text="Apply" />
+                  <TextField fx:id="songTwoIdField" layoutX="4.0" layoutY="210.0" prefHeight="25.0" prefWidth="75.0" />
+                  <Button fx:id="editSongTwoHTML" layoutX="1.0" layoutY="238.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Edit HTML" />
+                  <Separator layoutX="0" layoutY="260.0" prefHeight="17.0" prefWidth="126.0" />
+                  <Label layoutX="1.0" layoutY="270.0" text="Miscellaneous" />
+                  <Button fx:id="refreshButton" layoutX="1.0" layoutY="288.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Refresh" />
+                  <ToggleSwitch fx:id="easterSwitch" layoutX="1.0" layoutY="313.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Easter Switch" />
+                  <MenuButton fx:id="exportButton" layoutX="1.0" layoutY="92.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="122.0" text="Export PDF">
+                    <items>
+                        <MenuItem fx:id="singlepageSelection" mnemonicParsing="false" text="Singlepage PDF" />
+                        <MenuItem fx:id="defaultSelection" mnemonicParsing="false" text="Default PDF" />
+                        <MenuItem fx:id="printableSelection" mnemonicParsing="false" text="Printable PDF" />
+                    </items>
+                  </MenuButton>
+                   <Button fx:id="previewButton" layoutX="1.0" layoutY="338.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Preview PDF" />
+               </children></AnchorPane>
+        </items>
+      </SplitPane>
+   </children>
+</AnchorPane>

@@ -1,0 +1,6 @@
+#Desktop client
+desktop/scripts/node_modules/
+desktop/temp/
+desktop/target/
+#Web server
+web/tokens.json

@@ -1,0 +1,13 @@
+{
+	"token": "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h",
+	"name": "Default Read Token",
+	"created": "20-8-2023",
+	"frozen": false,
+	"permissions": {
+		"READ_PERMISSION": true,
+		"WRITE_PERMISSION": false,
+		"BACKUP_PERMISSION": false,
+		"RESTORE_PERMISSION": false
+	}
+
+}
