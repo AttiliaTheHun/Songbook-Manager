@@ -7,6 +7,8 @@ public class Song implements Serializable {
     private String name;
     private boolean active = true;
     private String url = "";
+
+    private transient String author = "";
     public Song(String name, int id) {
         this.name = name;
         this.id = id;
@@ -47,5 +49,13 @@ public class Song implements Serializable {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 }

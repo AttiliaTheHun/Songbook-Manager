@@ -32,15 +32,15 @@
                   <Separator layoutX="0" layoutY="260.0" prefHeight="17.0" prefWidth="126.0" />
                   <Label layoutX="1.0" layoutY="270.0" text="Miscellaneous" />
                   <Button fx:id="refreshButton" layoutX="1.0" layoutY="288.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Refresh" />
-                  <ToggleSwitch fx:id="easterSwitch" layoutX="1.0" layoutY="313.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Easter Switch" />
+                  <ToggleSwitch fx:id="easterSwitch" layoutX="1.0" layoutY="338.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Easter Switch" />
                   <MenuButton fx:id="exportButton" layoutX="1.0" layoutY="92.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="122.0" text="Export PDF">
                     <items>
-                        <MenuItem fx:id="singlepageSelection" mnemonicParsing="false" text="Singlepage PDF" />
-                        <MenuItem fx:id="defaultSelection" mnemonicParsing="false" text="Default PDF" />
-                        <MenuItem fx:id="printableSelection" mnemonicParsing="false" text="Printable PDF" />
+                        <MenuItem fx:id="singlepageSelection" mnemonicParsing="false" text="Singlepage PDF (A4)" />
+                        <MenuItem fx:id="defaultSelection" mnemonicParsing="false" text="Default PDF (A5)" />
+                        <MenuItem fx:id="printableSelection" mnemonicParsing="false" text="Printable PDF (A5)" />
                     </items>
                   </MenuButton>
-                   <Button fx:id="previewButton" layoutX="1.0" layoutY="338.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Preview PDF" />
+                   <Button fx:id="previewButton" layoutX="1.0" layoutY="313.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="PDF Preview" />
                </children></AnchorPane>
         </items>
       </SplitPane>

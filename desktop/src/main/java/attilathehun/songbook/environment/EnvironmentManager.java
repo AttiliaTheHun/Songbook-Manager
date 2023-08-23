@@ -1,13 +1,14 @@
 package attilathehun.songbook.environment;
 
-import attilathehun.songbook.Client;
+import attilathehun.songbook.util.Client;
+import attilathehun.songbook.SongbookApplication;
+import javafx.util.Pair;
 
+import javax.swing.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -35,7 +36,37 @@ public class EnvironmentManager {
                 client.downloadData();
 
             } else if (!new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH).exists()) {
-                //Does not exist, create new collection for a fresh start?
+                Environment.showWarningMessage("Warning", "Could not file a local data zip file.");
+                return;
+            }
+            unzipData();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Environment.getInstance().logTimestamp();
+            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            Environment.showWarningMessage("Warning", "Could not load the data");
+        }
+        Environment.showMessage("Success", "Data loaded successfully");
+    }
+
+    public void loadData(String remoteApiEndpointURL) {
+        try {
+            if (Environment.getInstance().settings.REMOTE_SAVE_LOAD_ENABLED) {
+                File dataFile = new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
+                Client client = new Client();
+                if (dataFile.exists()) {
+                    String content = String.join("\n", Files.readAllLines(dataFile.toPath()));
+                    String localHash = createSHAHash(content);
+                    String remoteHash = client.httpGet(remoteApiEndpointURL.endsWith("/") ? remoteApiEndpointURL + "hash/" : remoteApiEndpointURL + "/hash/");
+                    if (localHash.equals(remoteHash)) {
+                        Environment.showMessage("Success", "The local version of data is up to date with the remote one");
+                        return;
+                    }
+                }
+                client.downloadData(remoteApiEndpointURL.endsWith("/") ? remoteApiEndpointURL + "download/" : remoteApiEndpointURL + "/download/");
+
+            } else if (!new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH).exists()) {
+                Environment.showWarningMessage("Warning", "Could not file a local data zip file.");
                 return;
             }
             unzipData();
@@ -78,13 +109,16 @@ public class EnvironmentManager {
         Environment.showMessage("Success", "Data saved successfully");
     }
 
-    private void unzipData(){
+    public void unzipData() {
+        extractZip(Environment.getInstance().settings.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.DATA_FILE_PATH);
+    }
+
+    public void extractZip(String sourceFile, String targetPath){
         try {
-            String fileZip = Environment.getInstance().settings.DATA_ZIP_FILE_PATH;
-            File destDir = new File(Environment.getInstance().settings.DATA_FILE_PATH);
+            File destDir = new File(targetPath);
 
             byte[] buffer = new byte[1024];
-            ZipInputStream zis = new ZipInputStream(new FileInputStream(fileZip));
+            ZipInputStream zis = new ZipInputStream(new FileInputStream(sourceFile));
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
                 File newFile = newFile(destDir, zipEntry);
@@ -121,10 +155,13 @@ public class EnvironmentManager {
     }
 
     public void zipData() {
+        createZip(Environment.getInstance().settings.DATA_FILE_PATH, Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
+    }
+
+    public void createZip(String sourceFile, String targetPath) {
         try {
             logEditingUser();
-            String sourceFile = Environment.getInstance().settings.DATA_FILE_PATH;
-            FileOutputStream fos = new FileOutputStream(Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
+            FileOutputStream fos = new FileOutputStream(targetPath);
             ZipOutputStream zipOut = new ZipOutputStream(fos);
 
             File fileToZip = new File(sourceFile);
@@ -191,5 +228,65 @@ public class EnvironmentManager {
         PrintWriter printWriter = new PrintWriter(new FileWriter((Environment.getInstance().settings.EDIT_LOG_FILE_PATH), true));
         printWriter.write(date + " " + username + "\n");
         printWriter.close();
+    }
+
+    public void createNewSongbook() {
+        try {
+            File songDataFolder = new File(Environment.getInstance().settings.SONG_DATA_FILE_PATH);
+            songDataFolder.mkdirs();
+            File collectionJSONFile = new File(Environment.getInstance().settings.COLLECTION_FILE_PATH);
+            collectionJSONFile.createNewFile();
+            PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile), false);
+            printWriter.write("[]");
+            printWriter.close();
+            //TODO: ask if the user wants to create a song right away
+        } catch (IOException e) {
+            e.printStackTrace();
+            Environment.getInstance().logTimestamp();
+            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            Environment.showWarningMessage("Warning","Could not create a new songbook!");
+        }
+    }
+
+    public void loadSongbook() {
+        if (Environment.getInstance().settings.REMOTE_SAVE_LOAD_ENABLED) {
+            Pair<String, String> input = loadSongbookInputDialog();
+            if (input.getKey() == null) {
+                Environment.showWarningMessage("Warning", "Songbook loading aborted");
+                return;
+            }
+            Environment.getInstance().loadTokenToMemory(input.getValue(), new Certificate());
+            loadData(input.getKey());
+
+            return;
+        }
+        unzipData();
+        Environment.getInstance().refresh();
+        Environment.getInstance().getCollectionManager().init();
+        SongbookApplication.dialControlPLusRPressed();
+        Environment.showMessage("Success", "Songbook loaded successfully.");
+    }
+
+    private Pair<String, String> loadSongbookInputDialog() {
+        JLabel label = new JLabel("Leave the field blank to use the default value.");
+        JTextField remoteApiEndpointURL = new JTextField();
+        remoteApiEndpointURL.setToolTipText("For example http://example.org/api/data/");
+        JTextField token = new JPasswordField();
+        token.setToolTipText("The token must have READ permission.");
+        Object[] message = {
+                label,
+                "Remote API Endpoint:", remoteApiEndpointURL,
+                "Token:", token
+        };
+
+        int option = JOptionPane.showConfirmDialog(null, message, "Load Remote Songbook", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+           return new Pair<String, String>(remoteApiEndpointURL.getText(), token.getText());
+        }
+        return new Pair<>(null, null);
+    }
+
+    public static class Certificate {
+        private Certificate() {}
     }
 }

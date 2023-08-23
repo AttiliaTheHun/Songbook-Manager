@@ -67,7 +67,32 @@ public class EasterCollectionManager extends CollectionManager{
     }
 
     @Override
+    public void updateSongRecordFromHTML(Song s) {
+
+    }
+
+    @Override
     public void save() {
+
+    }
+
+    @Override
+    public Song addSong(Song s) {
+        return null;
+    }
+
+    @Override
+    public void removeSong(Song s) {
+
+    }
+
+    @Override
+    public void deactivateSong(Song s) {
+
+    }
+
+    @Override
+    public void activateSong(Song s) {
 
     }
 

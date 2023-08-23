@@ -1,8 +1,7 @@
 package attilathehun.songbook.environment;
 
-import attilathehun.songbook.Client;
+import attilathehun.songbook.util.Client;
 import attilathehun.songbook.collection.CollectionManager;
-import attilathehun.songbook.collection.StandardCollectionManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -21,7 +20,7 @@ import java.util.Objects;
 
 import static javax.swing.JOptionPane.showMessageDialog;
 
-public class Environment {
+public final class Environment {
 
     public static class Settings implements Serializable {
 
@@ -32,6 +31,7 @@ public class Environment {
         public final String EASTER_COLLECTION_FILE_PATH;
         public final String SONG_DATA_FILE_PATH;
         public final String EGG_DATA_FILE_PATH;
+        public final String RESOURCE_FILE_PATH;
         public final String CSS_RESOURCES_FILE_PATH;
         public final String TEMPLATE_RESOURCES_FILE_PATH;
         public final String DATA_ZIP_FILE_PATH;
@@ -41,7 +41,7 @@ public class Environment {
         public final String TEMP_FILE_PATH;
         public final String ASSETS_RESOURCES_FILE_PATH;
         public final String OUTPUT_FILE_PATH;
-        public final boolean IS_IT_EASTER_ALREADY;
+        public final transient boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;;
         public final String DATA_FILE_PATH;
         public final String TEMP_TIMESTAMP_FILE_PATH;
         public final String REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL;
@@ -64,24 +64,24 @@ public class Environment {
             EASTER_COLLECTION_FILE_PATH = Paths.get(DATA_FILE_PATH + "/easter_collection.json").toString();
             SONG_DATA_FILE_PATH = Paths.get(DATA_FILE_PATH + "/songs/html/").toString();
             EGG_DATA_FILE_PATH = Paths.get(DATA_FILE_PATH + "/songs/egg/").toString();
-            CSS_RESOURCES_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/resources/css/").toString();
-            TEMPLATE_RESOURCES_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/resources/templates/").toString();
+            RESOURCE_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/resources/").toString();
+            CSS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/css/").toString();
+            TEMPLATE_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/templates/").toString();
             DATA_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "data.zip").toString();
             EDIT_LOG_FILE_PATH = Paths.get(DATA_FILE_PATH + "/last_modified_by.txt").toString();
             AUTO_LOAD_DATA = false;
             REMOTE_SAVE_LOAD_ENABLED = false;
             TEMP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/temp/").toString();
             TEMP_TIMESTAMP_FILE_PATH = Paths.get(TEMP_FILE_PATH + "/session_timestamp.txt").toString();
-            ASSETS_RESOURCES_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/resources/assets/").toString();
+            ASSETS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/assets/").toString();
             OUTPUT_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/pdf/").toString();
-            IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
             REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL = "http://hrabozpevnik.clanweb.eu/api/data/download/";
             REMOTE_DATA_ZIP_FILE_UPLOAD_URL = "http://hrabozpevnik.clanweb.eu/api/data/upload/";
             REMOTE_DATA_FILE_HASH_URL = "http://hrabozpevnik.clanweb.eu/api/data/hash/";
             REMOTE_DATA_FILE_LAST_EDITED_URL = "http://hrabozpevnik.clanweb.eu/api/data/modify-date/";
             DEFAULT_READ_TOKEN = "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h";
-            AUTH_FILE_PATH = Paths.get(System.getProperty("user.dir") + ".auth").toString();
-            LOG_FILE_PATH = Paths.get(System.getProperty("user.dir") + "log.txt").toString();
+            AUTH_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/.auth").toString();
+            LOG_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/log.txt").toString();
             AUTH_TYPE = Environment.Settings.AuthType.TOKEN;
             LOG_ENABLED = true;
             SCRIPTS_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/scripts/").toString();
@@ -250,6 +250,9 @@ public class Environment {
 
     public void refresh() {
         for (File f : Objects.requireNonNull(new File(settings.TEMP_FILE_PATH).listFiles())) {
+            if (f.getName().equals("session_timestamp.txt")) {
+                continue;
+            }
             if (!f.delete()) {
                 showErrorMessage("Refreshing error", "Can not clean the temp folder!");
             }
@@ -309,5 +312,9 @@ public class Environment {
 
     public void setCollectionManager(CollectionManager collectionManager) {
         this.collectionManager = collectionManager;
+    }
+
+    public void loadTokenToMemory(String token, EnvironmentManager.Certificate certificate) {
+        tokenInMemory = token;
     }
 }

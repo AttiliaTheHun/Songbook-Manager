@@ -21,6 +21,15 @@ public abstract class CollectionManager {
     public abstract String getSongFilePath(int id);
 
     public abstract void updateSongRecord(Song s);
+    public abstract void updateSongRecordFromHTML(Song s);
 
     public abstract void save();
+
+    public abstract Song addSong(Song s);
+
+    public abstract void removeSong(Song s);
+
+    public abstract void deactivateSong(Song s);
+
+    public abstract void activateSong(Song s);
 }

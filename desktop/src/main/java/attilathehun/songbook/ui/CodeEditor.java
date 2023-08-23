@@ -13,12 +13,16 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
+import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import org.fife.ui.rtextarea.*;
 import org.fife.ui.rsyntaxtextarea.*;
 
-public class CodeEditor extends  JFrame {
+public class CodeEditor extends JFrame {
+    private static int instances = 0;
+
+    private static boolean isApplicationClosed = false;
 
     private String filePath;
 
@@ -26,7 +30,23 @@ public class CodeEditor extends  JFrame {
 
     private final RSyntaxTextArea textArea;
 
-    public CodeEditor()  {
+    public static int instanceCount() {
+        return instances;
+    }
+
+    private static void removeInstance() {
+        instances--;
+        if (instances == 0 && isApplicationClosed) {
+            System.exit(0);
+        }
+
+    }
+
+    public static void setApplicationClosed() {
+        CodeEditor.isApplicationClosed = true;
+    }
+
+    public CodeEditor() {
 
         JPanel cp = new JPanel(new BorderLayout());
 
@@ -51,30 +71,23 @@ public class CodeEditor extends  JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
 
-              //  JFrame frame = new JFrame();
+                int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Do you want to save the changes?", "Save changes?", JOptionPane.YES_NO_OPTION);
 
-                /*final JOptionPane optionPane = new JOptionPane(
-                        "The only way to close this dialog is by\n"
-                                + "pressing one of the following buttons.\n"
-                                + "Do you understand?",
-                        JOptionPane.QUESTION_MESSAGE,
-                        JOptionPane.OK_CANCEL_OPTION);*/
-                int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Do you want to save the changes?", "Save changes?", JOptionPane.OK_CANCEL_OPTION);
-
-                if (resultCode == JOptionPane.OK_OPTION) {
+                if (resultCode == JOptionPane.YES_OPTION) {
                     saveChanges();
+                    removeInstance();
                     setVisible(false);
-                } else if (resultCode == JOptionPane.CANCEL_OPTION) {
-
+                } else if (resultCode == JOptionPane.NO_OPTION) {
+                    removeInstance();
+                    setVisible(false);
                 } else if (resultCode == JOptionPane.CLOSED_OPTION) {
-                    setVisible(false);
+
                 }
 
             }
 
             @Override
             public void windowClosed(WindowEvent e) {
-
             }
 
             @Override
@@ -101,6 +114,7 @@ public class CodeEditor extends  JFrame {
         textArea.addKeyListener(new KeyListener() {
 
             private boolean CONTROL_PRESSED = false;
+
             @Override
             public void keyTyped(KeyEvent e) {
 
@@ -122,7 +136,22 @@ public class CodeEditor extends  JFrame {
                 }
             }
         });
+        toFront();
+        instances++;
+    }
 
+    /**
+     * @source https://stackoverflow.com/questions/309023/how-to-bring-a-window-to-the-front
+     * @author Lawrence Dol
+     */
+    public @Override void toFront() {
+        int sta = super.getExtendedState() & ~JFrame.ICONIFIED & JFrame.NORMAL;
+
+        super.setExtendedState(sta);
+        super.setAlwaysOnTop(true);
+        super.toFront();
+        super.requestFocus();
+        super.setAlwaysOnTop(false);
     }
 
     public void setSong(Song s) {
@@ -151,7 +180,9 @@ public class CodeEditor extends  JFrame {
             FileWriter writer = new FileWriter(filePath, false);
             writer.write(textArea.getText());
             writer.close();
-            Environment.getInstance().getCollectionManager().updateSongRecord(song);
+            Environment.getInstance().getCollectionManager().updateSongRecordFromHTML(song);
+            Environment.getInstance().refresh();
+            SongbookApplication.dialControlPLusRPressed();
         } catch (IOException exp) {
             exp.printStackTrace();
             Environment.getInstance().logTimestamp();

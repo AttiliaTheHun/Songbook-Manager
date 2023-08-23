@@ -1,4 +1,4 @@
-package attilathehun.songbook;
+package attilathehun.songbook.util;
 
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
@@ -23,16 +23,16 @@ public class HTMLGenerator {
     private static final String TEMP_FRONTPAGE_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/frontpage.html").toString();
     private static final String TEMP_PAGEVIEW_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/current_page.html").toString();
     private static final String BASE_STYLE_FILE_PATH = Paths.get(Environment.getInstance().settings.CSS_RESOURCES_FILE_PATH + "/style.css").toString();
-    private static final String HEAD_REPLACE_MARK = "<!--replace \"head\"-->";
-    private static final String BASE_STYLE_PATH_REPLACE_MARK = "<!--replace \"basecss\"-->"; //style.css
-    private static final String SONG_ONE_REPLACE_MARK = "<!--replace \"song1\"-->";
-    private static final String SONG_TWO_REPLACE_MARK = "<!--replace \"song2\"-->";
+    private static final String HEAD_REPLACE_MARK = "<replace \"head\">";
+    private static final String BASE_STYLE_PATH_REPLACE_MARK = "<replace \"basecss\">"; //style.css
+    private static final String SONG_ONE_REPLACE_MARK = "<replace \"song1\">";
+    private static final String SONG_TWO_REPLACE_MARK = "<replace \"song2\">";
 
     private static final String BASE_STYLE_HTML_LINK = "<link rel=\"stylesheet\" href=\"" + "style.css" + "\"></link>";
-    private static final String SONG_AUTHOR_REPLACE_MARK = "<!--replace \"songauthor\"-->";
-    private static final String SONG_NAME_REPLACE_MARK = "<!--replace \"songname\"-->";
-    private static final String SONG_LIST_REPLACE_MARK = "<!--replace \"unorderedlist\"-->";
-    private static final String FRONTPAGE_PICTURE_PATH_REPLACE_MARK = "<!--replace \"frontpagepic\"-->";
+    private static final String SONG_AUTHOR_REPLACE_MARK = "<replace \"songauthor\">";
+    private static final String SONG_NAME_REPLACE_MARK = "<replace \"songname\">";
+    private static final String SONG_LIST_REPLACE_MARK = "<replace \"unorderedlist\">";
+    private static final String FRONTPAGE_PICTURE_PATH_REPLACE_MARK = "<replace \"frontpagepic\">";
     private static final String FRONTPAGE_PICTURE_PATH = Paths.get(Environment.getInstance().settings.ASSETS_RESOURCES_FILE_PATH  + "/frontpage.png").toString();
     public static final String FRONTPAGE = "frontpage.html";
     private static final String SONGLIST_PART_ONE = "songlist_part_one.html";
@@ -235,28 +235,28 @@ public class HTMLGenerator {
         return TEMP_PAGEVIEW_PATH;
     }
 
-    /*private String generateSong(int id) throws IOException {
-        Path path = Paths.get(EnvironmentVerificator.getInstance().settings.SONG_DATA_FILE_PATH + "/" + id + ".html");
-
-        String html = String.join("\n", Files.readAllLines(path));
-
-        return html;
-    }
-
-    private void generateSongFile(int id) {
+    public void generateSongFile(Song s) {
         try {
-            String path = Paths.get(EnvironmentVerificator.getInstance().settings.TEMP_FILE_PATH + "/" + id + ".html").toString();
-            if (EnvironmentVerificator.fileExists(path)) {
+            File songFile = new File(String.format(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/%d.html", s.id()));
+            File songTemplate = new File(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/song.html");
+            if (!songFile.createNewFile() && songFile.length() != 0) {
+                Environment.showWarningMessage("Data Loss Prevented", "File exists but is not empty: " + songFile);
                 return;
             }
-            PrintWriter printWriter = new PrintWriter(new FileWriter((path), false));
-            printWriter.write(generateSong(id));
+            String songHTML = String.join("\n", Files.readAllLines(songTemplate.toPath()));
+            songHTML = songHTML.replace(SONG_NAME_REPLACE_MARK, s.name());
+            songHTML = songHTML.replace(SONG_AUTHOR_REPLACE_MARK,s.getAuthor());
+
+            PrintWriter printWriter = new PrintWriter(new FileWriter((songFile), false));
+            printWriter.write(songHTML);
             printWriter.close();
         } catch (Exception e) {
             e.printStackTrace(System.out);
-            EnvironmentVerificator.showErrorMessage("HTML Generation Error", "Unable to generate a song file.");
+            Environment.getInstance().logTimestamp();
+            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            Environment.showWarningMessage("HTML Generation Error", "Unable to generate a song file.");
         }
-    }*/
+    }
 
     private String generateFrontpage() throws IOException {
         Path path = Paths.get(FRONTPAGE_TEMPLATE_PATH);

@@ -6,6 +6,10 @@ import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.ui.CodeEditor;
+import attilathehun.songbook.ui.CollectionEditor;
+import attilathehun.songbook.util.HTMLGenerator;
+import attilathehun.songbook.util.KeyEventListener;
+import attilathehun.songbook.util.PDFGenerator;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
@@ -14,12 +18,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.web.WebView;
 import javafx.application.Platform;
 import javafx.scene.control.MenuItem;
 import org.controlsfx.control.ToggleSwitch;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -58,6 +64,8 @@ public class SongbookController implements KeyEventListener {
     @FXML
     private Button refreshButton;
     @FXML
+    private Button previewButton;
+    @FXML
     private MenuButton exportButton;
     @FXML
     private ToggleSwitch easterSwitch;
@@ -84,7 +92,7 @@ public class SongbookController implements KeyEventListener {
 
 
         editCollectionButton.setOnAction(event -> {
-
+            CollectionEditor.openCollectionEditor();
         });
 
         loadDataButton.setOnAction(event -> {
@@ -236,8 +244,11 @@ public class SongbookController implements KeyEventListener {
 
         });
 
-        if (!Environment.getInstance().settings.IS_IT_EASTER_ALREADY) {
-            easterSwitch.managedProperty().bind(easterSwitch.visibleProperty());
+        if (Environment.getInstance().settings.IS_IT_EASTER_ALREADY) {
+            easterSwitch.setManaged(true);
+            easterSwitch.setVisible(true);
+        } else {
+            easterSwitch.setManaged(false);
             easterSwitch.setVisible(false);
         }
 
@@ -252,6 +263,10 @@ public class SongbookController implements KeyEventListener {
                 Environment.getInstance().refresh();
                 refreshWebView();
             }
+        });
+
+        previewButton.setOnAction(event -> {
+            //TODO:
         });
 
     }
@@ -280,6 +295,46 @@ public class SongbookController implements KeyEventListener {
     @Override
     public void onControlPlusRPressed() {
         refreshWebView();
+    }
+
+    @Override
+    public void onImaginarySongOneKeyPressed(Song s) {
+        try {
+            if (s.id() == -1)
+                return;
+            int index = 0;
+            for (Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
+                if (song.equals(s)) {
+                    SONG_ONE = song;
+                    SONG_ONE_INDEX = index;
+                    break;
+                }
+                index++;
+            }
+            refreshWebView();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onImaginarySongTwoKeyPressed(Song s) {
+        try {
+            if (s.id() == -1)
+                return;
+            int index = 0;
+            for (Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
+                if (song.equals(s)) {
+                    SONG_TWO = song;
+                    SONG_TWO_INDEX = index;
+                    break;
+                }
+                index++;
+            }
+            refreshWebView();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void switchPage(boolean toTheRight){
@@ -320,4 +375,5 @@ public class SongbookController implements KeyEventListener {
             Environment.showErrorMessage("WebView configuration error", "Error when refreshing webview!");
         }
     }
+
 }

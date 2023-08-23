@@ -1,4 +1,4 @@
-package attilathehun.songbook;
+package attilathehun.songbook.util;
 
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
@@ -43,9 +43,10 @@ public class PDFGenerator {
     }
     
     public void generateSinglePage() {
-        
+        //TODO:
     }
-    
+
+    //TODO:
     public void generateDefault() {
         Task task = new Task<Void>()  {
                               @Override
@@ -131,7 +132,7 @@ public class PDFGenerator {
 
     
     public void generatePrintable() {
-        
+        //TODO:
     }
 
 

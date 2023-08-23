@@ -1,4 +1,4 @@
-package attilathehun.songbook;
+package attilathehun.songbook.util;
 
 import attilathehun.songbook.environment.Environment;
 
@@ -12,14 +12,19 @@ import java.nio.file.Paths;
 public class Client {
 
     public void downloadData() {
+        downloadData(Environment.getInstance().settings.REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL);
+    }
+
+    public void downloadData(String remoteDataZipFileDownloadURL) {
         try {
-            String fileContent = getFile(Environment.getInstance().settings.REMOTE_DATA_ZIP_FILE_UPLOAD_URL, Environment.getInstance().acquireToken(new Certificate()));
+            String fileContent = getFile(remoteDataZipFileDownloadURL, Environment.getInstance().acquireToken(new Certificate()));
             File file = new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
             file.createNewFile();
             FileOutputStream outputStream = new FileOutputStream(file, false);
             outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
             outputStream.close();
+            //TODO: remove for production
             Environment.showMessage("Success", "Data downloaded successfully from the server.");
         } catch (Exception e) {
             e.printStackTrace();
@@ -29,8 +34,12 @@ public class Client {
     }
 
     public void uploadData() {
+        uploadData(Environment.getInstance().settings.REMOTE_DATA_ZIP_FILE_UPLOAD_URL);
+    }
+
+    public void uploadData(String remoteDataZipFileUploadURL) {
         try {
-            postFile(Environment.getInstance().settings.REMOTE_DATA_ZIP_FILE_UPLOAD_URL, Environment.getInstance().acquireToken(new Certificate()));
+            postFile(remoteDataZipFileUploadURL, Environment.getInstance().acquireToken(new Certificate()));
             Environment.showMessage("Success", "Data uploaded successfully to the server.");
         } catch (Exception e) {
             e.printStackTrace();
