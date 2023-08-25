@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
+import attilathehun.songbook.plugin.DynamicSonglist;
 import attilathehun.songbook.ui.CodeEditor;
 import attilathehun.songbook.util.HTMLGenerator;
 import com.google.gson.*;
@@ -70,7 +71,7 @@ public class StandardCollectionManager extends CollectionManager {
         UIManager.put("OptionPane.noButtonText", "Create");
         UIManager.put("OptionPane.cancelButtonText", "Load");
 
-        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Repair songbook", "No collection file was found but it seems you have saved songs in your songbook. Would you like to generate a collection file to repair the songbook? Alternatively, you can create a new one or load an existing one from a local or remote zip file.", JOptionPane.YES_NO_CANCEL_OPTION);
+        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Repair songbook", "No collection file was found but it seems you have saved songs in your songbook. Would you like to generate a collection file to repair the songbook? Alternatively, you can create a new songbook or load an existing one from a local or remote zip file.", JOptionPane.YES_NO_CANCEL_OPTION);
 
         if (resultCode == JOptionPane.YES_OPTION) {
             repairMissingCollectionFile();
@@ -147,8 +148,10 @@ public class StandardCollectionManager extends CollectionManager {
             formalList.add(new Song("frontpage", -1));
         }
         if (!Environment.getInstance().settings.DISABLE_DYNAMIC_SONGLIST) {
-            formalList.add(new Song("songlist1", -1));
-            formalList.add(new Song("songlist2", -1));
+            for (int i = 0; i < new DynamicSonglist().generateSonglist(); i++) {
+                formalList.add(new Song("songlist" + i, -1));
+            }
+
         }
 
         formalList.addAll(new ArrayList<Song>(getSortedCollection().stream().filter(Song::isActive).collect(Collectors.toList())));
@@ -176,7 +179,7 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public void updateSongRecord(Song s) {
+    public Song updateSongRecord(Song s) {
         int index = getSongIndex(s);
 
         collection.get(index).setName(s.name());
@@ -186,6 +189,7 @@ public class StandardCollectionManager extends CollectionManager {
         save();
         Environment.getInstance().refresh();
         SongbookApplication.dialControlPLusRPressed();
+        return  s;
     }
 
     //TODO: <strike>Do we want this at all? And if so, </strike>editing the record from CollectionEditor should update the HTML

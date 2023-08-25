@@ -4,6 +4,7 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.plugin.DynamicSonglist;
 
 import java.io.*;
 import java.nio.file.*;
@@ -19,8 +20,7 @@ public class HTMLGenerator {
     private static final String FRONTPAGE_TEMPLATE_PATH = Paths.get(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/frontpage.html").toString();
     private static final String PAGEVIEW_TEMPLATE_PATH = Paths.get(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/pageview.html").toString();
     private static final String SONG_TEMPLATE_PATH = Paths.get(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/song.html").toString();
-    private static final String TEMP_SONGLIST_PART_ONE_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/songlist_part_one.html").toString();
-    private static final String TEMP_SONGLIST_PART_TWO_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/songlist_part_two.html").toString();
+    private static final String TEMP_SONGLIST_PART_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/songlist_part_%d.html").toString();
     private static final String TEMP_FRONTPAGE_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/frontpage.html").toString();
     private static final String TEMP_PAGEVIEW_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/current_page.html").toString();
     private static final String BASE_STYLE_FILE_PATH = Paths.get(Environment.getInstance().settings.CSS_RESOURCES_FILE_PATH + "/style.css").toString();
@@ -28,7 +28,6 @@ public class HTMLGenerator {
     private static final String BASE_STYLE_PATH_REPLACE_MARK = "<replace \"basecss\">"; //style.css
     private static final String SONG_ONE_REPLACE_MARK = "<replace \"song1\">";
     private static final String SONG_TWO_REPLACE_MARK = "<replace \"song2\">";
-
     private static final String BASE_STYLE_HTML_LINK = "<link rel=\"stylesheet\" href=\"" + "style.css" + "\"></link>";
     private static final String SONG_AUTHOR_REPLACE_MARK = "<replace \"songauthor\">";
     private static final String SONG_NAME_REPLACE_MARK = "<replace \"songname\">";
@@ -36,22 +35,10 @@ public class HTMLGenerator {
     private static final String FRONTPAGE_PICTURE_PATH_REPLACE_MARK = "<replace \"frontpagepic\">";
     private static final String FRONTPAGE_PICTURE_PATH = Paths.get(Environment.getInstance().settings.ASSETS_RESOURCES_FILE_PATH + "/frontpage.png").toString();
     public static final String FRONTPAGE = "frontpage.html";
-    private static final String SONGLIST_PART_ONE = "songlist_part_one.html";
-    private static final String SONGLIST_PART_TWO = "songlist_part_two.html";
     private static final String PAGEVIEW = "current_page.html";
     private static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/segment").toString();
-    /* Songlist I
-     * Songlist II
-     * SongView
-     * PageView
-     * Egglist
-     * Frontpage
-     */
 
-    private boolean IS_IT_EASTER_ALREADY = false;
-
-    public HTMLGenerator(boolean deluxe) {
-        IS_IT_EASTER_ALREADY = deluxe;
+    public HTMLGenerator() {
         try {
             Files.copy(Paths.get(BASE_STYLE_FILE_PATH), Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/style.css"), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
@@ -62,108 +49,65 @@ public class HTMLGenerator {
         }
     }
 
-    public HTMLGenerator() {
-        this(false);
-    }
 
-    private String generateSonglistPartOne() throws IOException {
-        Path path = Paths.get(SONGLIST_TEMPLATE_PATH);
-
-        String html = String.join("\n", Files.readAllLines(path));
-        ArrayList<Song> collection = Environment.getInstance().getCollectionManager().getDisplayCollection();
-        StringBuilder payload = new StringBuilder("<div class=\"divvy\">\n");
-        payload.append("<ul>\n");
-        for (int i = 0; i < Math.floor(collection.size() / 4) * 2 + 2; i++) {
-            if (i == Math.floor(collection.size() / 4) + 1) {
-                payload.append("</ul>\n");
-                payload.append("</div>\n");
-                payload.append("<div class=\"divvy\">\n");
-                payload.append("<ul>\n");
-            }
-
-            payload.append("<li>");
-            if (collection.get(i).id() == 96) {
-                payload.append("<b><u>");
-            }
-            payload.append(collection.get(i).name());
-            if (collection.get(i).id() == 96) {
-                payload.append("</b></u>");
-            }
-
-            payload.append("</li>\n");
+    public void generateSonglistSegmentFile(int startIndex, int endIndex, int segmentNumber) {
+        if (startIndex < 0 || startIndex > Environment.getInstance().getCollectionManager().getDisplayCollection().size() || endIndex > Environment.getInstance().getCollectionManager().getDisplayCollection().size()) {
+            throw new IllegalArgumentException();
         }
-        payload.append("</ul>\n");
-        payload.append("</div>\n");
-        html = html.replace(SONG_LIST_REPLACE_MARK, payload.toString());
-        return html;
-    }
 
-    public void generateSonglistPartOneFile() {
         try {
-            String path = TEMP_SONGLIST_PART_ONE_PATH;
+            String path = String.format(TEMP_SONGLIST_PART_PATH, segmentNumber);
             if (Environment.fileExists(path)) {
                 return;
             }
             PrintWriter printWriter = new PrintWriter(new FileWriter((path), false));
-            printWriter.write(generateSonglistPartOne());
+            printWriter.write(generateSonglistSegment(startIndex, endIndex, segmentNumber));
             printWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
             Environment.getInstance().logTimestamp();
             e.printStackTrace(Environment.getInstance().getLogPrintStream());
-            Environment.showErrorMessage("HTML Generation Error", "Unable to generate first part of the song list.");
+            Environment.showErrorMessage("HTML Generation Error", "Unable to generate the songlist.");
         }
+
     }
 
-    private String generateSonglistPartTwo() throws IOException {
+    private String generateSonglistSegment(int startIndex, int endIndex, int segmentNumber) throws IOException {
         Path path = Paths.get(SONGLIST_TEMPLATE_PATH);
 
         String html = String.join("\n", Files.readAllLines(path));
         ArrayList<Song> collection = Environment.getInstance().getCollectionManager().getDisplayCollection();
-        StringBuilder payload = new StringBuilder("<div class=\"divvy\">\n");
-        payload.append("<ul>\n");
-        for (int i = Math.round(collection.size() / 4) * 2 + 2; i < collection.size(); i++) {
-            //echo round($arr_length / 2);
-            if (i == Math.round(collection.size() / 4) * 3 + 3) {
-                payload.append("</ul>\n");
-                payload.append("</div>\n");
-                payload.append("<div class=\"divvy\">\n");
-                payload.append("<ul>\n");
+        StringBuilder payload = new StringBuilder();
+        int columns = (endIndex - startIndex > DynamicSonglist.MAX_SONG_PER_COLUMN) ? 2 : 1;
+        int columnStartIndex = startIndex;
+        int columnEndIndex = (startIndex + DynamicSonglist.MAX_SONG_PER_COLUMN > endIndex) ? endIndex : startIndex + DynamicSonglist.MAX_SONG_PER_COLUMN;
+        for (int j = 1; j < columns + 1; j++) {
+
+            payload.append("<div class=\"divvy\">\n");
+            payload.append("<ul>\n");
+
+            for (int i = columnStartIndex; i < columnEndIndex; i++) {
+                payload.append("<li>");
+                if (collection.get(i).id() == 96) {
+                    payload.append("<b><u>");
+                }
+                payload.append(collection.get(i).name());
+                if (collection.get(i).id() == 96) {
+                    payload.append("</b></u>");
+                }
+
+                payload.append("</li>\n");
             }
 
-            payload.append("<li>");
-            if (collection.get(i).id() == 96) {
-                payload.append("<b><u>");
-            }
-            payload.append(collection.get(i).name());
-            if (collection.get(i).id() == 96) {
-                payload.append("</b></u>");
-            }
+            payload.append("</ul>\n");
+            payload.append("</div>\n");
 
-            payload.append("</li>\n");
-
+            columnStartIndex = columnEndIndex;
+            columnEndIndex = (columnEndIndex + DynamicSonglist.MAX_SONG_PER_COLUMN > endIndex) ? endIndex : columnEndIndex + DynamicSonglist.MAX_SONG_PER_COLUMN;
         }
-        payload.append("</ul>\n");
-        payload.append("</div>\n");
+
         html = html.replace(SONG_LIST_REPLACE_MARK, payload.toString());
         return html;
-    }
-
-    public void generateSonglistPartTwoFile() {
-        try {
-            String path = TEMP_SONGLIST_PART_TWO_PATH;
-            if (Environment.fileExists(path)) {
-                return;
-            }
-            PrintWriter printWriter = new PrintWriter(new FileWriter((path), false));
-            printWriter.write(generateSonglistPartTwo());
-            printWriter.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
-            Environment.showErrorMessage("HTML Generation Error", "Unable to generate second part of the song list.");
-        }
     }
 
     private String getHead() throws IOException {
@@ -179,34 +123,41 @@ public class HTMLGenerator {
             songOnePath = Paths.get(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/" + songOne.id() + ".html").toString();
             //generateSongFile(songOne.id());
         } else {
-            songOnePath = switch (songOne.name()) {
-                case "frontpage" -> TEMP_FRONTPAGE_PATH;
-                case "songlist1" -> TEMP_SONGLIST_PART_ONE_PATH;
-                case "songlist2" -> TEMP_SONGLIST_PART_TWO_PATH;
-                default -> "WTF";
-            };
+                if (songOne.name().equals("frontpage")) {
+                    songOnePath = TEMP_FRONTPAGE_PATH;
+                } else if (songOne.name().startsWith("songlist")) {
+                    int songlistPartNumber = Integer.parseInt(songOne.name().substring("songlist".length()));
+                    songOnePath = String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber);
+                }
         }
 
         if (songTwo.id() != -1) {
             songTwoPath = Paths.get(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/" + songTwo.id() + ".html").toString();
             //generateSongFile(songTwo.id());
         } else {
-            songTwoPath = switch (songTwo.name()) {
-                case "frontpage" -> TEMP_FRONTPAGE_PATH;
-                case "songlist1" -> TEMP_SONGLIST_PART_ONE_PATH;
-                case "songlist2" -> TEMP_SONGLIST_PART_TWO_PATH;
-                default -> "WTF";
-            };
+            if (songTwo.name().equals("frontpage")) {
+                songTwoPath = TEMP_FRONTPAGE_PATH;
+            } else if (songTwo.name().startsWith("songlist")) {
+                int songlistPartNumber = Integer.parseInt(songTwo.name().substring("songlist".length()));
+                songTwoPath = String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber);
+            }
         }
 
         if ((songOne.name().equals("frontpage") || songTwo.name().equals("frontpage")) && !new File(TEMP_FRONTPAGE_PATH).exists()) {
             generateFrontpageFile();
         }
-        if ((songOne.name().equals("songlist1") || songTwo.name().equals("songlist1")) && !new File(TEMP_SONGLIST_PART_ONE_PATH).exists()) {
-            generateSonglistPartOneFile();
+        if (songOne.name().startsWith("songlist")) {
+            int songlistPartNumber = Integer.parseInt(songOne.name().substring("songlist".length()));
+            if (!new File(String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber)).exists()) {
+                new DynamicSonglist().generateSonglist();
+            }
         }
-        if ((songOne.name().equals("songlist2") || songTwo.name().equals("songlist2")) && !new File(TEMP_SONGLIST_PART_TWO_PATH).exists()) {
-            generateSonglistPartTwoFile();
+
+        if (songTwo.name().startsWith("songlist")) {
+            int songlistPartNumber = Integer.parseInt(songTwo.name().substring("songlist".length()));
+            if (!new File(String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber)).exists()) {
+                new DynamicSonglist().generateSonglist();
+            }
         }
 
         Path path = Paths.get(PAGEVIEW_TEMPLATE_PATH);

@@ -150,11 +150,11 @@ public class EasterCollectionManager extends CollectionManager {
             }
             searchForEasterEgg:
             for (Song value : collection) {
-                if (song.id() == value.id()) {
-                    formalList.add(value);
+                if (value.isActive()) {
+                   formalList.add(value);
                     esterEggFound = true;
-                    break searchForEasterEgg;
                 }
+                break searchForEasterEgg;
             }
 
             if (!esterEggFound) {
@@ -167,12 +167,36 @@ public class EasterCollectionManager extends CollectionManager {
 
     @Override
     public ArrayList<Song> getDisplayCollection() {
-        ArrayList<Song> displayList = new ArrayList<Song>(new ArrayList<Song>(getSortedCollection().stream().filter(Song::isActive).collect(Collectors.toList())));
+        ArrayList<Song> standardDisplayList = StandardCollectionManager.getInstance().getDisplayCollection();
+        ArrayList<Song> displayList = new ArrayList<Song>();
+
+        for (Song song : standardDisplayList) {
+            boolean esterEggFound = false;
+            if (!song.isActive()) {
+                continue;
+            }
+            searchForEasterEgg:
+            for (Song value : collection) {
+                if (song.id() == value.id()) {
+                    if (value.isActive()) {
+                        displayList.add(value);
+                        esterEggFound = true;
+                    }
+                    break searchForEasterEgg;
+                }
+            }
+
+            if (!esterEggFound) {
+                displayList.add(song);
+            }
+        }
+
+
         return displayList;
     }
 
     @Override
-    public void updateSongRecord(Song s) {
+    public Song updateSongRecord(Song s) {
         int songIdMatches = 0;
         for (Song song : collection) {
             if (song.id() == s.id()) {
@@ -182,13 +206,13 @@ public class EasterCollectionManager extends CollectionManager {
 
         if (songIdMatches > 1) {
             Environment.showWarningMessage("Warning", "A song with such Id already exists. Please, resolve this conflict manually on the other song before using this Id.");
-            return;
+            return s;
         }
 
         int index = getSongIndex(s);
-
+        Song song = null;
         if (index == -1) {
-            Song song = null;
+
             for (Song item : collection) {
                 if (item.id() == s.getFormerId()) {
                     song = item;
@@ -198,15 +222,16 @@ public class EasterCollectionManager extends CollectionManager {
             index = getSongIndex(song);
             collection.remove(index);
             collection.add(s);
-
+            song = s;
         } else {
             collection.get(index).setName(s.name());
             collection.get(index).setUrl(s.getUrl());
             collection.get(index).setActive(s.isActive());
+            song = collection.get(index);
         }
 
-
         save();
+        return  song;
 
     }
 

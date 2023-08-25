@@ -55,6 +55,7 @@ public class Installer {
             if (!new File(SCRIPTS_ZIP_FILE_PATH).exists()) {
                 if (REMOTE_SCRIPTS_ZIP_FILE.equals("")) {
                     Environment.showWarningMessage("Installation Error", "Please provide a 'scripts.zip' file!");
+                    return;
                 }
                 IS_TEMP_SCRIPTS_ZIP_FILE = true;
                 downloadRemoteFile(REMOTE_SCRIPTS_ZIP_FILE, "scripts.zip");

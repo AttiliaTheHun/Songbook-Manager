@@ -278,47 +278,7 @@ public class SongbookController implements KeyEventListener {
 
     private void initAddSongButton() {
         addSongButton.setOnAction(event -> {
-            UIManager.put("OptionPane.okButtonText", "Add");
-            UIManager.put("OptionPane.cancelButtonText", "Cancel");
-
-            JTextField songNameField = new JTextField();
-            songNameField.setToolTipText("Name of the song. For example 'I Will Always Return'.");
-            JTextField songURLField = new JTextField();
-            songURLField.setToolTipText("Link to a video performance of the song.");
-            JCheckBox songActiveSwitch = new JCheckBox("Active");
-            songActiveSwitch.setToolTipText("When disabled, the song will not be included in the songbook.");
-
-            JTextField songAuthorField = new JTextField();
-            Song placeholder = Environment.getInstance().getCollectionManager().getPlaceholderSong();
-
-            songNameField.setText(placeholder.name());
-            songAuthorField.setText(placeholder.getAuthor());
-            songURLField.setText(placeholder.getUrl());
-            songActiveSwitch.setSelected(true);
-
-
-            songAuthorField.setToolTipText("Author or interpret of the song. For example 'Leonard Cohen'.");
-
-            Object[] message = new Object[]{
-                    "Name:", songNameField,
-                    "Author:", songAuthorField,
-                    "URL:", songURLField,
-                    songActiveSwitch
-            };
-
-            int option = JOptionPane.showConfirmDialog(null, message, "Add a Song", JOptionPane.OK_CANCEL_OPTION);
-
-            UIManager.put("OptionPane.okButtonText", "Ok");
-            UIManager.put("OptionPane.cancelButtonText", "Cancel");
-
-            if (option == JOptionPane.YES_OPTION) {
-                Song song = new Song(songNameField.getText(), -1);
-                song.setUrl(songURLField.getText());
-                song.setAuthor(songAuthorField.getText());
-                song.setActive(songActiveSwitch.isSelected());
-                song = Environment.getInstance().getCollectionManager().addSong(song);
-                //TODO: Refresh CollectionEditor list if an instance exists
-            }
+            EnvironmentManager.addSongDialog(Environment.getInstance().getCollectionManager());
         });
     }
 

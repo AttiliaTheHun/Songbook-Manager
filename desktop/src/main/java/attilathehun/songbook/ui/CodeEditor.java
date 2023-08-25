@@ -162,7 +162,7 @@ public class CodeEditor extends JFrame {
         super.setExtendedState(sta);
         super.setAlwaysOnTop(true);
         super.toFront();
-        super.requestFocus();
+        super.requestFocusInWindow();
         super.setAlwaysOnTop(false);
     }
 

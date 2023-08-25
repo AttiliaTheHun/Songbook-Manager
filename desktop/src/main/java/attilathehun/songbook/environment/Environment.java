@@ -1,6 +1,7 @@
 package attilathehun.songbook.environment;
 
 import attilathehun.songbook.collection.Song;
+import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.util.Client;
 import attilathehun.songbook.collection.CollectionManager;
 import com.google.gson.Gson;
@@ -240,18 +241,18 @@ public final class Environment {
 
 
     public static void showErrorMessage(String title, String message) {
-        showMessageDialog(null, message, title,
+        showMessageDialog(getAlwaysOnTopJDialog(), message, title,
                 JOptionPane.ERROR_MESSAGE);
-        System.exit(0);
+        getInstance().exit();
     }
 
     public static void showMessage(String title, String message) {
-        showMessageDialog(null, message, title,
+        showMessageDialog(getAlwaysOnTopJDialog(), message, title,
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
     public static void showWarningMessage(String title, String message) {
-        showMessageDialog(null, message, title,
+        showMessageDialog(getAlwaysOnTopJDialog(), message, title,
                 JOptionPane.WARNING_MESSAGE);
     }
 
@@ -319,6 +320,9 @@ public final class Environment {
     }
 
     public CollectionManager getCollectionManager() {
+        if (collectionManager == null) {
+            return StandardCollectionManager.getInstance();
+        }
         return collectionManager;
     }
 
@@ -361,6 +365,14 @@ public final class Environment {
             }
         }
         return -1;
+    }
+
+    public static JDialog getAlwaysOnTopJDialog() {
+        JDialog dialog = new JDialog();
+        dialog.setAlwaysOnTop(true);
+        dialog.toFront();
+        dialog.requestFocusInWindow();
+        return dialog;
     }
 
 }

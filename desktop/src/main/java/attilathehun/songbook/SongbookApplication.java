@@ -93,6 +93,8 @@ public class SongbookApplication extends Application {
                     if (!stage.isFocused()) {
                         return;
                     }
+                    //Environment.showMessage("Message", "Key pressed");
+                    System.out.println("Keypress: " + nativeEvent.getKeyChar() + " : " + nativeEvent.getKeyCode());
                     switch (nativeEvent.getKeyCode()) {
                         case NativeKeyEvent.VC_CONTROL -> CONTROL_PRESSED = true;
                         case NativeKeyEvent.VC_LEFT, NativeKeyEvent.VC_PAGE_DOWN -> dialLeftArrowPressed();
@@ -118,35 +120,38 @@ public class SongbookApplication extends Application {
                         case NativeKeyEvent.VC_O -> { //open song link
                             if (CONTROL_PRESSED) {
                                 if (SongbookController.getSongOne().getUrl().equals("") && SongbookController.getSongTwo().getUrl().equals("")) {
-                                    Environment.showMessage("Message", "None of the displayed songs has an associated URL. You can managed URLs in the Collection Editor Window");
+                                    Environment.showMessage("Message", "None of the displayed songs has an associated URL. You can managed URLs in the Collection Editor Window.");
                                 } else if (!SongbookController.getSongOne().getUrl().equals("") && SongbookController.getSongTwo().getUrl().equals("")) {
 
-                                    int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Do you want to open the associated URL in a web browser?", SongbookController.getSongOne().getUrl(), JOptionPane.YES_NO_OPTION);
+                                    int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to open the associated URL in a web browser?", String.format("%s - %s", SongbookController.getSongOne().name(), SongbookController.getSongOne().getUrl()), JOptionPane.YES_NO_OPTION);
 
                                     if (resultCode == JOptionPane.YES_OPTION) {
                                         try {
                                             Desktop.getDesktop().browse(new URL(SongbookController.getSongOne().getUrl()).toURI());
                                         } catch (Exception e) {
+                                            e.printStackTrace();
                                             Environment.showWarningMessage("Warning", "The associated URL is malformed. PLease check for typos :)");
                                         }
 
                                     }
                                 } else if (SongbookController.getSongOne().getUrl().equals("") && !SongbookController.getSongTwo().getUrl().equals("")) {
 
-                                    int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Do you want to open the associated URL in a web browser?", SongbookController.getSongTwo().getUrl(), JOptionPane.YES_NO_OPTION);
+                                    int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to open the associated URL in a web browser?", SongbookController.getSongTwo().getUrl(), JOptionPane.YES_NO_OPTION);
 
                                     if (resultCode == JOptionPane.YES_OPTION) {
                                         try {
                                             Desktop.getDesktop().browse(new URL(SongbookController.getSongTwo().getUrl()).toURI());
                                         } catch (Exception e) {
+                                            e.printStackTrace();
+                                            Environment.showWarningMessage("Warning", "The associated URL is malformed. PLease check for typos :)");
                                         }
 
-                                        Environment.showWarningMessage("Warning", "The associated URL is malformed. PLease check for typos :)");
+
                                     }
                                 } else /* both have a URL */ {
                                     UIManager.put("OptionPane.yesButtonText", SongbookController.getSongOne().name());
                                     UIManager.put("OptionPane.noButtonText", SongbookController.getSongTwo().name());
-                                    int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Which song's associated URL do you want to open in the browser?", String.format("%s or %s?", SongbookController.getSongOne().name(), SongbookController.getSongTwo().name()), JOptionPane.YES_NO_OPTION);
+                                    int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Which song's associated URL do you want to open in the browser?", String.format("%s or %s?", SongbookController.getSongOne().name(), SongbookController.getSongTwo().name()), JOptionPane.YES_NO_OPTION);
                                     if (resultCode == JOptionPane.YES_OPTION) {
                                         try {
                                             Desktop.getDesktop().browse(new URL(SongbookController.getSongOne().getUrl()).toURI());
