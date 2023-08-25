@@ -1,34 +1,50 @@
 [
-    {
-        "name": "Defilé u moře",
-        "id": 25
-    },
-    {
-        "name": "Hercegovina",
-        "id": 39
-    },
-    {
-        "name": "Hymna trpaslíků",
-        "id": 50
-    },
-    {
-        "name": "Jackova píseň",
-        "id": 52
-    },
-    {
-        "name": "Kde je moje máma",
-        "id": 63
-    },
-    {
-        "name": "Pošťák",
-        "id": 99
-    },
-    {
-        "name": "Strom",
-        "id": 120
-    },
-    {
-        "name": "Žádám",
-        "id": 147
-    }
+  {
+    "id": 25,
+    "name": "Defilé u moře",
+    "active": true,
+    "url": ""
+  },
+  {
+    "id": 39,
+    "name": "Hercegovina",
+    "active": true,
+    "url": ""
+  },
+  {
+    "id": 50,
+    "name": "Hymna trpaslíků",
+    "active": true,
+    "url": ""
+  },
+  {
+    "id": 52,
+    "name": "Jackova píseň",
+    "active": true,
+    "url": ""
+  },
+  {
+    "id": 63,
+    "name": "Kde je moje máma",
+    "active": true,
+    "url": ""
+  },
+  {
+    "id": 99,
+    "name": "Rošťák",
+    "active": true,
+    "url": ""
+  },
+  {
+    "id": 120,
+    "name": "Strom 2",
+    "active": false,
+    "url": ""
+  },
+  {
+    "id": 147,
+    "name": "Žádám",
+    "active": true,
+    "url": ""
+  }
 ]

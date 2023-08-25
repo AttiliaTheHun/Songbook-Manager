@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import attilathehun.songbook.SongbookApplication;
+import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import org.fife.ui.rtextarea.*;
@@ -28,6 +29,8 @@ public class CodeEditor extends JFrame {
 
     private Song song;
 
+    private static boolean SHIFT_PRESSED = false;
+
     private final RSyntaxTextArea textArea;
 
     public static int instanceCount() {
@@ -37,7 +40,7 @@ public class CodeEditor extends JFrame {
     private static void removeInstance() {
         instances--;
         if (instances == 0 && isApplicationClosed) {
-            System.exit(0);
+            Environment.getInstance().exit();
         }
 
     }
@@ -70,6 +73,12 @@ public class CodeEditor extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent e) {
+                if (SHIFT_PRESSED) {
+                    removeInstance();
+                    SHIFT_PRESSED = false;
+                    setVisible(false);
+                    return;
+                }
 
                 int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Do you want to save the changes?", "Save changes?", JOptionPane.YES_NO_OPTION);
 
@@ -113,26 +122,29 @@ public class CodeEditor extends JFrame {
 
         textArea.addKeyListener(new KeyListener() {
 
-            private boolean CONTROL_PRESSED = false;
-
             @Override
             public void keyTyped(KeyEvent e) {
-
+               /* if (getTitle().startsWith("*")) {
+                    CodeEditor.super.setTitle("*" + getTitle());
+                }*/
             }
 
             @Override
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    CONTROL_PRESSED = true;
-                } else if (CONTROL_PRESSED && e.getKeyCode() == KeyEvent.VK_S) {
+                if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
+                    SHIFT_PRESSED = true;
+                } else if (SHIFT_PRESSED && e.getKeyCode() == KeyEvent.VK_S) {
                     saveChanges();
+                    if (getTitle().startsWith("*")) {
+                        CodeEditor.super.setTitle(getTitle().substring(1));
+                    }
                 }
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    CONTROL_PRESSED = false;
+                if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
+                    SHIFT_PRESSED = false;
                 }
             }
         });
@@ -190,5 +202,14 @@ public class CodeEditor extends JFrame {
             Environment.showWarningMessage("Warning", "Can not save the changes! You can save them manually to the path " + filePath + "from your clipboard");
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(textArea.getText()), new StringSelection(textArea.getText()));
         }
+    }
+
+    @Override
+    public void setTitle(String s) {
+        String title = s;
+        if (Environment.getInstance().getCollectionManager().equals(EasterCollectionManager.getInstance())) {
+            title = "[E] " + s;
+        }
+        super.setTitle(title);
     }
 }

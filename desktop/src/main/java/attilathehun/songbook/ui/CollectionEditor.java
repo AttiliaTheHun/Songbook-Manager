@@ -1,24 +1,23 @@
 package attilathehun.songbook.ui;
 
 import attilathehun.songbook.collection.CollectionManager;
+import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
-import com.google.gson.Gson;
-import javafx.scene.control.Tooltip;
-import javafx.util.Pair;
-import org.controlsfx.control.ToggleSwitch;
 
 import javax.swing.*;
-import javax.swing.event.ListDataListener;
+import javax.swing.border.EmptyBorder;
+import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Collection;
-import java.util.Collections;
 
 public class CollectionEditor extends JFrame {
+
+    private static boolean CONTROL_PRESSED = false;
 
     private static CollectionEditor instance = null;
 
@@ -41,6 +40,7 @@ public class CollectionEditor extends JFrame {
         addTableHeader();
         addTabbedPane();
         addBottomToolbar();
+        registerKeyboardShortcuts();
         setVisible(true);
     }
 
@@ -119,32 +119,82 @@ public class CollectionEditor extends JFrame {
                 "Default song collection");
 
         if (Environment.getInstance().settings.IS_IT_EASTER_ALREADY) {
-            JComponent easterCollection = makeTextPanel("Panel 2");
-            tabPane.addTab("Easter Collection", null, easterCollection,
+            JComponent easterCollectionPanel = new CollectionPanel(EasterCollectionManager.getInstance());
+            tabPane.addTab("Easter Collection", null, easterCollectionPanel,
                     "Collection of easter eggs");
-
         }
 
-        /*tabPane.addChangeListener(e -> {
-            refreshStoredSelection();
-        });*/
+        tabPane.addChangeListener(e -> {
+            System.out.println("Tab switched: " + tabPane.getSelectedIndex());
+            //refreshStoredSelection();
+        });
 
         add(tabPane, BorderLayout.CENTER);
     }
 
     private void addBottomToolbar() {
-        JPanel bottomToolbar = new JPanel(new GridLayout(1,2));
+        JPanel bottomToolbar = new JPanel(new GridLayout(1, 6));
 
         JButton editSongRecordButton = new JButton("Edit Song Record");
         editSongRecordButton.addActionListener(e -> {
             actionDialog(ACTION_EDIT);
+        });
+
+        JButton editSongHTMLButton = new JButton("Edit Song HTML");
+        editSongHTMLButton.addActionListener(e -> {
+            refreshStoredSelection();
+
+            if (selectedSong == null) {
+                Environment.showMessage("Message", "Select a song first.");
+                return;
+            }
+            CodeEditor editor = new CodeEditor();
+            editor.setTitle(String.format("HTML editor - %s (id: %d)", selectedSong.name(), selectedSong.id()));
+            editor.setSong(selectedSong);
+            editor.setVisible(true);
+        });
+
+        JButton viewSongInBrowserButton = new JButton("View in Browser");
+        viewSongInBrowserButton.addActionListener(e -> {
+            if (selectedSong == null) {
+                Environment.showMessage("Message", "Select a song first.");
+                return;
+            }
+            //TODO
+        });
+        JButton previewSongPDFButton = new JButton("Preview PDF");
+        previewSongPDFButton.addActionListener(e -> {
+            if (selectedSong == null) {
+                Environment.showMessage("Message", "Select a song first.");
+                return;
+            }
+            //TODO
+        });
+        JButton deleteSongButton = new JButton("Delete Song");
+        deleteSongButton.addActionListener(e -> {
+            if (selectedSong == null) {
+                Environment.showMessage("Message", "Select a song first.");
+                return;
+            }
+            int result = JOptionPane.showConfirmDialog(null, "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
+            if (result == JOptionPane.OK_OPTION) {
+                selectedManager.removeSong(selectedSong);
+                forceRefreshList();
+                selectedSong = null;
+            }
         });
         JButton addNewSongButton = new JButton("Add New Song");
         addNewSongButton.addActionListener(e -> {
             actionDialog(ACTION_ADD);
         });
         bottomToolbar.add(editSongRecordButton);
+        bottomToolbar.add(editSongHTMLButton);
+        bottomToolbar.add(viewSongInBrowserButton);
+        bottomToolbar.add(previewSongPDFButton);
+        bottomToolbar.add(deleteSongButton);
         bottomToolbar.add(addNewSongButton);
+
+        bottomToolbar.setBorder(new EmptyBorder(0, -1, 0, -1));
 
         add(bottomToolbar, BorderLayout.PAGE_END);
     }
@@ -154,17 +204,33 @@ public class CollectionEditor extends JFrame {
         selectedSong = tabPanel.getSelectedSong();
         selectedManager = tabPanel.getCollectionManager();
         list = tabPanel.getList();
-        System.out.print(selectedManager.getClass().getName() + ": ");
-        System.out.println(new Gson().toJson(selectedSong));
+        System.out.println("Selected tab CollectionManager: " + selectedManager.getClass().getName());
     }
 
-    protected JComponent makeTextPanel(String text) {
-        JPanel panel = new JPanel(false);
-        JLabel filler = new JLabel(text);
-        filler.setHorizontalAlignment(JLabel.CENTER);
-        panel.setLayout(new GridLayout(1, 1));
-        panel.add(filler);
-        return panel;
+    private void registerKeyboardShortcuts() {
+        addKeyListener(new KeyListener() {
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+                    CONTROL_PRESSED = true;
+                } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    list.ensureIndexIsVisible(list.getSelectedIndex());
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+                    CONTROL_PRESSED = false;
+                }
+            }
+        });
     }
 
     public void actionDialog(int action) {
@@ -187,57 +253,74 @@ public class CollectionEditor extends JFrame {
         JCheckBox songActiveSwitch = new JCheckBox("Active");
         songActiveSwitch.setToolTipText("When disabled, the song will not be included in the songbook.");
 
+        NumberFormat longFormat = NumberFormat.getIntegerInstance();
 
+        NumberFormatter numberFormatter = new NumberFormatter(longFormat);
+        numberFormatter.setAllowsInvalid(false);
+        numberFormatter.setMinimum(0l);
+
+        JFormattedTextField songIdField = new JFormattedTextField(numberFormatter);
+        songIdField.setToolTipText("Identificator of the song. Do not confuse with collection index (n).");
 
         Object[] message;
         int option;
 
         switch (action) {
             case ACTION_EDIT:
-                UIManager.put("OptionPane.yesButtonText", "Save Changes");
-                UIManager.put("OptionPane.noButtonText", "Delete Song");
+                UIManager.put("OptionPane.okButtonText", "Save Changes");
                 UIManager.put("OptionPane.cancelButtonText", "Cancel");
 
                 songNameField.setText(selectedSong.name());
                 songURLField.setText(selectedSong.getUrl());
                 songActiveSwitch.setSelected(selectedSong.isActive());
+                if (selectedManager.equals(EasterCollectionManager.getInstance())) {
+                    songIdField.setText(String.valueOf(selectedSong.id()));
+                    message = new Object[]{
+                            "Name:", songNameField,
+                            "Id: ", songIdField,
+                            "URL:", songURLField,
+                            songActiveSwitch
+                    };
+                } else {
+                    message = new Object[]{
+                            "Name:", songNameField,
+                            "URL:", songURLField,
+                            songActiveSwitch
+                    };
+                }
 
-                message = new Object[]{
-                        "Name:", songNameField,
-                        "URL:", songURLField,
-                        songActiveSwitch
-                };
 
-                option = JOptionPane.showConfirmDialog(null, message, "Edit Song id: " + selectedSong.id(), JOptionPane.YES_NO_CANCEL_OPTION);
+                option = JOptionPane.showConfirmDialog(null, message, "Edit Song id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
 
                 UIManager.put("OptionPane.okButtonText", "Yes");
-                UIManager.put("OptionPane.noButtonText", "No");
                 UIManager.put("OptionPane.cancelButtonText", "Cancel");
 
-                if (option == JOptionPane.YES_OPTION) {
-                    Song song = new Song(songNameField.getText(), selectedSong.id());
+                if (option == JOptionPane.OK_OPTION) {
+                    Song song = null;
+                    if (selectedManager.equals(EasterCollectionManager.getInstance())) {
+                        if (songIdField.getText().equals("")) {
+                            Environment.showWarningMessage("Warning", "Invalid Id value!");
+                            return;
+                        }
+                        song = new Song(songNameField.getText(), Integer.parseInt(songIdField.getText()));
+                        if (selectedSong.id() != song.id()) {
+                            song.setFormerId(selectedSong.id());
+                        }
+                    } else {
+                        song = new Song(songNameField.getText(), selectedSong.id());
+                    }
+
                     song.setUrl(songURLField.getText());
                     song.setActive(songActiveSwitch.isSelected());
                     selectedManager.updateSongRecord(song);
                     forceRefreshList();
-                    list.setSelectedValue(song, true);
-
-
-
-                } else if (option == JOptionPane.NO_OPTION) {
-                    int result = JOptionPane.showConfirmDialog(null, "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
-                    if (result == JOptionPane.OK_OPTION) {
-                        //int listIndex = list.getSelect;
-                        //list.remove(listIndex);
-                        selectedManager.removeSong(selectedSong);
-                        forceRefreshList();
-
-
-                        selectedSong = null;
+                    int index = getSongIndexInSortedCollection(song);
+                    if (index != -1) {
+                        list.setSelectedValue(index, true);
                     }
 
-                }
 
+                }
 
                 break;
 
@@ -246,7 +329,7 @@ public class CollectionEditor extends JFrame {
                 UIManager.put("OptionPane.cancelButtonText", "Cancel");
 
                 JTextField songAuthorField = new JTextField();
-                Song placeholder = getPlaceholderSong();
+                Song placeholder = selectedManager.getPlaceholderSong();
 
                 songNameField.setText(placeholder.name());
                 songAuthorField.setText(placeholder.getAuthor());
@@ -256,24 +339,48 @@ public class CollectionEditor extends JFrame {
 
                 songAuthorField.setToolTipText("Author or interpret of the song. For example 'Leonard Cohen'.");
 
-                message = new Object[]{
-                        "Name:", songNameField,
-                        "Author:", songAuthorField,
-                        "URL:", songURLField,
-                        songActiveSwitch
-                };
+                if (selectedManager.equals(EasterCollectionManager.getInstance()) || (selectedManager.equals(StandardCollectionManager.getInstance()) && CONTROL_PRESSED)) {
+                    songIdField.setText(String.valueOf(placeholder.id()));
+                    message = new Object[]{
+                            "Name:", songNameField,
+                            "Author:", songAuthorField,
+                            "Id: ", songIdField,
+                            "URL:", songURLField,
+                            songActiveSwitch
+                    };
+                } else {
+                    message = new Object[]{
+                            "Name:", songNameField,
+                            "Author:", songAuthorField,
+                            "URL:", songURLField,
+                            songActiveSwitch
+                    };
+                }
 
                 option = JOptionPane.showConfirmDialog(null, message, "Add a Song", JOptionPane.OK_CANCEL_OPTION);
 
                 UIManager.put("OptionPane.okButtonText", "Ok");
                 UIManager.put("OptionPane.cancelButtonText", "Cancel");
-
+                //TODO: when browsing standard collection, holding CTRL and clicking 'Add New Song' creates an easter copy of the selected song
+                //TODO: Ctrl+R should forceRefreshList
                 if (option == JOptionPane.YES_OPTION) {
-                    Song song = new Song(songNameField.getText(), -1);
+                    Song song = null;
+                    if (selectedManager.equals(EasterCollectionManager.getInstance()) || (selectedManager.equals(StandardCollectionManager.getInstance()) && CONTROL_PRESSED)) {
+                        if (songIdField.getText().equals("")) {
+                            Environment.showWarningMessage("Warning", "Invalid Id value!");
+                            return;
+                        }
+                        song = new Song(songNameField.getText(), Integer.parseInt(songIdField.getText()));
+                    } else {
+                        song = new Song(songNameField.getText(), -1);
+                    }
                     song.setUrl(songURLField.getText());
                     song.setAuthor(songAuthorField.getText());
                     song.setActive(songActiveSwitch.isSelected());
                     song = selectedManager.addSong(song);
+                    if (song == null) {
+                        return;
+                    }
                     forceRefreshList();
                     list.setSelectedValue(song, true);
                 }
@@ -284,45 +391,22 @@ public class CollectionEditor extends JFrame {
         }
     }
 
+    private int getSongIndexInSortedCollection(Song s) {
+        ArrayList<Song> sortedCollection = selectedManager.getSortedCollection();
+        for (int i = 0; i < sortedCollection.size(); i++) {
+            if (sortedCollection.get(i).id() == s.id()) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     private void forceRefreshList() {
         DefaultListModel listModel = new DefaultListModel();
         for (Song song : selectedManager.getSortedCollection()) {
             listModel.addElement(song);
         }
         list.setModel(listModel);
-
-        //list.validate();
-        //list.updateUI();
-        //list.getModel();
-    }
-
-    private Song getPlaceholderSong() {
-        int min = 1;
-        int max = 21;
-        int random = (int)Math.random() * (max - min + 1) + min;
-        Song song;
-        switch (random) {
-            case 1 -> {
-                song = new Song("New Song", -1);
-                song.setUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
-                return song;
-            }
-            case 2 -> {
-                song = new Song("Večer křupavých srdíček", -1);
-                song.setAuthor("Vlasta Redl");
-                song.setUrl("https://www.youtube.com/watch?v=txLfhpEroYI");
-                return song;
-            }
-            case 3 -> {
-                song = new Song("Je reviendrai vers toi", -1);
-                song.setAuthor("Bryan Adams");
-                song.setUrl("https://www.youtube.com/watch?v=29TPk17Z4AA");
-                return song;
-            }
-        }
-
-        return new Song("New Song", -1);
-
     }
 
     private static class CollectionPanel extends JPanel {
@@ -335,6 +419,7 @@ public class CollectionEditor extends JFrame {
         private CollectionPanel() {
             throw new RuntimeException("Constructor not allowed!");
         }
+
         public CollectionPanel(CollectionManager manager) {
             super(new BorderLayout());
             setDoubleBuffered(false);
@@ -354,9 +439,7 @@ public class CollectionEditor extends JFrame {
                     return;
                 }
                 selectedSong = manager.getSortedCollection().get(list.getSelectedIndex());
-                System.out.println(String.format("List selection changed selectedIndex: %d songId: %d", list.getSelectedIndex(), selectedSong.id()));
             });
-
 
 
             add(new JScrollPane(list), BorderLayout.CENTER);

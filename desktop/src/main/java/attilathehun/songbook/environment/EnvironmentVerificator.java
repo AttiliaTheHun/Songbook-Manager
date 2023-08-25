@@ -15,24 +15,24 @@ public class EnvironmentVerificator {
 
     }
 
-    public EnvironmentVerificator(boolean automated) {
+    private EnvironmentVerificator(boolean automated) {
         this.automated = automated;
+
+        verifyResources();
+
+        verifyTemplates();
+
+        verifyCSS();
+
+        verifyScripts();
+
+        verifyTemp();
 
         verifyCollection();
 
         verifyData();
 
-        verifyResources();
-
-        verifyCSS();
-
-        verifyTemplates();
-
-        verifyScripts();
-
         verifyEaster();
-
-        verifyTemp();
 
     }
 
@@ -90,7 +90,7 @@ public class EnvironmentVerificator {
     public boolean verifyCSS() {
         if (!(new File(Environment.getInstance().settings.CSS_RESOURCES_FILE_PATH).exists() && new File(Environment.getInstance().settings.CSS_RESOURCES_FILE_PATH).isDirectory())) {
             verificationFail("No CSS resource folder found!");
-         if (automated) {
+            if (automated) {
                 verificationFail("No CSS resource folder found!");
             }
             return false;
@@ -121,7 +121,7 @@ public class EnvironmentVerificator {
     public void verifyTemp() {
         try {
 
-            if(!(new File(Environment.getInstance().settings.TEMP_FILE_PATH).exists() && new File(Environment.getInstance().settings.TEMP_FILE_PATH).isDirectory())) {
+            if (!(new File(Environment.getInstance().settings.TEMP_FILE_PATH).exists() && new File(Environment.getInstance().settings.TEMP_FILE_PATH).isDirectory())) {
                 new File(Environment.getInstance().settings.TEMP_FILE_PATH).mkdirs();
             } else {
                 if (new File(Environment.getInstance().settings.TEMP_TIMESTAMP_FILE_PATH).exists() && new File(Environment.getInstance().settings.TEMP_TIMESTAMP_FILE_PATH).length() != 0) {

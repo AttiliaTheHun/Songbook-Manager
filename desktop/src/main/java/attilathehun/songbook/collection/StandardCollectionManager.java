@@ -23,9 +23,7 @@ import org.jsoup.nodes.Element;
 
 import javax.swing.*;
 
-/**
- * This class manages the collection of the songs and any regarding operations.
- */
+
 public class StandardCollectionManager extends CollectionManager {
     private static final StandardCollectionManager instance = new StandardCollectionManager();
 
@@ -100,6 +98,7 @@ public class StandardCollectionManager extends CollectionManager {
         int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Create a songbook", "Do you want to create a new songbook? Alternatively, you can load an existing one from a local or remote zip file.", JOptionPane.YES_NO_CANCEL_OPTION);
 
         if (resultCode == JOptionPane.YES_OPTION) {
+            collection = new ArrayList<Song>();
             new EnvironmentManager().createNewSongbook();
         } else if (resultCode == JOptionPane.NO_OPTION) {
             new EnvironmentManager().loadSongbook();
@@ -141,19 +140,39 @@ public class StandardCollectionManager extends CollectionManager {
         return copy;
     }
 
-    /**
-     * Returns a collection that can be used for production purposes like browsing and printing.
-     *
-     * @return ArrayList of songs
-     */
     @Override
     public ArrayList<Song> getFormalCollection() {
         ArrayList<Song> formalList = new ArrayList<Song>();
-        formalList.add(new Song("frontpage", -1));
-        formalList.add(new Song("songlist1", -1));
-        formalList.add(new Song("songlist2", -1));
+        if (!Environment.getInstance().settings.DISABLE_FRONTPAGE) {
+            formalList.add(new Song("frontpage", -1));
+        }
+        if (!Environment.getInstance().settings.DISABLE_DYNAMIC_SONGLIST) {
+            formalList.add(new Song("songlist1", -1));
+            formalList.add(new Song("songlist2", -1));
+        }
+
         formalList.addAll(new ArrayList<Song>(getSortedCollection().stream().filter(Song::isActive).collect(Collectors.toList())));
+        if (formalList.size() % 2 != 0) {
+            createShadowSong();
+        }
         return formalList;
+    }
+
+    @Override
+    public ArrayList<Song> getDisplayCollection() {
+        ArrayList<Song> displayList = new ArrayList<Song>(new ArrayList<Song>(getSortedCollection().stream().filter(Song::isActive).collect(Collectors.toList())));
+        return displayList;
+    }
+    
+    public void createShadowSong() {
+        try {
+            new File(Environment.getInstance().settings.SONG_DATA_FILE_PATH + String.format("/%d.html", getNextId())).createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Environment.getInstance().logTimestamp();
+            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+        }
+        
     }
 
     @Override
@@ -165,13 +184,17 @@ public class StandardCollectionManager extends CollectionManager {
         collection.get(index).setActive(s.isActive());
 
         save();
-
+        Environment.getInstance().refresh();
+        SongbookApplication.dialControlPLusRPressed();
     }
 
-    //TODO: Do we want this at all? And if so, editing the record from CollectionEditor should update the HTML
+    //TODO: <strike>Do we want this at all? And if so, </strike>editing the record from CollectionEditor should update the HTML
     @Override
     public void updateSongRecordFromHTML(Song s) {
-        /*try {
+        if (!Environment.getInstance().settings.BIND_SONG_TITLES) {
+            return;
+        }
+        try {
             String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
             Document document = Jsoup.parse(songHTML);
             Element element = document.select(".song-title").first();
@@ -187,7 +210,7 @@ public class StandardCollectionManager extends CollectionManager {
             Environment.getInstance().logTimestamp();
             e.printStackTrace(Environment.getInstance().getLogPrintStream());
             Environment.showWarningMessage("Warning", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
-        }*/
+        }
     }
 
     private int getSongIndex(Song s) {
@@ -217,16 +240,19 @@ public class StandardCollectionManager extends CollectionManager {
     @Override
     public Song addSong(Song s) {
         Song song = s;
-        song.setId(getNewId());
+        song.setId(getNextId());
+
+        if (!new HTMLGenerator().generateSongFile(song)) {
+            return null;
+        }
         collection.add(song);
         save();
-        new HTMLGenerator().generateSongFile(song);
         CodeEditor editor = new CodeEditor();
         editor.setTitle(String.format("HTML editor - %s (id: %d)", song.name(), song.id()));
         editor.setSong(s);
         editor.setVisible(true);
         Environment.getInstance().refresh();
-        int index = 0;
+        /*int index = 0;
         boolean isPageOne = false;
         ArrayList<Song> formalCollection = getFormalCollection();
         for (int i = 0; i < formalCollection.size(); i++) {
@@ -236,7 +262,7 @@ public class StandardCollectionManager extends CollectionManager {
                 break;
             }
         }
-        /*if (isPageOne) {
+        if (isPageOne) {
             SongbookApplication.dialImaginarySongOneKeyPressed(song);
             SongbookApplication.dialImaginarySongTwoKeyPressed(formalCollection.get(index + 1));
         } else {
@@ -272,14 +298,44 @@ public class StandardCollectionManager extends CollectionManager {
         save();
     }
 
-    private int getNewId() {
+    private int getNextId() {
         int id = -1;
         for (Song song : collection) {
             if (song.id() > id) {
                 id = song.id();
             }
         }
+        System.out.println("Highest id found: " + id);
         return id + 1;
+    }
+
+    public Song getPlaceholderSong() {
+        int min = 0;
+        int max = 21;
+        int random = (int) (Math.random() * max + min);
+        Song song;
+        switch (random) {
+            case 1 -> {
+                song = new Song("New Song", -1);
+                song.setUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+                return song;
+            }
+            case 2 -> {
+                song = new Song("Večer křupavých srdíček", -1);
+                song.setAuthor("Vlasta Redl");
+                song.setUrl("https://www.youtube.com/watch?v=txLfhpEroYI");
+                return song;
+            }
+            case 3 -> {
+                song = new Song("Je reviendrai vers toi", -1);
+                song.setAuthor("Bryan Adams");
+                song.setUrl("https://www.youtube.com/watch?v=29TPk17Z4AA");
+                return song;
+            }
+        }
+
+        return new Song("New Song", -1);
+
     }
 
 }

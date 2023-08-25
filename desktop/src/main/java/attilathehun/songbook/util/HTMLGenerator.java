@@ -1,6 +1,7 @@
 package attilathehun.songbook.util;
 
 import attilathehun.songbook.collection.CollectionManager;
+import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 
 /**
  * This class is used to create HTML files from templates. The product HTML is then fed to the WebView or converted into a PDF.
- * */
+ */
 public class HTMLGenerator {
 
     private static final String SONGLIST_TEMPLATE_PATH = Paths.get(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/songlist.html").toString();
@@ -33,7 +34,7 @@ public class HTMLGenerator {
     private static final String SONG_NAME_REPLACE_MARK = "<replace \"songname\">";
     private static final String SONG_LIST_REPLACE_MARK = "<replace \"unorderedlist\">";
     private static final String FRONTPAGE_PICTURE_PATH_REPLACE_MARK = "<replace \"frontpagepic\">";
-    private static final String FRONTPAGE_PICTURE_PATH = Paths.get(Environment.getInstance().settings.ASSETS_RESOURCES_FILE_PATH  + "/frontpage.png").toString();
+    private static final String FRONTPAGE_PICTURE_PATH = Paths.get(Environment.getInstance().settings.ASSETS_RESOURCES_FILE_PATH + "/frontpage.png").toString();
     public static final String FRONTPAGE = "frontpage.html";
     private static final String SONGLIST_PART_ONE = "songlist_part_one.html";
     private static final String SONGLIST_PART_TWO = "songlist_part_two.html";
@@ -47,7 +48,7 @@ public class HTMLGenerator {
      * Frontpage
      */
 
-    private  boolean IS_IT_EASTER_ALREADY = false;
+    private boolean IS_IT_EASTER_ALREADY = false;
 
     public HTMLGenerator(boolean deluxe) {
         IS_IT_EASTER_ALREADY = deluxe;
@@ -69,7 +70,7 @@ public class HTMLGenerator {
         Path path = Paths.get(SONGLIST_TEMPLATE_PATH);
 
         String html = String.join("\n", Files.readAllLines(path));
-        ArrayList<Song> collection = Environment.getInstance().getCollectionManager().getSortedCollection();
+        ArrayList<Song> collection = Environment.getInstance().getCollectionManager().getDisplayCollection();
         StringBuilder payload = new StringBuilder("<div class=\"divvy\">\n");
         payload.append("<ul>\n");
         for (int i = 0; i < Math.floor(collection.size() / 4) * 2 + 2; i++) {
@@ -77,22 +78,22 @@ public class HTMLGenerator {
                 payload.append("</ul>\n");
                 payload.append("</div>\n");
                 payload.append("<div class=\"divvy\">\n");
-                payload.append( "<ul>\n");
+                payload.append("<ul>\n");
             }
 
-            payload.append( "<li>");
+            payload.append("<li>");
             if (collection.get(i).id() == 96) {
                 payload.append("<b><u>");
             }
             payload.append(collection.get(i).name());
             if (collection.get(i).id() == 96) {
-                payload.append( "</b></u>");
+                payload.append("</b></u>");
             }
 
-            payload.append( "</li>\n");
+            payload.append("</li>\n");
         }
         payload.append("</ul>\n");
-        payload.append( "</div>\n");
+        payload.append("</div>\n");
         html = html.replace(SONG_LIST_REPLACE_MARK, payload.toString());
         return html;
     }
@@ -118,7 +119,7 @@ public class HTMLGenerator {
         Path path = Paths.get(SONGLIST_TEMPLATE_PATH);
 
         String html = String.join("\n", Files.readAllLines(path));
-        ArrayList<Song> collection = Environment.getInstance().getCollectionManager().getSortedCollection();
+        ArrayList<Song> collection = Environment.getInstance().getCollectionManager().getDisplayCollection();
         StringBuilder payload = new StringBuilder("<div class=\"divvy\">\n");
         payload.append("<ul>\n");
         for (int i = Math.round(collection.size() / 4) * 2 + 2; i < collection.size(); i++) {
@@ -175,10 +176,10 @@ public class HTMLGenerator {
     private String generatePage(Song songOne, Song songTwo) throws IOException {
         String songOnePath = null, songTwoPath = null;
         if (songOne.id() != -1) {
-            songOnePath = Paths.get(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/"+ songOne.id() + ".html").toString();
+            songOnePath = Paths.get(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/" + songOne.id() + ".html").toString();
             //generateSongFile(songOne.id());
         } else {
-           songOnePath = switch (songOne.name()) {
+            songOnePath = switch (songOne.name()) {
                 case "frontpage" -> TEMP_FRONTPAGE_PATH;
                 case "songlist1" -> TEMP_SONGLIST_PART_ONE_PATH;
                 case "songlist2" -> TEMP_SONGLIST_PART_TWO_PATH;
@@ -187,7 +188,7 @@ public class HTMLGenerator {
         }
 
         if (songTwo.id() != -1) {
-            songTwoPath = Paths.get(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/"+ songTwo.id() + ".html").toString();
+            songTwoPath = Paths.get(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/" + songTwo.id() + ".html").toString();
             //generateSongFile(songTwo.id());
         } else {
             songTwoPath = switch (songTwo.name()) {
@@ -209,8 +210,8 @@ public class HTMLGenerator {
         }
 
         Path path = Paths.get(PAGEVIEW_TEMPLATE_PATH);
-       // System.out.println(songOnePath);
-       // System.out.println(songTwoPath);
+        // System.out.println(songOnePath);
+        // System.out.println(songTwoPath);
         String songOneHTML = String.join("\n", Files.readAllLines(Paths.get(songOnePath)));
         String songTwoHTML = String.join("\n", Files.readAllLines(Paths.get(songTwoPath)));
         String html = String.join("\n", Files.readAllLines(path));
@@ -235,17 +236,23 @@ public class HTMLGenerator {
         return TEMP_PAGEVIEW_PATH;
     }
 
-    public void generateSongFile(Song s) {
+    public boolean generateSongFile(Song s) {
         try {
-            File songFile = new File(String.format(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/%d.html", s.id()));
+            File songFile = null;
+            if (Environment.getInstance().getCollectionManager().equals(EasterCollectionManager.getInstance())) {
+                songFile = new File(String.format(EasterCollectionManager.EASTER_SONG_DATA_FILE_PATH + "/%d.html", s.id()));
+            } else {
+                songFile = new File(String.format(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/%d.html", s.id()));
+            }
+
             File songTemplate = new File(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/song.html");
             if (!songFile.createNewFile() && songFile.length() != 0) {
                 Environment.showWarningMessage("Data Loss Prevented", "File exists but is not empty: " + songFile);
-                return;
+                return false;
             }
             String songHTML = String.join("\n", Files.readAllLines(songTemplate.toPath()));
             songHTML = songHTML.replace(SONG_NAME_REPLACE_MARK, s.name());
-            songHTML = songHTML.replace(SONG_AUTHOR_REPLACE_MARK,s.getAuthor());
+            songHTML = songHTML.replace(SONG_AUTHOR_REPLACE_MARK, s.getAuthor());
 
             PrintWriter printWriter = new PrintWriter(new FileWriter((songFile), false));
             printWriter.write(songHTML);
@@ -255,7 +262,9 @@ public class HTMLGenerator {
             Environment.getInstance().logTimestamp();
             e.printStackTrace(Environment.getInstance().getLogPrintStream());
             Environment.showWarningMessage("HTML Generation Error", "Unable to generate a song file.");
+            return false;
         }
+        return true;
     }
 
     private String generateFrontpage() throws IOException {

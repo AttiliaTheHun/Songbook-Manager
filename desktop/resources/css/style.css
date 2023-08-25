@@ -90,7 +90,7 @@ a:hover {
 .song_title {
 	padding: 0;
 	margin-bottom: 0;
-	font-family: "Times New Roman", Times, serif;
+	font-family: "Roboto Mono", "Courier New", monospace;
 }
 
 .song-author {

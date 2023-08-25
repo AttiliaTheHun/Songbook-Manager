@@ -94,6 +94,7 @@ public class Client {
     }
 
     public static class Certificate {
-        private Certificate() {}
+        private Certificate() {
+        }
     }
 }

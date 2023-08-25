@@ -2,6 +2,7 @@ package attilathehun.songbook.environment;
 
 import attilathehun.songbook.util.Client;
 import attilathehun.songbook.SongbookApplication;
+import attilathehun.songbook.util.ZipGenerator;
 import javafx.util.Pair;
 
 import javax.swing.*;
@@ -39,12 +40,15 @@ public class EnvironmentManager {
                 Environment.showWarningMessage("Warning", "Could not file a local data zip file.");
                 return;
             }
-            unzipData();
+            if (!unzipData()) {
+                return;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             Environment.getInstance().logTimestamp();
             e.printStackTrace(Environment.getInstance().getLogPrintStream());
             Environment.showWarningMessage("Warning", "Could not load the data");
+            return;
         }
         Environment.showMessage("Success", "Data loaded successfully");
     }
@@ -66,22 +70,30 @@ public class EnvironmentManager {
                 client.downloadData(remoteApiEndpointURL.endsWith("/") ? remoteApiEndpointURL + "download/" : remoteApiEndpointURL + "/download/");
 
             } else if (!new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH).exists()) {
-                Environment.showWarningMessage("Warning", "Could not file a local data zip file.");
+                Environment.showWarningMessage("Warning", "Could not load a local data zip file.");
                 return;
             }
-            unzipData();
+            if (!unzipData()) {
+                return;
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             Environment.getInstance().logTimestamp();
             e.printStackTrace(Environment.getInstance().getLogPrintStream());
             Environment.showWarningMessage("Warning", "Could not load the data");
+            return;
         }
         Environment.showMessage("Success", "Data loaded successfully");
     }
 
     public void saveData() {
         try {
-            zipData();
+            logEditingUser();
+            if (!zipData()) {
+                return;
+            }
+
             if (Environment.getInstance().settings.REMOTE_SAVE_LOAD_ENABLED) {
                 File dataFile = new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
                 Client client = new Client();
@@ -105,100 +117,38 @@ public class EnvironmentManager {
             Environment.getInstance().logTimestamp();
             e.printStackTrace(Environment.getInstance().getLogPrintStream());
             Environment.showWarningMessage("Warning", "Could not save the data");
+            return;
         }
         Environment.showMessage("Success", "Data saved successfully");
     }
 
-    public void unzipData() {
-        extractZip(Environment.getInstance().settings.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.DATA_FILE_PATH);
-    }
-
-    public void extractZip(String sourceFile, String targetPath){
+    private boolean unzipData() {
         try {
-            File destDir = new File(targetPath);
-
-            byte[] buffer = new byte[1024];
-            ZipInputStream zis = new ZipInputStream(new FileInputStream(sourceFile));
-            ZipEntry zipEntry = zis.getNextEntry();
-            while (zipEntry != null) {
-                File newFile = newFile(destDir, zipEntry);
-                if (zipEntry.isDirectory()) {
-                    if (!newFile.isDirectory() && !newFile.mkdirs()) {
-                        throw new IOException("Failed to create directory " + newFile);
-                    }
-                } else {
-                    // fix for Windows-created archives
-                    File parent = newFile.getParentFile();
-                    if (!parent.isDirectory() && !parent.mkdirs()) {
-                        throw new IOException("Failed to create directory " + parent);
-                    }
-
-                    // write file content
-                    FileOutputStream fos = new FileOutputStream(newFile);
-                    int len;
-                    while ((len = zis.read(buffer)) > 0) {
-                        fos.write(buffer, 0, len);
-                    }
-                    fos.close();
-                }
-                zipEntry = zis.getNextEntry();
-            }
-
-            zis.closeEntry();
-            zis.close();
+            new ZipGenerator().extractZip(Environment.getInstance().settings.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.DATA_FILE_PATH);
         } catch (IOException e) {
             e.printStackTrace();
             Environment.getInstance().logTimestamp();
             e.printStackTrace(Environment.getInstance().getLogPrintStream());
-            Environment.showWarningMessage("Data problem", "Cannot decompress the data!");
+            Environment.showWarningMessage("Warning", "Could not unzip the data");
+            return false;
         }
+        return true;
     }
 
-    public void zipData() {
-        createZip(Environment.getInstance().settings.DATA_FILE_PATH, Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
-    }
 
-    public void createZip(String sourceFile, String targetPath) {
+    private boolean zipData() {
         try {
-            logEditingUser();
-            FileOutputStream fos = new FileOutputStream(targetPath);
-            ZipOutputStream zipOut = new ZipOutputStream(fos);
-
-            File fileToZip = new File(sourceFile);
-            FileInputStream fis = new FileInputStream(fileToZip);
-            ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
-            zipOut.putNextEntry(zipEntry);
-
-            byte[] bytes = new byte[1024];
-            int length;
-            while((length = fis.read(bytes)) >= 0) {
-                zipOut.write(bytes, 0, length);
-            }
-
-            zipOut.close();
-            fis.close();
-            fos.close();
+            new ZipGenerator(false).createZip(Environment.getInstance().settings.DATA_FILE_PATH, Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
         } catch (IOException e) {
             e.printStackTrace();
             Environment.getInstance().logTimestamp();
             e.printStackTrace(Environment.getInstance().getLogPrintStream());
-            Environment.showWarningMessage("Data problem", "Cannot compress the data!");
+            Environment.showWarningMessage("Warning", "Could not zip the data");
+            return false;
         }
-
+        return true;
     }
 
-    private static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
-        File destFile = new File(destinationDir, zipEntry.getName());
-
-        String destDirPath = destinationDir.getCanonicalPath();
-        String destFilePath = destFile.getCanonicalPath();
-
-        if (!destFilePath.startsWith(destDirPath + File.separator)) {
-            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());
-        }
-
-        return destFile;
-    }
 
     public String createSHAHash(String input) throws NoSuchAlgorithmException {
 
@@ -221,7 +171,7 @@ public class EnvironmentManager {
     }
 
     public void logEditingUser() throws IOException {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
         final String date = dtf.format(now);
         final String username = System.getProperty("user.name");
@@ -234,9 +184,11 @@ public class EnvironmentManager {
         try {
             File songDataFolder = new File(Environment.getInstance().settings.SONG_DATA_FILE_PATH);
             songDataFolder.mkdirs();
+            Environment.getInstance().getCollectionManager().createShadowSong();
+            Environment.getInstance().getCollectionManager().createShadowSong();
             File collectionJSONFile = new File(Environment.getInstance().settings.COLLECTION_FILE_PATH);
             collectionJSONFile.createNewFile();
-            PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile), false);
+            PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
             printWriter.write("[]");
             printWriter.close();
             //TODO: ask if the user wants to create a song right away
@@ -244,7 +196,7 @@ public class EnvironmentManager {
             e.printStackTrace();
             Environment.getInstance().logTimestamp();
             e.printStackTrace(Environment.getInstance().getLogPrintStream());
-            Environment.showWarningMessage("Warning","Could not create a new songbook!");
+            Environment.showWarningMessage("Warning", "Could not create a new songbook!");
         }
     }
 
@@ -281,12 +233,13 @@ public class EnvironmentManager {
 
         int option = JOptionPane.showConfirmDialog(null, message, "Load Remote Songbook", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
-           return new Pair<String, String>(remoteApiEndpointURL.getText(), token.getText());
+            return new Pair<String, String>(remoteApiEndpointURL.getText(), token.getText());
         }
         return new Pair<>(null, null);
     }
 
     public static class Certificate {
-        private Certificate() {}
+        private Certificate() {
+        }
     }
 }

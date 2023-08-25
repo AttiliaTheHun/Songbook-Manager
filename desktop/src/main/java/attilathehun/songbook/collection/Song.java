@@ -8,17 +8,29 @@ public class Song implements Serializable {
     private boolean active = true;
     private String url = "";
 
+    private transient int formerId = -1;
+
     private transient String author = "";
+
     public Song(String name, int id) {
         this.name = name;
         this.id = id;
     }
+
+    public Song(int id, String name, boolean active, String url) {
+        this.name = name;
+        this.id = id;
+        this.active = active;
+        this.url = url;
+    }
+
     public String getDisplayId() {
         if (id == -1) {
             return name;
         }
         return String.valueOf(id);
     }
+
     public String name() {
         return name;
     }
@@ -57,5 +69,13 @@ public class Song implements Serializable {
 
     public void setAuthor(String author) {
         this.author = author;
+    }
+
+    public int getFormerId() {
+        return formerId;
+    }
+
+    public void setFormerId(int formerId) {
+        this.formerId = formerId;
     }
 }

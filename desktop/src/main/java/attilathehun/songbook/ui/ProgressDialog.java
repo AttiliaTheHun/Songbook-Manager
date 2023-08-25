@@ -1,7 +1,10 @@
 package attilathehun.songbook.ui;
-/** (MODIFIED)
+/**
+ * (MODIFIED)
+ *
  * @source https://github.com/pteraforce/fx-libs/blob/master/src/com/pteraforce/fxdiags/ProgressDialog.java
  */
+
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Pos;
@@ -20,7 +23,7 @@ import javafx.scene.layout.Region;
  * @author AttiliaTheHun
  * @version 1.0.0
  */
-public class ProgressDialog extends Dialog<Boolean>{
+public class ProgressDialog extends Dialog<Boolean> {
     private final HBox hbox;
     private final Label label;
     private final ProgressBar progressBar;
@@ -38,7 +41,7 @@ public class ProgressDialog extends Dialog<Boolean>{
      * Creates a new progress dialog with the given progress.
      *
      * @param progress The progress to apply to the progress bar. Must be
-     * between 0 and 1.
+     *                 between 0 and 1.
      */
 
     public ProgressDialog(double progress) {
@@ -54,7 +57,7 @@ public class ProgressDialog extends Dialog<Boolean>{
         // progress bar
         progressBar = new ProgressBar(progress);
         progressBar.prefWidthProperty().bind(hbox.widthProperty().subtract(10));
-       // progressBar.progressProperty().bind(task.progressProperty());
+        // progressBar.progressProperty().bind(task.progressProperty());
 
         // label
         label = createContentLabel(dialogPane.getContentText());
@@ -65,7 +68,7 @@ public class ProgressDialog extends Dialog<Boolean>{
 
         setTitle("Working...");
         dialogPane.setHeaderText("Doing cool stuff in the background ;)");
-       // dialogPane.headerTextProperty().bind(task.messageProperty());
+        // dialogPane.headerTextProperty().bind(task.messageProperty());
         updateGrid();
 
         setResult(isFinished);
@@ -104,7 +107,7 @@ public class ProgressDialog extends Dialog<Boolean>{
      * from 0-1 and fills in the progress bar accordingly.
      *
      * @param progress The progress to apply to the progress bar. Must be
-     * between 0 and 1.
+     *                 between 0 and 1.
      */
     public void setProgress(double progress) {
         progressBar.setProgress(progress);

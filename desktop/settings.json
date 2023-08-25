@@ -6,7 +6,7 @@
   "RESOURCE_FILE_PATH": "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\resources",
   "CSS_RESOURCES_FILE_PATH": "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\resources\\css",
   "TEMPLATE_RESOURCES_FILE_PATH": "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\resources\\templates",
-  "DATA_ZIP_FILE_PATH": "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktopdata.zip",
+  "DATA_ZIP_FILE_PATH": "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\data.zip",
   "EDIT_LOG_FILE_PATH": "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\data\\last_modified_by.txt",
   "AUTO_LOAD_DATA": false,
   "REMOTE_SAVE_LOAD_ENABLED": false,
@@ -24,5 +24,8 @@
   "LOG_FILE_PATH": "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\log.txt",
   "AUTH_TYPE": "TOKEN",
   "LOG_ENABLED": true,
-  "SCRIPTS_FILE_PATH": "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\scripts"
+  "SCRIPTS_FILE_PATH": "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\scripts",
+  "DISABLE_FRONTPAGE": false,
+  "DISABLE_DYNAMIC_SONGLIST": false,
+  "BIND_SONG_TITLES": true
 }

@@ -4,5 +4,9 @@ desktop/temp/
 desktop/target/
 desktop/log.txt
 desktop/easter.exe
+desktop/pdf/
+desktop/*.zip
+desktop/out/
+desktop/settings.json
 #Web server
 web/tokens.json

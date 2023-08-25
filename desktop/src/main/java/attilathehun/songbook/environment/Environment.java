@@ -1,5 +1,6 @@
 package attilathehun.songbook.environment;
 
+import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.util.Client;
 import attilathehun.songbook.collection.CollectionManager;
 import com.google.gson.Gson;
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Objects;
 
 import static javax.swing.JOptionPane.showMessageDialog;
@@ -41,7 +43,8 @@ public final class Environment {
         public final String TEMP_FILE_PATH;
         public final String ASSETS_RESOURCES_FILE_PATH;
         public final String OUTPUT_FILE_PATH;
-        public final transient boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;;
+        public final transient boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
+        ;
         public final String DATA_FILE_PATH;
         public final String TEMP_TIMESTAMP_FILE_PATH;
         public final String REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL;
@@ -56,6 +59,9 @@ public final class Environment {
 
         public final boolean LOG_ENABLED;
         public final String SCRIPTS_FILE_PATH;
+        public final boolean DISABLE_FRONTPAGE;
+        public final boolean DISABLE_DYNAMIC_SONGLIST;
+        public final boolean BIND_SONG_TITLES;
 
 
         private Settings() {
@@ -67,7 +73,7 @@ public final class Environment {
             RESOURCE_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/resources/").toString();
             CSS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/css/").toString();
             TEMPLATE_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/templates/").toString();
-            DATA_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "data.zip").toString();
+            DATA_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/data.zip").toString();
             EDIT_LOG_FILE_PATH = Paths.get(DATA_FILE_PATH + "/last_modified_by.txt").toString();
             AUTO_LOAD_DATA = false;
             REMOTE_SAVE_LOAD_ENABLED = false;
@@ -85,6 +91,9 @@ public final class Environment {
             AUTH_TYPE = Environment.Settings.AuthType.TOKEN;
             LOG_ENABLED = true;
             SCRIPTS_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/scripts/").toString();
+            DISABLE_FRONTPAGE = false;
+            DISABLE_DYNAMIC_SONGLIST = false;
+            BIND_SONG_TITLES = true;
         }
 
         static Environment.Settings getSettings() {
@@ -93,7 +102,8 @@ public final class Environment {
 
                 String json = String.join("\n", Files.readAllLines(path));
 
-                Type targetClassType = new TypeToken<Environment.Settings>() { }.getType();
+                Type targetClassType = new TypeToken<Environment.Settings>() {
+                }.getType();
                 Environment.Settings settings = new Gson().fromJson(json, targetClassType);
                 return settings;
             } catch (NoSuchFileException nsf) {
@@ -118,7 +128,7 @@ public final class Environment {
                 writer.close();
             } catch (IOException e) {
                 showWarningMessage("Warning", "Can not export the settings!");
-                return  false;
+                return false;
             }
             return true;
         }
@@ -144,7 +154,7 @@ public final class Environment {
 
     private static final Environment instance = new Environment();
 
-    private FileOutputStream logOutputStream = null;
+    private PrintStream logOutputStream = null;
 
     private CollectionManager collectionManager;
 
@@ -154,31 +164,29 @@ public final class Environment {
         if (settings.LOG_ENABLED) {
             logOutputStream = openFileOutputStream(settings.LOG_FILE_PATH);
         }
+        refresh();
     }
 
     public static Environment getInstance() {
         return instance;
     }
 
-    public FileOutputStream openFileOutputStream(String path) {
+    private PrintStream openFileOutputStream(String path) {
         try {
             File file = new File(path);
             if (!file.exists()) {
                 file.createNewFile();
             }
-            return new FileOutputStream(file);
+            return new PrintStream(new FileOutputStream(file), true);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    private FileOutputStream getLogOutputStream() {
-        return logOutputStream;
-    }
 
     public PrintStream getLogPrintStream() {
-        return new PrintStream(logOutputStream);
+        return logOutputStream;
     }
 
     private void writeLogStream(String message) {
@@ -195,7 +203,7 @@ public final class Environment {
     }
 
     public void logTimestamp() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
         writeLogStream("[" + dtf.format(now) + "] ");
     }
@@ -208,7 +216,7 @@ public final class Environment {
         if (timestamp) {
             logTimestamp();
         }
-        writeLogStream(message);
+        writeLogStream(message + "\n");
     }
 
     public String acquireToken(Client.Certificate certificate) {
@@ -231,7 +239,6 @@ public final class Environment {
     }
 
 
-
     public static void showErrorMessage(String title, String message) {
         showMessageDialog(null, message, title,
                 JOptionPane.ERROR_MESSAGE);
@@ -249,14 +256,18 @@ public final class Environment {
     }
 
     public void refresh() {
-        for (File f : Objects.requireNonNull(new File(settings.TEMP_FILE_PATH).listFiles())) {
-            if (f.getName().equals("session_timestamp.txt")) {
-                continue;
+        try {
+            for (File f : new File(settings.TEMP_FILE_PATH).listFiles()) {
+                if (f.getName().equals("session_timestamp.txt")) {
+                    continue;
+                }
+                if (!f.delete()) {
+                    showErrorMessage("Refreshing error", "Can not clean the temp folder!");
+                }
             }
-            if (!f.delete()) {
-                showErrorMessage("Refreshing error", "Can not clean the temp folder!");
-            }
+        } catch (NullPointerException npe) {
         }
+
     }
 
     public static boolean fileExists(String path) {
@@ -266,6 +277,7 @@ public final class Environment {
     /**
      * Perform action(s) depending on the arguments. Handles command line arguments, but can be used on runtime as well.
      * Unrecognized commands are ignored
+     *
      * @param args series of commands
      * @return false when any error occurs
      */
@@ -317,4 +329,38 @@ public final class Environment {
     public void loadTokenToMemory(String token, EnvironmentManager.Certificate certificate) {
         tokenInMemory = token;
     }
+
+    public void exit() {
+        if (logOutputStream != null) {
+            logOutputStream.close();
+        }
+        System.exit(0);
+    }
+
+    public int getFormalCollectionSongIndex(Song s) {
+        if (s.id() < 0) {
+            throw new IllegalArgumentException();
+        }
+        ArrayList<Song> formalCollection = collectionManager.getFormalCollection();
+        for (int i = 0; i < formalCollection.size(); i++) {
+            if (formalCollection.get(i).equals(s)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int getFormalCollectionSongIndex(int id) {
+        if (id < 0) {
+            throw new IllegalArgumentException();
+        }
+        ArrayList<Song> formalCollection = collectionManager.getFormalCollection();
+        for (int i = 0; i < formalCollection.size(); i++) {
+            if (formalCollection.get(i).id() == id) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
 }

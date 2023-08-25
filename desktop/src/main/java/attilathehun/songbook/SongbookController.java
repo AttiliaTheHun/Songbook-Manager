@@ -24,15 +24,11 @@ import javafx.scene.control.MenuItem;
 import org.controlsfx.control.ToggleSwitch;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.KeyEvent;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-//import org.xhtmlrenderer.*;
-
-//import com.fifesoft.rsyntaxtextarea;
 
 public class SongbookController implements KeyEventListener {
 
@@ -66,6 +62,8 @@ public class SongbookController implements KeyEventListener {
     @FXML
     private Button previewButton;
     @FXML
+    private Button addSongButton;
+    @FXML
     private MenuButton exportButton;
     @FXML
     private ToggleSwitch easterSwitch;
@@ -81,15 +79,26 @@ public class SongbookController implements KeyEventListener {
     public void initialize() throws MalformedURLException {
         SongbookApplication.addListener(this);
 
+        initWebView();
+
+        initUIComponents();
+
+    }
+
+    private void initWebView() throws MalformedURLException {
         URL url = new File(generator.generatePageFile(Environment.getInstance().getCollectionManager().getFormalCollection().get(0), Environment.getInstance().getCollectionManager().getFormalCollection().get(1))).toURI().toURL();
         SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(0);
         SONG_ONE_INDEX = 0;
         SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(1);
         SONG_TWO_INDEX = 1;
         webview.getEngine().load(url.toExternalForm());
+
+    }
+
+    private void initUIComponents() {
+
         songOneIdField.setText(SONG_ONE.getDisplayId());
         songTwoIdField.setText(SONG_TWO.getDisplayId());
-
 
         editCollectionButton.setOnAction(event -> {
             CollectionEditor.openCollectionEditor();
@@ -125,15 +134,12 @@ public class SongbookController implements KeyEventListener {
                 id = Integer.parseInt(text);
                 if (id == -1)
                     break lol;
-                int index = 0;
-                for (Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
-                    if (song.id() == id) {
-                        SONG_ONE = song;
-                        SONG_ONE_INDEX = index;
-                        break;
-                    }
-                    index++;
+                int index = Environment.getInstance().getFormalCollectionSongIndex(id);
+                if (index != -1) {
+                    SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(index);
+                    SONG_ONE_INDEX = index;
                 }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -162,14 +168,10 @@ public class SongbookController implements KeyEventListener {
                 id = Integer.parseInt(text);
                 if (id == -1)
                     break lol;
-                int index = 0;
-                for (Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
-                    if (song.id() == id) {
-                        SONG_TWO = song;
-                        SONG_TWO_INDEX = index;
-                        break;
-                    }
-                    index++;
+                int index = Environment.getInstance().getFormalCollectionSongIndex(id);
+                if (index != -1) {
+                    SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(index);
+                    SONG_TWO_INDEX = index;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -269,6 +271,55 @@ public class SongbookController implements KeyEventListener {
             //TODO:
         });
 
+        initAddSongButton();
+
+
+    }
+
+    private void initAddSongButton() {
+        addSongButton.setOnAction(event -> {
+            UIManager.put("OptionPane.okButtonText", "Add");
+            UIManager.put("OptionPane.cancelButtonText", "Cancel");
+
+            JTextField songNameField = new JTextField();
+            songNameField.setToolTipText("Name of the song. For example 'I Will Always Return'.");
+            JTextField songURLField = new JTextField();
+            songURLField.setToolTipText("Link to a video performance of the song.");
+            JCheckBox songActiveSwitch = new JCheckBox("Active");
+            songActiveSwitch.setToolTipText("When disabled, the song will not be included in the songbook.");
+
+            JTextField songAuthorField = new JTextField();
+            Song placeholder = Environment.getInstance().getCollectionManager().getPlaceholderSong();
+
+            songNameField.setText(placeholder.name());
+            songAuthorField.setText(placeholder.getAuthor());
+            songURLField.setText(placeholder.getUrl());
+            songActiveSwitch.setSelected(true);
+
+
+            songAuthorField.setToolTipText("Author or interpret of the song. For example 'Leonard Cohen'.");
+
+            Object[] message = new Object[]{
+                    "Name:", songNameField,
+                    "Author:", songAuthorField,
+                    "URL:", songURLField,
+                    songActiveSwitch
+            };
+
+            int option = JOptionPane.showConfirmDialog(null, message, "Add a Song", JOptionPane.OK_CANCEL_OPTION);
+
+            UIManager.put("OptionPane.okButtonText", "Ok");
+            UIManager.put("OptionPane.cancelButtonText", "Cancel");
+
+            if (option == JOptionPane.YES_OPTION) {
+                Song song = new Song(songNameField.getText(), -1);
+                song.setUrl(songURLField.getText());
+                song.setAuthor(songAuthorField.getText());
+                song.setActive(songActiveSwitch.isSelected());
+                song = Environment.getInstance().getCollectionManager().addSong(song);
+                //TODO: Refresh CollectionEditor list if an instance exists
+            }
+        });
     }
 
 
@@ -285,7 +336,7 @@ public class SongbookController implements KeyEventListener {
     @Override
     public void onRightArrowPressed() {
 
-        if (SONG_TWO.name().equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(Environment.getInstance().getCollectionManager().getFormalCollection().size() - 1).name())  || SONG_TWO_INDEX - SONG_ONE_INDEX != 1) {
+        if (SONG_TWO.name().equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(Environment.getInstance().getCollectionManager().getFormalCollection().size() - 1).name()) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1) {
             return;
         } else {
             switchPage(true);
@@ -337,19 +388,19 @@ public class SongbookController implements KeyEventListener {
         }
     }
 
-    private void switchPage(boolean toTheRight){
-            if (toTheRight) {
-                SONG_ONE_INDEX += 2;
-                SONG_TWO_INDEX += 2;
-            } else {
-                SONG_ONE_INDEX -= 2;
-                SONG_TWO_INDEX -= 2;
-            }
-            SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_ONE_INDEX);
-            SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
-            refreshWebView();
-            songOneIdField.setText(SONG_ONE.getDisplayId());
-            songTwoIdField.setText(SONG_TWO.getDisplayId());
+    private void switchPage(boolean toTheRight) {
+        if (toTheRight) {
+            SONG_ONE_INDEX += 2;
+            SONG_TWO_INDEX += 2;
+        } else {
+            SONG_ONE_INDEX -= 2;
+            SONG_TWO_INDEX -= 2;
+        }
+        SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_ONE_INDEX);
+        SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
+        refreshWebView();
+        songOneIdField.setText(SONG_ONE.getDisplayId());
+        songTwoIdField.setText(SONG_TWO.getDisplayId());
 
     }
 
@@ -358,7 +409,7 @@ public class SongbookController implements KeyEventListener {
             SONG_ONE_INDEX = 0;
             SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_ONE_INDEX);
         }
-        if (SONG_TWO_INDEX < 0  || SONG_TWO_INDEX >= Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
+        if (SONG_TWO_INDEX < 0 || SONG_TWO_INDEX >= Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
             SONG_TWO_INDEX = 1;
             SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
         }
@@ -374,6 +425,14 @@ public class SongbookController implements KeyEventListener {
         } catch (MalformedURLException e) {
             Environment.showErrorMessage("WebView configuration error", "Error when refreshing webview!");
         }
+    }
+
+    public static Song getSongOne() {
+        return SONG_ONE;
+    }
+
+    public static Song getSongTwo() {
+        return SONG_TWO;
     }
 
 }
