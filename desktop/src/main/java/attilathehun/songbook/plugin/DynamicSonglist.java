@@ -2,28 +2,49 @@ package attilathehun.songbook.plugin;
 
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.util.HTMLGenerator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-public class DynamicSonglist {
+public class DynamicSonglist extends Plugin {
+
+    private static final Logger logger = LogManager.getLogger(DynamicSonglist.class);
 
     public static final int MAX_SONG_PER_COLUMN = 38;
     public static final int MAX_SONG_PER_PAGE = 2 * MAX_SONG_PER_COLUMN;
 
-    public DynamicSonglist() {
-        if (Environment.getInstance().settings.DISABLE_DYNAMIC_SONGLIST) {
-            throw new RuntimeException("Plugin is disabled");
-        }
+    private static final DynamicSonglist instance = new DynamicSonglist();
+
+    private String name = DynamicSonglist.class.getSimpleName();
+
+    private DynamicSonglist() {
+        super();
+        PluginManager.registerPlugin(this);
     }
 
-    public static boolean getEnabled() {
-        return !Environment.getInstance().settings.DISABLE_DYNAMIC_SONGLIST;
+    @Override
+    public String getName() {
+        return name;
     }
 
-    public int generateSonglist() {
-        boolean isLastPageSignleColumn = false;
+    @Override
+    public int execute() {
+        return generateSonglist();
+    }
+
+    public PluginSettings getSettings() {
+        return new Plugin.PluginSettings();
+    }
+
+    public static Plugin getInstance() {
+        return instance;
+    }
+
+    private int generateSonglist() {
+        boolean isLastPageSingleColumn = false;
         int songlistParts = Environment.getInstance().getCollectionManager().getDisplayCollection().size() / MAX_SONG_PER_PAGE;
         if (Environment.getInstance().getCollectionManager().getDisplayCollection().size() % MAX_SONG_PER_PAGE != 0) {
             songlistParts += 1;
-            isLastPageSignleColumn = Environment.getInstance().getCollectionManager().getDisplayCollection().size() % MAX_SONG_PER_PAGE <= MAX_SONG_PER_COLUMN;
+            isLastPageSingleColumn = Environment.getInstance().getCollectionManager().getDisplayCollection().size() % MAX_SONG_PER_PAGE <= MAX_SONG_PER_COLUMN;
         }
 
         HTMLGenerator generator = new HTMLGenerator();
@@ -38,9 +59,9 @@ public class DynamicSonglist {
         for (int i = 0; i < songlistParts; i++) {
             generator.generateSonglistSegmentFile(startIndex, endIndex, i);
             startIndex += MAX_SONG_PER_PAGE;
-            endIndex = (endIndex + MAX_SONG_PER_PAGE > Environment.getInstance().getCollectionManager().getDisplayCollection().size()) ? Environment.getInstance().getCollectionManager().getDisplayCollection().size() :
-                        endIndex + MAX_SONG_PER_PAGE;
+            endIndex = Math.min(endIndex + MAX_SONG_PER_PAGE, Environment.getInstance().getCollectionManager().getDisplayCollection().size());
         }
+        logger.info("Dynamic songlist generated");
         return songlistParts;
     }
 }

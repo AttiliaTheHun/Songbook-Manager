@@ -25,7 +25,13 @@
   "AUTH_TYPE": "TOKEN",
   "LOG_ENABLED": true,
   "SCRIPTS_FILE_PATH": "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\scripts",
-  "DISABLE_FRONTPAGE": false,
-  "DISABLE_DYNAMIC_SONGLIST": false,
-  "BIND_SONG_TITLES": true
+  "BIND_SONG_TITLES": true,
+  "plugins": {
+    "Frontpage": {
+      "enabled": true
+    },
+    "DynamicSonglist": {
+      "enabled": true
+    }
+  }
 }

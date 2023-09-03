@@ -1,6 +1,8 @@
 package attilathehun.songbook.util;
 
 import attilathehun.songbook.environment.Environment;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -10,6 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Client {
+
+    private static final Logger logger = LogManager.getLogger(Client.class);
 
     public void downloadData() {
         downloadData(Environment.getInstance().settings.REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL);
@@ -27,9 +31,7 @@ public class Client {
             //TODO: remove for production
             Environment.showMessage("Success", "Data downloaded successfully from the server.");
         } catch (Exception e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -42,9 +44,7 @@ public class Client {
             postFile(remoteDataZipFileUploadURL, Environment.getInstance().acquireToken(new Certificate()));
             Environment.showMessage("Success", "Data uploaded successfully to the server.");
         } catch (Exception e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
         }
 
     }
@@ -68,7 +68,7 @@ public class Client {
             outputStream.close();
             conn.disconnect();
         } else {
-            Environment.getInstance().log("Error uploading data: Response code " + conn.getResponseCode());
+            //Environment.getInstance().log("Error uploading data: Response code " + conn.getResponseCode());
             Environment.showMessage("Could not upload the data", "HTTP response code: " + conn.getResponseCode());
         }
 

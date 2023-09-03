@@ -17,10 +17,15 @@ import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.*;
 import org.fife.ui.rsyntaxtextarea.*;
 
 public class CodeEditor extends JFrame {
+
+    private static final Logger logger = LogManager.getLogger(CodeEditor.class);
+
     private static int instances = 0;
 
     private static boolean isApplicationClosed = false;
@@ -176,9 +181,7 @@ public class CodeEditor extends JFrame {
                 textArea.setRows(lines.size());
                 textArea.setText(String.join("\n", lines));
             } catch (IOException e) {
-                e.printStackTrace();
-                Environment.getInstance().logTimestamp();
-                e.printStackTrace(Environment.getInstance().getLogPrintStream());
+                logger.error(e.getMessage(), e);
                 Environment.showWarningMessage("Warning", "Can not open song data file");
             }
 
@@ -195,10 +198,8 @@ public class CodeEditor extends JFrame {
             Environment.getInstance().getCollectionManager().updateSongRecordFromHTML(song);
             Environment.getInstance().refresh();
             SongbookApplication.dialControlPLusRPressed();
-        } catch (IOException exp) {
-            exp.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            exp.printStackTrace(Environment.getInstance().getLogPrintStream());
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Warning", "Can not save the changes! You can save them manually to the path " + filePath + "from your clipboard");
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(textArea.getText()), new StringSelection(textArea.getText()));
         }

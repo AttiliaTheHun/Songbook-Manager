@@ -2,20 +2,34 @@ package attilathehun.songbook.plugin;
 
 import attilathehun.songbook.environment.Environment;
 
-public class Frontpage {
+public class Frontpage extends Plugin {
 
-    public Frontpage() {
-        if (Environment.getInstance().settings.DISABLE_FRONTPAGE) {
-            throw new RuntimeException("Plugin is disabled");
-        }
+    private static final Frontpage instance = new Frontpage();
+
+    private String name = Frontpage.class.getSimpleName();
+
+    private Frontpage() {
+        super();
+        PluginManager.registerPlugin(this);
     }
 
-    public static boolean getEnabled() {
-        return !Environment.getInstance().settings.DISABLE_FRONTPAGE;
+    @Override
+    public String getName() {
+        return name;
     }
 
-    public void generateSonglist() {
 
+    @Override
+    public int execute() {
+        return 0;
+    }
+
+    public PluginSettings getSettings() {
+        return new Plugin.PluginSettings();
+    }
+
+    public static Plugin getInstance() {
+        return instance;
     }
 }
 

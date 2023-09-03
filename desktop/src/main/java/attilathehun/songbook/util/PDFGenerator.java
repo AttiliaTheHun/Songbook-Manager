@@ -4,6 +4,8 @@ import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.ui.ProgressDialog;
 import javafx.concurrent.Task;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 
@@ -16,6 +18,8 @@ import java.util.ArrayList;
  * HTML into a PDF file.
  */
 public class PDFGenerator {
+
+    private static final Logger logger = LogManager.getLogger(PDFGenerator.class);
 
     private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.OUTPUT_FILE_PATH + "/DefaultExport.pdf").toString();
     private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.OUTPUT_FILE_PATH + "/SinglepageExport.pdf").toString();
@@ -30,9 +34,7 @@ public class PDFGenerator {
         try {
             new File(Environment.getInstance().settings.OUTPUT_FILE_PATH).mkdirs();
         } catch (Exception e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showErrorMessage("PDF Generation Error", "Cannot initialize the output folder!");
         }
 
@@ -93,9 +95,7 @@ public class PDFGenerator {
                     //dialog.hide();
                     //Environment.showMessage("PDF generation finished", "You can view the newly generated file in this location: " + DEFAULT_PDF_OUTPUT_PATH);
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    Environment.getInstance().logTimestamp();
-                    e.printStackTrace(Environment.getInstance().getLogPrintStream());
+                    logger.error(e.getMessage(), e);
                     Environment.showErrorMessage("PDF Generation Failed", e.getMessage());
                 }
                 return Void.TYPE.cast(null);
@@ -121,7 +121,7 @@ public class PDFGenerator {
             Thread.sleep(200);
             dialog.hide();
         } catch (Exception e) {
-
+            logger.error(e.getMessage(), e);
         }
 
         Environment.showMessage("PDF generation finished", "You can view the newly generated file in this location: " + DEFAULT_PDF_OUTPUT_PATH);

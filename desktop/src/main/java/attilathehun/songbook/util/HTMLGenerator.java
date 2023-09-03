@@ -5,6 +5,9 @@ import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.plugin.DynamicSonglist;
+import attilathehun.songbook.plugin.PluginManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.*;
@@ -14,6 +17,8 @@ import java.util.ArrayList;
  * This class is used to create HTML files from templates. The product HTML is then fed to the WebView or converted into a PDF.
  */
 public class HTMLGenerator {
+
+    private static final Logger logger = LogManager.getLogger(HTMLGenerator.class);
 
     private static final String SONGLIST_TEMPLATE_PATH = Paths.get(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/songlist.html").toString();
     private static final String HEAD_TEMPLATE_PATH = Paths.get(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/head.html").toString();
@@ -38,13 +43,15 @@ public class HTMLGenerator {
     private static final String PAGEVIEW = "current_page.html";
     private static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/segment").toString();
 
+    private static final String SHADOW_SONG_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/shadow_song.html").toString();
+
     public HTMLGenerator() {
         try {
             Files.copy(Paths.get(BASE_STYLE_FILE_PATH), Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/style.css"), StandardCopyOption.REPLACE_EXISTING);
+            File shadowSongFile = new File(SHADOW_SONG_PATH);
+            shadowSongFile.createNewFile();
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Error", "Can not instantiate the HTML generator");
         }
     }
@@ -64,9 +71,7 @@ public class HTMLGenerator {
             printWriter.write(generateSonglistSegment(startIndex, endIndex, segmentNumber));
             printWriter.close();
         } catch (Exception e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showErrorMessage("HTML Generation Error", "Unable to generate the songlist.");
         }
 
@@ -80,7 +85,7 @@ public class HTMLGenerator {
         StringBuilder payload = new StringBuilder();
         int columns = (endIndex - startIndex > DynamicSonglist.MAX_SONG_PER_COLUMN) ? 2 : 1;
         int columnStartIndex = startIndex;
-        int columnEndIndex = (startIndex + DynamicSonglist.MAX_SONG_PER_COLUMN > endIndex) ? endIndex : startIndex + DynamicSonglist.MAX_SONG_PER_COLUMN;
+        int columnEndIndex = Math.min(startIndex + DynamicSonglist.MAX_SONG_PER_COLUMN, endIndex);
         for (int j = 1; j < columns + 1; j++) {
 
             payload.append("<div class=\"divvy\">\n");
@@ -103,7 +108,7 @@ public class HTMLGenerator {
             payload.append("</div>\n");
 
             columnStartIndex = columnEndIndex;
-            columnEndIndex = (columnEndIndex + DynamicSonglist.MAX_SONG_PER_COLUMN > endIndex) ? endIndex : columnEndIndex + DynamicSonglist.MAX_SONG_PER_COLUMN;
+            columnEndIndex = Math.min(columnEndIndex + DynamicSonglist.MAX_SONG_PER_COLUMN, endIndex);
         }
 
         html = html.replace(SONG_LIST_REPLACE_MARK, payload.toString());
@@ -118,10 +123,10 @@ public class HTMLGenerator {
     }
 
     private String generatePage(Song songOne, Song songTwo) throws IOException {
-        String songOnePath = null, songTwoPath = null;
+        String songOnePath = null;
+        String songTwoPath = null;
         if (songOne.id() != -1) {
-            songOnePath = Paths.get(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/" + songOne.id() + ".html").toString();
-            //generateSongFile(songOne.id());
+            songOnePath = Environment.getInstance().getCollectionManager().getSongFilePath(songOne.id());
         } else {
                 if (songOne.name().equals("frontpage")) {
                     songOnePath = TEMP_FRONTPAGE_PATH;
@@ -132,14 +137,15 @@ public class HTMLGenerator {
         }
 
         if (songTwo.id() != -1) {
-            songTwoPath = Paths.get(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/" + songTwo.id() + ".html").toString();
-            //generateSongFile(songTwo.id());
+            songTwoPath = Environment.getInstance().getCollectionManager().getSongFilePath(songTwo.id());
         } else {
             if (songTwo.name().equals("frontpage")) {
                 songTwoPath = TEMP_FRONTPAGE_PATH;
             } else if (songTwo.name().startsWith("songlist")) {
                 int songlistPartNumber = Integer.parseInt(songTwo.name().substring("songlist".length()));
                 songTwoPath = String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber);
+            } else if (songTwo.name().equals(CollectionManager.SHADOW_SONG_NAME)) {
+                songTwoPath = SHADOW_SONG_PATH;
             }
         }
 
@@ -149,14 +155,14 @@ public class HTMLGenerator {
         if (songOne.name().startsWith("songlist")) {
             int songlistPartNumber = Integer.parseInt(songOne.name().substring("songlist".length()));
             if (!new File(String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber)).exists()) {
-                new DynamicSonglist().generateSonglist();
+                PluginManager.getInstance().getPlugin(DynamicSonglist.class.getName()).execute();
             }
         }
 
         if (songTwo.name().startsWith("songlist")) {
             int songlistPartNumber = Integer.parseInt(songTwo.name().substring("songlist".length()));
             if (!new File(String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber)).exists()) {
-                new DynamicSonglist().generateSonglist();
+                PluginManager.getInstance().getPlugin(DynamicSonglist.class.getName()).execute();
             }
         }
 
@@ -179,9 +185,7 @@ public class HTMLGenerator {
             printWriter.write(generatePage(songOne, songTwo));
             printWriter.close();
         } catch (Exception e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showErrorMessage("HTML Generation Error", "Unable to generate current page file.");
         }
         return TEMP_PAGEVIEW_PATH;
@@ -209,9 +213,7 @@ public class HTMLGenerator {
             printWriter.write(songHTML);
             printWriter.close();
         } catch (Exception e) {
-            e.printStackTrace(System.out);
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("HTML Generation Error", "Unable to generate a song file.");
             return false;
         }
@@ -237,9 +239,7 @@ public class HTMLGenerator {
             printWriter.write(generateFrontpage());
             printWriter.close();
         } catch (Exception e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showErrorMessage("HTML Generation Error", "Unable to generate the frontpage file.");
         }
     }
@@ -252,9 +252,7 @@ public class HTMLGenerator {
             printWriter.write(generatePage(songOne, songTwo));
             printWriter.close();
         } catch (Exception e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showErrorMessage("HTML Generation Error", "Unable to generate current segment file.");
         }
         return path;

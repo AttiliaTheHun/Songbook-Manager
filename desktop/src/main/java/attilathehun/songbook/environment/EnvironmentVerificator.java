@@ -1,5 +1,8 @@
 package attilathehun.songbook.environment;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -9,6 +12,9 @@ import java.util.Objects;
  * Upon loading this class performs a verification of the environment, eventually notifying the user what is wrong.
  */
 public class EnvironmentVerificator {
+
+    private static final Logger logger = LogManager.getLogger(EnvironmentVerificator.class);
+
     private boolean automated = false;
 
     public EnvironmentVerificator() {
@@ -38,6 +44,7 @@ public class EnvironmentVerificator {
 
     public static void automated() {
         new EnvironmentVerificator(true);
+        logger.info("Automated environment verification successful");
     }
 
     private static void verificationFail(String message) {
@@ -138,9 +145,7 @@ public class EnvironmentVerificator {
 
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             verificationFail("Could not initialize temp folder!");
         }
     }

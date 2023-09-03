@@ -1,5 +1,8 @@
 package attilathehun.songbook.util;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.zip.*;
 import java.io.*;
 
@@ -12,6 +15,8 @@ import java.io.*;
  * @author AttilaTheHun
  */
 public class ZipGenerator {
+
+    private static final Logger logger = LogManager.getLogger(ZipGenerator.class);
 
     private static final int BUFFER_SIZE = 4096;
 

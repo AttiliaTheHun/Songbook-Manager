@@ -69,6 +69,31 @@
             <artifactId>controlsfx</artifactId>
             <version>11.1.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>2.15.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.15.2</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -95,7 +120,8 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>package</phase>
+                        <!-- <phase>package</phase> -->
+                        <phase>none</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
@@ -143,6 +169,7 @@
                                 <copyright>Open sourced.</copyright>
                                 <companyName>AttilaTheHun</companyName>
                             </versionInfo>
+                            <skip>true</skip>
                         </configuration>
                     </execution>
                 </executions>

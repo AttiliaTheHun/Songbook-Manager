@@ -14,10 +14,15 @@ import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.plugin.DynamicSonglist;
+import attilathehun.songbook.plugin.Frontpage;
+import attilathehun.songbook.plugin.Plugin;
+import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.ui.CodeEditor;
 import attilathehun.songbook.util.HTMLGenerator;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -26,6 +31,8 @@ import javax.swing.*;
 
 
 public class StandardCollectionManager extends CollectionManager {
+
+    private static final Logger logger = LogManager.getLogger(StandardCollectionManager.class);
     private static final StandardCollectionManager instance = new StandardCollectionManager();
 
     private ArrayList<Song> collection;
@@ -58,12 +65,11 @@ public class StandardCollectionManager extends CollectionManager {
             }.getType();
             collection = new Gson().fromJson(json, targetClassType);
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Collection Initialisation error", "Can not load the song collection!");
             //TODO: Wiki Troubleshooting: should be fixed by deleting collection.json and then Repairing (add guide with screenshots)
         }
+        logger.info("StandardCollectionManager initialised");
     }
 
     private void repairSongbookDialog() {
@@ -123,7 +129,6 @@ public class StandardCollectionManager extends CollectionManager {
         return getSongFilePath(s.id());
     }
 
-    ;
 
     @Override
     public Collection<Song> getCollection() {
@@ -144,20 +149,18 @@ public class StandardCollectionManager extends CollectionManager {
     @Override
     public ArrayList<Song> getFormalCollection() {
         ArrayList<Song> formalList = new ArrayList<Song>();
-        if (!Environment.getInstance().settings.DISABLE_FRONTPAGE) {
+        logger.info("PluginManager settings: " +  new Gson().toJson(PluginManager.getInstance().getSettings()));
+        if (PluginManager.getInstance().getSettings().getEnabled(Frontpage.class.getSimpleName())) {
             formalList.add(new Song("frontpage", -1));
         }
-        if (!Environment.getInstance().settings.DISABLE_DYNAMIC_SONGLIST) {
-            for (int i = 0; i < new DynamicSonglist().generateSonglist(); i++) {
+        if (PluginManager.getInstance().getSettings().getEnabled(DynamicSonglist.class.getSimpleName())) {
+            for (int i = 0; i < PluginManager.getInstance().getPlugin(DynamicSonglist.class.getSimpleName()).execute(); i++) {
                 formalList.add(new Song("songlist" + i, -1));
             }
 
         }
 
         formalList.addAll(new ArrayList<Song>(getSortedCollection().stream().filter(Song::isActive).collect(Collectors.toList())));
-        if (formalList.size() % 2 != 0) {
-            createShadowSong();
-        }
         return formalList;
     }
 
@@ -165,17 +168,6 @@ public class StandardCollectionManager extends CollectionManager {
     public ArrayList<Song> getDisplayCollection() {
         ArrayList<Song> displayList = new ArrayList<Song>(new ArrayList<Song>(getSortedCollection().stream().filter(Song::isActive).collect(Collectors.toList())));
         return displayList;
-    }
-    
-    public void createShadowSong() {
-        try {
-            new File(Environment.getInstance().settings.SONG_DATA_FILE_PATH + String.format("/%d.html", getNextId())).createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
-        }
-        
     }
 
     @Override
@@ -210,9 +202,7 @@ public class StandardCollectionManager extends CollectionManager {
             }
             save();
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Warning", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
         }
     }
@@ -234,9 +224,7 @@ public class StandardCollectionManager extends CollectionManager {
             gson.toJson(collection, writer);
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Error", "Can not save the song collection!");
         }
     }

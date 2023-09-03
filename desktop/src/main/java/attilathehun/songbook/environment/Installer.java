@@ -1,6 +1,8 @@
 package attilathehun.songbook.environment;
 
 import attilathehun.songbook.util.ZipGenerator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +12,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Installer {
+
+    private static final Logger logger = LogManager.getLogger(Installer.class);
+
     private static boolean IS_TEMP_RESOURCES_ZIP_FILE = false;
 
     private static boolean IS_TEMP_SCRIPTS_ZIP_FILE = false;
@@ -21,6 +26,7 @@ public class Installer {
     private static final String SCRIPTS_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/scripts.zip").toString();
 
     public static void runDiagnostics() {
+        logger.info("Running installer diagnostics...");
         Installer installer = new Installer();
         EnvironmentVerificator verificator = new EnvironmentVerificator();
         if (!verificator.verifyResources()) {
@@ -29,9 +35,11 @@ public class Installer {
         if (!verificator.verifyScripts()) {
             installer.installScripts();
         }
+        logger.info("Installer diagnostics finished");
     }
 
     private void installResources() {
+        logger.info("Installing resources....");
         try {
             if (!new File(RESOURCES_ZIP_FILE_PATH).exists()) {
                 if (REMOTE_RESOURCES_ZIP_FILE.equals("")) {
@@ -42,15 +50,15 @@ public class Installer {
             }
             new ZipGenerator().extractZip(RESOURCES_ZIP_FILE_PATH, Environment.getInstance().settings.RESOURCE_FILE_PATH);
             new File(RESOURCES_ZIP_FILE_PATH).delete();
+            logger.info("Finished installing resources");
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Installation Error", "Cannot install resources!");
         }
     }
 
     private void installScripts() {
+        logger.info("Installing scripts....");
         try {
             if (!new File(SCRIPTS_ZIP_FILE_PATH).exists()) {
                 if (REMOTE_SCRIPTS_ZIP_FILE.equals("")) {
@@ -61,10 +69,9 @@ public class Installer {
                 downloadRemoteFile(REMOTE_SCRIPTS_ZIP_FILE, "scripts.zip");
             }
             new ZipGenerator().extractZip(SCRIPTS_ZIP_FILE_PATH, Environment.getInstance().settings.SCRIPTS_FILE_PATH);
+            logger.info("Finished installing scripts");
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Installation Error", "Cannot install scripts!");
         }
     }

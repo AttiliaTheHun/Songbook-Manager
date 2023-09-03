@@ -327,7 +327,7 @@
     "id": 55,
     "name": "Jasná zpráva",
     "active": true,
-    "url": ""
+    "url": "https://www.youtube.com/watch?v\u003dFH_10PaW2Lg"
   },
   {
     "id": 56,
@@ -338,7 +338,7 @@
   {
     "id": 57,
     "name": "Jdou po mně jdou",
-    "active": true,
+    "active": false,
     "url": ""
   },
   {

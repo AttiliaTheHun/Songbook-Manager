@@ -2,6 +2,7 @@ package attilathehun.songbook.environment;
 
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.util.Client;
 import attilathehun.songbook.collection.CollectionManager;
 import com.google.gson.Gson;
@@ -19,7 +20,9 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Objects;
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import static javax.swing.JOptionPane.showMessageDialog;
 
@@ -27,9 +30,12 @@ public final class Environment {
 
     public static class Settings implements Serializable {
 
+        private static final Logger logger = LogManager.getLogger(Settings.class);
+
         public static final String SETTINGS_FILE_PATH = "settings.json";
         public static final String EASTER_EXE_FILE_PATH = "easter.exe";
         public static final long SESSION_TIMESTAMP = System.currentTimeMillis();
+        public final transient boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
         public final String COLLECTION_FILE_PATH;
         public final String EASTER_COLLECTION_FILE_PATH;
         public final String SONG_DATA_FILE_PATH;
@@ -39,30 +45,25 @@ public final class Environment {
         public final String TEMPLATE_RESOURCES_FILE_PATH;
         public final String DATA_ZIP_FILE_PATH;
         public final String EDIT_LOG_FILE_PATH;
-        public final boolean AUTO_LOAD_DATA;
-        public final boolean REMOTE_SAVE_LOAD_ENABLED;
         public final String TEMP_FILE_PATH;
         public final String ASSETS_RESOURCES_FILE_PATH;
         public final String OUTPUT_FILE_PATH;
-        public final transient boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
-        ;
         public final String DATA_FILE_PATH;
         public final String TEMP_TIMESTAMP_FILE_PATH;
+        private final String AUTH_FILE_PATH;
+        public final String LOG_FILE_PATH;
+        public final String SCRIPTS_FILE_PATH;
+        public final boolean REMOTE_SAVE_LOAD_ENABLED;
         public final String REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL;
         public final String REMOTE_DATA_ZIP_FILE_UPLOAD_URL;
         public final String REMOTE_DATA_FILE_HASH_URL;
         public final String REMOTE_DATA_FILE_LAST_EDITED_URL;
-        private final String DEFAULT_READ_TOKEN;
-        private String AUTH_FILE_PATH;
-        public final String LOG_FILE_PATH;
-
-        public final Environment.Settings.AuthType AUTH_TYPE;
-
+        public final boolean AUTO_LOAD_DATA;
         public final boolean LOG_ENABLED;
-        public final String SCRIPTS_FILE_PATH;
-        public final boolean DISABLE_FRONTPAGE;
-        public final boolean DISABLE_DYNAMIC_SONGLIST;
         public final boolean BIND_SONG_TITLES;
+        public final Environment.Settings.AuthType AUTH_TYPE;
+        private final String DEFAULT_READ_TOKEN;
+        public final PluginManager.Settings plugins;
 
 
         private Settings() {
@@ -92,9 +93,10 @@ public final class Environment {
             AUTH_TYPE = Environment.Settings.AuthType.TOKEN;
             LOG_ENABLED = true;
             SCRIPTS_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/scripts/").toString();
-            DISABLE_FRONTPAGE = false;
-            DISABLE_DYNAMIC_SONGLIST = false;
+            //DISABLE_FRONTPAGE = false;
+            //DISABLE_DYNAMIC_SONGLIST = false;
             BIND_SONG_TITLES = true;
+            plugins = PluginManager.getInstance().getSettings();
         }
 
         static Environment.Settings getSettings() {
@@ -106,12 +108,13 @@ public final class Environment {
                 Type targetClassType = new TypeToken<Environment.Settings>() {
                 }.getType();
                 Environment.Settings settings = new Gson().fromJson(json, targetClassType);
+                PluginManager.getInstance().setSettings(settings.plugins);
+                logger.info("Loaded local environment settings");
                 return settings;
             } catch (NoSuchFileException nsf) {
 
             } catch (Exception e) {
-                e.printStackTrace();
-
+                logger.error(e.getMessage(), e);
             }
             Environment.Settings settings = new Environment.Settings();
             if (!Environment.fileExists(SETTINGS_FILE_PATH)) {
@@ -124,10 +127,11 @@ public final class Environment {
         public static boolean save(Settings settings) {
             try {
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                FileWriter writer = new FileWriter(SETTINGS_FILE_PATH);
+                FileWriter writer = new FileWriter(SETTINGS_FILE_PATH, false);
                 gson.toJson(settings, writer);
                 writer.close();
             } catch (IOException e) {
+                logger.error(e.getMessage(), e);
                 showWarningMessage("Warning", "Can not export the settings!");
                 return false;
             }
@@ -151,73 +155,24 @@ public final class Environment {
 
     }
 
+    private static final Logger logger = LogManager.getLogger(Environment.class);
+
     public final Environment.Settings settings = Environment.Settings.getSettings();
 
     private static final Environment instance = new Environment();
-
-    private PrintStream logOutputStream = null;
 
     private CollectionManager collectionManager;
 
     private String tokenInMemory = null;
 
     private Environment() {
-        if (settings.LOG_ENABLED) {
-            logOutputStream = openFileOutputStream(settings.LOG_FILE_PATH);
-        }
+        //System.setProperty("log4j.configurationFile", settings.LOG_FILE_PATH);
         refresh();
+        logger.info("Environment instantiated");
     }
 
     public static Environment getInstance() {
         return instance;
-    }
-
-    private PrintStream openFileOutputStream(String path) {
-        try {
-            File file = new File(path);
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            return new PrintStream(new FileOutputStream(file), true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-
-    public PrintStream getLogPrintStream() {
-        return logOutputStream;
-    }
-
-    private void writeLogStream(String message) {
-        if (logOutputStream == null) {
-            return;
-        }
-        try {
-            logOutputStream.write(message.getBytes(StandardCharsets.UTF_8));
-            logOutputStream.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void logTimestamp() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        writeLogStream("[" + dtf.format(now) + "] ");
-    }
-
-    public void log(String message) {
-        log(message, true);
-    }
-
-    public void log(String message, boolean timestamp) {
-        if (timestamp) {
-            logTimestamp();
-        }
-        writeLogStream(message + "\n");
     }
 
     public String acquireToken(Client.Certificate certificate) {
@@ -229,8 +184,7 @@ public final class Environment {
             try {
                 return String.join("", Files.readAllLines(Path.of(settings.AUTH_FILE_PATH)));
             } catch (IOException e) {
-                e.printStackTrace();
-                e.printStackTrace(getLogPrintStream());
+                logger.warn(e.getMessage(), e);
                 showWarningMessage("Warning", "Error reading auth file, continuing with default token.");
             }
 
@@ -267,6 +221,7 @@ public final class Environment {
                 }
             }
         } catch (NullPointerException npe) {
+            logger.error(npe.getMessage(), npe);
         }
 
     }
@@ -335,9 +290,7 @@ public final class Environment {
     }
 
     public void exit() {
-        if (logOutputStream != null) {
-            logOutputStream.close();
-        }
+        Settings.save(settings);
         System.exit(0);
     }
 

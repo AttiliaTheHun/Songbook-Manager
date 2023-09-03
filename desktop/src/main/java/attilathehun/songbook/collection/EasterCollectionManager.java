@@ -17,6 +17,8 @@ import attilathehun.songbook.ui.CodeEditor;
 import attilathehun.songbook.util.HTMLGenerator;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -24,6 +26,8 @@ import org.jsoup.nodes.Element;
 import javax.swing.*;
 
 public class EasterCollectionManager extends CollectionManager {
+
+    private static final Logger logger = LogManager.getLogger(EasterCollectionManager.class);
 
     public static final String EASTER_SONG_DATA_FILE_PATH = Paths.get(Environment.getInstance().settings.DATA_FILE_PATH + "/songs/egg/").toString();
     private static final EasterCollectionManager instance = new EasterCollectionManager();
@@ -58,9 +62,7 @@ public class EasterCollectionManager extends CollectionManager {
             }.getType();
             collection = new Gson().fromJson(json, targetClassType);
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Easter Collection Initialisation error", "Can not load the easter egg song collection!");
             //TODO: Wiki Troubleshooting: should be fixed by deleting collection.json and then Repairing (add guide with screenshots)
         }
@@ -112,7 +114,7 @@ public class EasterCollectionManager extends CollectionManager {
 
     @Override
     public String getSongFilePath(int id) {
-        return Paths.get(String.format("%s/%d.html", EASTER_SONG_DATA_FILE_PATH)).toString();
+        return Paths.get(String.format("%s/%d.html", EASTER_SONG_DATA_FILE_PATH, id)).toString();
     }
 
     @Override
@@ -120,7 +122,7 @@ public class EasterCollectionManager extends CollectionManager {
         return getSongFilePath(s.id());
     }
 
-    ;
+
 
     @Override
     public Collection<Song> getCollection() {
@@ -150,7 +152,7 @@ public class EasterCollectionManager extends CollectionManager {
             }
             searchForEasterEgg:
             for (Song value : collection) {
-                if (value.isActive()) {
+                if (value.isActive() && value.id() == song.id()) {
                    formalList.add(value);
                     esterEggFound = true;
                 }
@@ -167,7 +169,7 @@ public class EasterCollectionManager extends CollectionManager {
 
     @Override
     public ArrayList<Song> getDisplayCollection() {
-        ArrayList<Song> standardDisplayList = StandardCollectionManager.getInstance().getDisplayCollection();
+       /* ArrayList<Song> standardDisplayList = StandardCollectionManager.getInstance().getDisplayCollection();
         ArrayList<Song> displayList = new ArrayList<Song>();
 
         for (Song song : standardDisplayList) {
@@ -188,11 +190,12 @@ public class EasterCollectionManager extends CollectionManager {
 
             if (!esterEggFound) {
                 displayList.add(song);
-            }
-        }
+            }*/
 
+        //}
 
-        return displayList;
+        return StandardCollectionManager.getInstance().getDisplayCollection();
+       //return displayList;
     }
 
     @Override
@@ -253,9 +256,7 @@ public class EasterCollectionManager extends CollectionManager {
             }
             save();
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Warning", String.format("An easter egg song record could not be updated! Song: %s id: %d", s.name(), s.id()));
         }
     }
@@ -277,9 +278,7 @@ public class EasterCollectionManager extends CollectionManager {
             gson.toJson(collection, writer);
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Error", "Can not save the easter egg song collection!");
         }
     }
@@ -381,9 +380,5 @@ public class EasterCollectionManager extends CollectionManager {
         return new Song("Secret Song", -1);
     }
 
-    @Override
-    public void createShadowSong() {
-        //TODO
-    }
 
 }

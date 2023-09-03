@@ -8,6 +8,8 @@ import attilathehun.songbook.util.Client;
 import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.util.ZipGenerator;
 import javafx.util.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
@@ -22,6 +24,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class EnvironmentManager {
+
+    private static final Logger logger = LogManager.getLogger(EnvironmentManager.class);
 
     private static final int ACTION_EDIT = 0;
     private static final int ACTION_ADD = 1;
@@ -50,9 +54,7 @@ public class EnvironmentManager {
                 return;
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Warning", "Could not load the data");
             return;
         }
@@ -84,9 +86,7 @@ public class EnvironmentManager {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Warning", "Could not load the data");
             return;
         }
@@ -119,9 +119,7 @@ public class EnvironmentManager {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Warning", "Could not save the data");
             return;
         }
@@ -132,9 +130,7 @@ public class EnvironmentManager {
         try {
             new ZipGenerator().extractZip(Environment.getInstance().settings.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.DATA_FILE_PATH);
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Warning", "Could not unzip the data");
             return false;
         }
@@ -146,9 +142,7 @@ public class EnvironmentManager {
         try {
             new ZipGenerator(false).createZip(Environment.getInstance().settings.DATA_FILE_PATH, Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Warning", "Could not zip the data");
             return false;
         }
@@ -190,8 +184,8 @@ public class EnvironmentManager {
         try {
             File songDataFolder = new File(Environment.getInstance().settings.SONG_DATA_FILE_PATH);
             songDataFolder.mkdirs();
-            Environment.getInstance().getCollectionManager().createShadowSong();
-            Environment.getInstance().getCollectionManager().createShadowSong();
+            //Environment.getInstance().getCollectionManager().createShadowSong();
+            //Environment.getInstance().getCollectionManager().createShadowSong();
             File collectionJSONFile = new File(Environment.getInstance().settings.COLLECTION_FILE_PATH);
             collectionJSONFile.createNewFile();
             PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
@@ -199,9 +193,7 @@ public class EnvironmentManager {
             printWriter.close();
             //TODO: ask if the user wants to create a song right away
         } catch (IOException e) {
-            e.printStackTrace();
-            Environment.getInstance().logTimestamp();
-            e.printStackTrace(Environment.getInstance().getLogPrintStream());
+            logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Warning", "Could not create a new songbook!");
         }
     }

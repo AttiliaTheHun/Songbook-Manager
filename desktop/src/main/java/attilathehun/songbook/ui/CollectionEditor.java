@@ -6,6 +6,8 @@ import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -19,6 +21,8 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 
 public class CollectionEditor extends JFrame {
+
+    private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
 
     private static boolean CONTROL_PRESSED = false;
 
@@ -174,7 +178,7 @@ public class CollectionEditor extends JFrame {
             editor.setVisible(true);
         });
 
-        JButton viewSongInBrowserButton = new JButton("View in Browser");
+        JButton viewSongInBrowserButton = new JButton("View Song");
         viewSongInBrowserButton.addActionListener(e -> {
             refreshStoredSelection();
             if (selectedSong == null) {
@@ -299,6 +303,9 @@ public class CollectionEditor extends JFrame {
     }
 
     private static class CollectionPanel extends JPanel {
+
+        private static final Logger logger = LogManager.getLogger(CollectionPanel.class);
+
         private CollectionManager manager;
         private JList list;
 

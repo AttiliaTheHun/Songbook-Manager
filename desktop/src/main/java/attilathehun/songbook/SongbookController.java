@@ -1,5 +1,6 @@
 package attilathehun.songbook;
 
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
@@ -21,6 +22,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.web.WebView;
 import javafx.application.Platform;
 import javafx.scene.control.MenuItem;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.controlsfx.control.ToggleSwitch;
 
 import javax.swing.*;
@@ -31,6 +34,8 @@ import java.net.URL;
 
 
 public class SongbookController implements KeyEventListener {
+
+    private static final Logger logger = LogManager.getLogger(SongbookController.class);
 
     private static boolean CONTROL_PRESSED = false;
     private static Song SONG_ONE;
@@ -286,7 +291,7 @@ public class SongbookController implements KeyEventListener {
     @Override
     public void onLeftArrowPressed() {
 
-        if (SONG_ONE.name().equals(HTMLGenerator.FRONTPAGE) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1) {
+        if ((SONG_ONE.name().equals("frontpage") || SONG_ONE.name().equals("songlist0") || SONG_ONE.equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(0))) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1) {
             return;
         } else {
             switchPage(false);
@@ -324,7 +329,7 @@ public class SongbookController implements KeyEventListener {
             }
             refreshWebView();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -357,7 +362,12 @@ public class SongbookController implements KeyEventListener {
             SONG_TWO_INDEX -= 2;
         }
         SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_ONE_INDEX);
-        SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
+        if (SONG_TWO_INDEX >= Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
+            SONG_TWO = CollectionManager.getShadowSong();
+        } else {
+            SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
+        }
+
         refreshWebView();
         songOneIdField.setText(SONG_ONE.getDisplayId());
         songTwoIdField.setText(SONG_TWO.getDisplayId());
@@ -369,7 +379,7 @@ public class SongbookController implements KeyEventListener {
             SONG_ONE_INDEX = 0;
             SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_ONE_INDEX);
         }
-        if (SONG_TWO_INDEX < 0 || SONG_TWO_INDEX >= Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
+        if (SONG_TWO_INDEX < 0 || (SONG_TWO_INDEX > Environment.getInstance().getCollectionManager().getFormalCollection().size() && SONG_TWO_INDEX != Environment.getInstance().getCollectionManager().getFormalCollection().size())) {
             SONG_TWO_INDEX = 1;
             SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
         }
@@ -383,6 +393,7 @@ public class SongbookController implements KeyEventListener {
                 }
             });
         } catch (MalformedURLException e) {
+            logger.error(e.getMessage(), e);
             Environment.showErrorMessage("WebView configuration error", "Error when refreshing webview!");
         }
     }

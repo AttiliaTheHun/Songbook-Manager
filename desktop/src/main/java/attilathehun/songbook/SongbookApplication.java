@@ -28,11 +28,15 @@ import java.util.List;
 
 import com.github.kwhat.jnativehook.GlobalScreen;
 import javafx.stage.WindowEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 
 
 public class SongbookApplication extends Application {
+
+    private static final Logger logger = LogManager.getLogger(SongbookApplication.class);
 
     private static boolean CONTROL_PRESSED = false;
     private static final List<KeyEventListener> listeners = new ArrayList<KeyEventListener>();
@@ -117,6 +121,15 @@ public class SongbookApplication extends Application {
                                 new EnvironmentManager().loadData();
                             }
                         }
+                        case NativeKeyEvent.VC_H -> { //load
+                            if (CONTROL_PRESSED) {
+                                try {
+                                    Desktop.getDesktop().browse(new URL("https://github.com/AttiliaTheHun/Songbook-Manager/wiki/English").toURI());
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
                         case NativeKeyEvent.VC_O -> { //open song link
                             if (CONTROL_PRESSED) {
                                 if (SongbookController.getSongOne().getUrl().equals("") && SongbookController.getSongTwo().getUrl().equals("")) {
@@ -177,7 +190,7 @@ public class SongbookApplication extends Application {
                 }
             });
         } catch (NativeHookException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 

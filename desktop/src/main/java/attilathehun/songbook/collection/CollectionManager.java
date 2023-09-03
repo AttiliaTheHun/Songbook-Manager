@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public abstract class CollectionManager {
+    public static final int INVALID_SONG_ID = -1;
+    public static final int FRONTPAGE_SONG_ID = -2;
+    public static final int SONGLIST_SONG_ID = -3;
 
-    private static CollectionManager instance;
-    private Collection<Song> collection;
+    public static final String SHADOW_SONG_NAME = "Shadow Song";
+    public static final int SHADOW_SONG_ID = -4;
 
     /**
      * Returns the raw collection the manager manages without any data manipulation.
@@ -61,5 +64,7 @@ public abstract class CollectionManager {
 
     public abstract Song getPlaceholderSong();
 
-    public abstract void createShadowSong();
+    public static Song getShadowSong() {
+        return new Song(SHADOW_SONG_NAME, SHADOW_SONG_ID);
+    };
 }

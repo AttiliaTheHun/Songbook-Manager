@@ -7,10 +7,19 @@ import attilathehun.songbook.collection.Song;
  */
 public interface KeyEventListener {
 
+    /**
+     * Notifies the listener that left arrow key has been pressed.
+     */
     public void onLeftArrowPressed();
 
+    /**
+     * Notifies the listener that rigth arrow key has been pressed.
+     */
     public void onRightArrowPressed();
 
+    /**
+     * Notifies the listeners that Ctrl + R keyboard shortcut has been utilised.
+     */
     public void onControlPlusRPressed();
 
     public void onImaginarySongOneKeyPressed(Song s);
