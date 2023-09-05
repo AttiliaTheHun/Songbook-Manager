@@ -91,11 +91,21 @@ public class SongbookController implements KeyEventListener {
     }
 
     private void initWebView() throws MalformedURLException {
-        URL url = new File(generator.generatePageFile(Environment.getInstance().getCollectionManager().getFormalCollection().get(0), Environment.getInstance().getCollectionManager().getFormalCollection().get(1))).toURI().toURL();
-        SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(0);
         SONG_ONE_INDEX = 0;
-        SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(1);
         SONG_TWO_INDEX = 1;
+
+        if (Environment.getInstance().getCollectionManager().getFormalCollection().size() == 0) {
+            SONG_ONE = CollectionManager.getShadowSong();
+            SONG_TWO = CollectionManager.getShadowSong();
+        } else if (Environment.getInstance().getCollectionManager().getFormalCollection().size() == 1) {
+            SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(0);
+            SONG_TWO = CollectionManager.getShadowSong();
+        } else {
+            SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(0);
+            SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(1);
+        }
+
+        URL url = new File(generator.generatePageFile(SONG_ONE, SONG_TWO)).toURI().toURL();
         webview.getEngine().load(url.toExternalForm());
 
     }
@@ -123,6 +133,7 @@ public class SongbookController implements KeyEventListener {
             }
         });
 
+
         songTwoIdField.setOnKeyPressed(keyEvent -> {
             if (keyEvent.getCode() == KeyCode.ENTER) {
                 applySongTwoId.fire();
@@ -133,14 +144,14 @@ public class SongbookController implements KeyEventListener {
             if (text.length() == 0) {
                 return;
             }
-            int id = -1;
+            int id = CollectionManager.INVALID_SONG_ID;
             lol:
             try {
                 id = Integer.parseInt(text);
-                if (id == -1)
+                if (id < 0)
                     break lol;
                 int index = Environment.getInstance().getFormalCollectionSongIndex(id);
-                if (index != -1) {
+                if (index > 0) {
                     SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(index);
                     SONG_ONE_INDEX = index;
                 }
@@ -203,7 +214,7 @@ public class SongbookController implements KeyEventListener {
         });
 
         editSongOneHTML.setOnAction(event -> {
-            if (SONG_ONE.id() == -1) {
+            if (SONG_ONE.id() < 0) {
                 Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH);
                 return;
             }
@@ -214,7 +225,7 @@ public class SongbookController implements KeyEventListener {
         });
 
         editSongTwoHTML.setOnAction(event -> {
-            if (SONG_TWO.id() == -1) {
+            if (SONG_TWO.id() < 0) {
                 Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH);
                 return;
             }
@@ -225,29 +236,17 @@ public class SongbookController implements KeyEventListener {
         });
 
         singlepageSelection.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
-            if (easterSwitch.isSelected()) {
-                new PDFGenerator(true).generateSinglePage();
-            } else {
-                new PDFGenerator().generateSinglePage();
-            }
+            new PDFGenerator().generateSinglePage();
 
         });
 
         defaultSelection.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
-            if (easterSwitch.isSelected()) {
-                new PDFGenerator(true).generateDefault();
-            } else {
-                new PDFGenerator().generateDefault();
-            }
+            new PDFGenerator().generateDefault();
 
         });
 
         printableSelection.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
-            if (easterSwitch.isSelected()) {
-                new PDFGenerator(true).generatePrintable();
-            } else {
-                new PDFGenerator().generatePrintable();
-            }
+            new PDFGenerator().generatePrintable();
 
         });
 
@@ -353,6 +352,14 @@ public class SongbookController implements KeyEventListener {
         }
     }
 
+    @Override
+    public boolean onImaginaryIsTextFieldFocusedKeyPressed() {
+        if (songOneIdField.isFocused()) {
+            return true;
+        }
+        return songTwoIdField.isFocused();
+    }
+
     private void switchPage(boolean toTheRight) {
         if (toTheRight) {
             SONG_ONE_INDEX += 2;
@@ -384,7 +391,7 @@ public class SongbookController implements KeyEventListener {
             SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
         }
         try {
-            URL url = new File(generator.generatePageFile(Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_ONE_INDEX), Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX))).toURI().toURL();
+            URL url = new File(new HTMLGenerator().generatePageFile(SONG_ONE, SONG_TWO)).toURI().toURL();
 
             Platform.runLater(new Runnable() {
                 @Override

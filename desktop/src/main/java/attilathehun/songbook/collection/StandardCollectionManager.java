@@ -33,12 +33,17 @@ import javax.swing.*;
 public class StandardCollectionManager extends CollectionManager {
 
     private static final Logger logger = LogManager.getLogger(StandardCollectionManager.class);
-    private static final StandardCollectionManager instance = new StandardCollectionManager();
+    private static final StandardCollectionManager instance;
+
+    static {
+        instance = new StandardCollectionManager();
+        instance.init();
+    }
 
     private ArrayList<Song> collection;
 
     private StandardCollectionManager() {
-        init();
+
     }
 
     public static StandardCollectionManager getInstance() {
@@ -69,7 +74,7 @@ public class StandardCollectionManager extends CollectionManager {
             Environment.showErrorMessage("Collection Initialisation error", "Can not load the song collection!");
             //TODO: Wiki Troubleshooting: should be fixed by deleting collection.json and then Repairing (add guide with screenshots)
         }
-        logger.info("StandardCollectionManager initialised");
+        logger.debug("StandardCollectionManager initialised");
     }
 
     private void repairSongbookDialog() {
@@ -77,7 +82,7 @@ public class StandardCollectionManager extends CollectionManager {
         UIManager.put("OptionPane.noButtonText", "Create");
         UIManager.put("OptionPane.cancelButtonText", "Load");
 
-        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Repair songbook", "No collection file was found but it seems you have saved songs in your songbook. Would you like to generate a collection file to repair the songbook? Alternatively, you can create a new songbook or load an existing one from a local or remote zip file.", JOptionPane.YES_NO_CANCEL_OPTION);
+        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "No collection file was found but it seems you have saved songs in your songbook. Would you like to generate a collection file to repair the songbook? Alternatively, you can create a new songbook or load an existing one from a local or remote zip file.", "Repair songbook", JOptionPane.YES_NO_CANCEL_OPTION);
 
         if (resultCode == JOptionPane.YES_OPTION) {
             repairMissingCollectionFile();
@@ -149,13 +154,12 @@ public class StandardCollectionManager extends CollectionManager {
     @Override
     public ArrayList<Song> getFormalCollection() {
         ArrayList<Song> formalList = new ArrayList<Song>();
-        logger.info("PluginManager settings: " +  new Gson().toJson(PluginManager.getInstance().getSettings()));
         if (PluginManager.getInstance().getSettings().getEnabled(Frontpage.class.getSimpleName())) {
-            formalList.add(new Song("frontpage", -1));
+            formalList.add(CollectionManager.getFrontpageSong());
         }
         if (PluginManager.getInstance().getSettings().getEnabled(DynamicSonglist.class.getSimpleName())) {
             for (int i = 0; i < PluginManager.getInstance().getPlugin(DynamicSonglist.class.getSimpleName()).execute(); i++) {
-                formalList.add(new Song("songlist" + i, -1));
+                formalList.add(CollectionManager.getSonglistSong(i));
             }
 
         }
@@ -303,7 +307,7 @@ public class StandardCollectionManager extends CollectionManager {
 
     public Song getPlaceholderSong() {
         int min = 0;
-        int max = 21;
+        int max = 41;
         int random = (int) (Math.random() * max + min);
         Song song;
         switch (random) {

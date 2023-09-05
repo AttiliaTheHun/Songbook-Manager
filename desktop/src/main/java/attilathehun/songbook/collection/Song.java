@@ -25,7 +25,7 @@ public class Song implements Serializable {
     }
 
     public String getDisplayId() {
-        if (id == -1) {
+        if (id < 0) {
             return name;
         }
         return String.valueOf(id);

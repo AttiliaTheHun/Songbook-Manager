@@ -125,29 +125,29 @@ public class HTMLGenerator {
     private String generatePage(Song songOne, Song songTwo) throws IOException {
         String songOnePath = null;
         String songTwoPath = null;
-        if (songOne.id() != -1) {
+
+        if (songOne.name().equals("frontpage")) {
+            songOnePath = TEMP_FRONTPAGE_PATH;
+        } else if (songOne.name().startsWith("songlist")) {
+            int songlistPartNumber = Integer.parseInt(songOne.name().substring("songlist".length()));
+            songOnePath = String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber);
+        } else if (songOne.name().equals(CollectionManager.SHADOW_SONG_NAME)) {
+            songOnePath = SHADOW_SONG_PATH;
+        } else if (songOne.id() != CollectionManager.INVALID_SONG_ID) {
             songOnePath = Environment.getInstance().getCollectionManager().getSongFilePath(songOne.id());
-        } else {
-                if (songOne.name().equals("frontpage")) {
-                    songOnePath = TEMP_FRONTPAGE_PATH;
-                } else if (songOne.name().startsWith("songlist")) {
-                    int songlistPartNumber = Integer.parseInt(songOne.name().substring("songlist".length()));
-                    songOnePath = String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber);
-                }
         }
 
-        if (songTwo.id() != -1) {
+        if (songTwo.name().equals("frontpage")) {
+            songTwoPath = TEMP_FRONTPAGE_PATH;
+        } else if (songTwo.name().startsWith("songlist")) {
+            int songlistPartNumber = Integer.parseInt(songTwo.name().substring("songlist".length()));
+            songTwoPath = String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber);
+        } else if (songTwo.name().equals(CollectionManager.SHADOW_SONG_NAME)) {
+            songTwoPath = SHADOW_SONG_PATH;
+        } else if (songTwo.id() != CollectionManager.INVALID_SONG_ID) {
             songTwoPath = Environment.getInstance().getCollectionManager().getSongFilePath(songTwo.id());
-        } else {
-            if (songTwo.name().equals("frontpage")) {
-                songTwoPath = TEMP_FRONTPAGE_PATH;
-            } else if (songTwo.name().startsWith("songlist")) {
-                int songlistPartNumber = Integer.parseInt(songTwo.name().substring("songlist".length()));
-                songTwoPath = String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber);
-            } else if (songTwo.name().equals(CollectionManager.SHADOW_SONG_NAME)) {
-                songTwoPath = SHADOW_SONG_PATH;
-            }
         }
+
 
         if ((songOne.name().equals("frontpage") || songTwo.name().equals("frontpage")) && !new File(TEMP_FRONTPAGE_PATH).exists()) {
             generateFrontpageFile();
@@ -155,23 +155,23 @@ public class HTMLGenerator {
         if (songOne.name().startsWith("songlist")) {
             int songlistPartNumber = Integer.parseInt(songOne.name().substring("songlist".length()));
             if (!new File(String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber)).exists()) {
-                PluginManager.getInstance().getPlugin(DynamicSonglist.class.getName()).execute();
+                PluginManager.getInstance().getPlugin(DynamicSonglist.class.getSimpleName()).execute();
             }
         }
 
         if (songTwo.name().startsWith("songlist")) {
             int songlistPartNumber = Integer.parseInt(songTwo.name().substring("songlist".length()));
             if (!new File(String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber)).exists()) {
-                PluginManager.getInstance().getPlugin(DynamicSonglist.class.getName()).execute();
+                PluginManager.getInstance().getPlugin(DynamicSonglist.class.getSimpleName()).execute();
             }
         }
 
-        Path path = Paths.get(PAGEVIEW_TEMPLATE_PATH);
+        Path templatePath = Paths.get(PAGEVIEW_TEMPLATE_PATH);
         // System.out.println(songOnePath);
         // System.out.println(songTwoPath);
         String songOneHTML = String.join("\n", Files.readAllLines(Paths.get(songOnePath)));
         String songTwoHTML = String.join("\n", Files.readAllLines(Paths.get(songTwoPath)));
-        String html = String.join("\n", Files.readAllLines(path));
+        String html = String.join("\n", Files.readAllLines(templatePath));
 
         html = html.replace(HEAD_REPLACE_MARK, getHead());
         html = html.replace(SONG_ONE_REPLACE_MARK, songOneHTML);

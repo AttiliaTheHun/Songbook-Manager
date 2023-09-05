@@ -39,6 +39,7 @@ public class SongbookApplication extends Application {
     private static final Logger logger = LogManager.getLogger(SongbookApplication.class);
 
     private static boolean CONTROL_PRESSED = false;
+
     private static final List<KeyEventListener> listeners = new ArrayList<KeyEventListener>();
 
     public static void main(String[] args) {
@@ -98,11 +99,19 @@ public class SongbookApplication extends Application {
                         return;
                     }
                     //Environment.showMessage("Message", "Key pressed");
-                    System.out.println("Keypress: " + nativeEvent.getKeyChar() + " : " + nativeEvent.getKeyCode());
+                    //System.out.println("Keypress: " + nativeEvent.getKeyChar() + " : " + nativeEvent.getKeyCode());
                     switch (nativeEvent.getKeyCode()) {
                         case NativeKeyEvent.VC_CONTROL -> CONTROL_PRESSED = true;
-                        case NativeKeyEvent.VC_LEFT, NativeKeyEvent.VC_PAGE_DOWN -> dialLeftArrowPressed();
-                        case NativeKeyEvent.VC_RIGHT, NativeKeyEvent.VC_PAGE_UP -> dialRightArrowPressed();
+                        case NativeKeyEvent.VC_LEFT, NativeKeyEvent.VC_PAGE_DOWN -> {
+                            if (!listeners.get(0).onImaginaryIsTextFieldFocusedKeyPressed()) {
+                                dialLeftArrowPressed();
+                            }
+                        }
+                        case NativeKeyEvent.VC_RIGHT, NativeKeyEvent.VC_PAGE_UP -> {
+                            if (!listeners.get(0).onImaginaryIsTextFieldFocusedKeyPressed()) {
+                                dialRightArrowPressed();
+                            }
+                        }
                         case NativeKeyEvent.VC_R -> { //refresh
                             if (CONTROL_PRESSED) {
                                 Environment.getInstance().getCollectionManager().init();
@@ -143,7 +152,7 @@ public class SongbookApplication extends Application {
                                             Desktop.getDesktop().browse(new URL(SongbookController.getSongOne().getUrl()).toURI());
                                         } catch (Exception e) {
                                             e.printStackTrace();
-                                            Environment.showWarningMessage("Warning", "The associated URL is malformed. PLease check for typos :)");
+                                            Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
                                         }
 
                                     }
@@ -156,7 +165,7 @@ public class SongbookApplication extends Application {
                                             Desktop.getDesktop().browse(new URL(SongbookController.getSongTwo().getUrl()).toURI());
                                         } catch (Exception e) {
                                             e.printStackTrace();
-                                            Environment.showWarningMessage("Warning", "The associated URL is malformed. PLease check for typos :)");
+                                            Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
                                         }
 
 
@@ -176,9 +185,9 @@ public class SongbookApplication extends Application {
                                         try {
                                             Desktop.getDesktop().browse(new URL(SongbookController.getSongTwo().getUrl()).toURI());
                                         } catch (Exception e) {
+                                            Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
                                         }
 
-                                        Environment.showWarningMessage("Warning", "The associated URL is malformed. PLease check for typos :)");
                                     }
                                     UIManager.put("OptionPane.yesButtonText", "Yes");
                                     UIManager.put("OptionPane.noButtonText", "No");

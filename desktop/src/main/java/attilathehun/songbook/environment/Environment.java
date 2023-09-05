@@ -93,8 +93,6 @@ public final class Environment {
             AUTH_TYPE = Environment.Settings.AuthType.TOKEN;
             LOG_ENABLED = true;
             SCRIPTS_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/scripts/").toString();
-            //DISABLE_FRONTPAGE = false;
-            //DISABLE_DYNAMIC_SONGLIST = false;
             BIND_SONG_TITLES = true;
             plugins = PluginManager.getInstance().getSettings();
         }

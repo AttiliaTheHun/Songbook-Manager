@@ -15,6 +15,8 @@ public class EnvironmentVerificator {
 
     private static final Logger logger = LogManager.getLogger(EnvironmentVerificator.class);
 
+    public static boolean SUPPRESS_WARNINGS = false;
+
     private boolean automated = false;
 
     public EnvironmentVerificator() {
@@ -55,7 +57,7 @@ public class EnvironmentVerificator {
     public boolean verifyEaster() {
         if (Environment.getInstance().settings.IS_IT_EASTER_ALREADY) {
             if (!(new File(Environment.getInstance().settings.EGG_DATA_FILE_PATH).exists() && new File(Environment.getInstance().settings.EGG_DATA_FILE_PATH).isDirectory())) {
-                if (automated) {
+                if (automated && !SUPPRESS_WARNINGS) {
                     Environment.showMessage("Warning", "No easter egg folder found!");
                 }
                 return false;

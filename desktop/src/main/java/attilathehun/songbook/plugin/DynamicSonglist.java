@@ -49,7 +49,7 @@ public class DynamicSonglist extends Plugin {
 
         HTMLGenerator generator = new HTMLGenerator();
         if (songlistParts == 0) {
-            generator.generateSonglistSegmentFile(0, 0, 1);
+            generator.generateSonglistSegmentFile(0, 0, 0);
             return 1;
         }
 
@@ -61,7 +61,7 @@ public class DynamicSonglist extends Plugin {
             startIndex += MAX_SONG_PER_PAGE;
             endIndex = Math.min(endIndex + MAX_SONG_PER_PAGE, Environment.getInstance().getCollectionManager().getDisplayCollection().size());
         }
-        logger.info("Dynamic songlist generated");
+        logger.debug("Dynamic songlist generated");
         return songlistParts;
     }
 }

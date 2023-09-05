@@ -5,7 +5,11 @@ import java.util.Collection;
 
 public abstract class CollectionManager {
     public static final int INVALID_SONG_ID = -1;
+
+    public static final String FRONTPAGE_SONG_NAME = "frontpage";
     public static final int FRONTPAGE_SONG_ID = -2;
+
+    public static final String SONGLIST_SONG_NAME = "songlist%d";
     public static final int SONGLIST_SONG_ID = -3;
 
     public static final String SHADOW_SONG_NAME = "Shadow Song";
@@ -63,6 +67,16 @@ public abstract class CollectionManager {
     public abstract void activateSong(Song s);
 
     public abstract Song getPlaceholderSong();
+    public static Song getFrontpageSong() {
+        return new Song(FRONTPAGE_SONG_NAME, FRONTPAGE_SONG_ID);
+    }
+
+    public static Song getSonglistSong(int listPartId) {
+        if (listPartId < 0) {
+            throw new IllegalArgumentException();
+        }
+        return new Song(String.format(SONGLIST_SONG_NAME, listPartId), SONGLIST_SONG_ID);
+    }
 
     public static Song getShadowSong() {
         return new Song(SHADOW_SONG_NAME, SHADOW_SONG_ID);

@@ -32,7 +32,7 @@ public class EasterCollectionManager extends CollectionManager {
     public static final String EASTER_SONG_DATA_FILE_PATH = Paths.get(Environment.getInstance().settings.DATA_FILE_PATH + "/songs/egg/").toString();
     private static final EasterCollectionManager instance = new EasterCollectionManager();
 
-    private ArrayList<Song> collection;
+    private ArrayList<Song> collection = new ArrayList<Song>();
 
     private EasterCollectionManager() {
         init();
@@ -47,7 +47,7 @@ public class EasterCollectionManager extends CollectionManager {
         try {
             File collectionJSONFile = new File(Environment.getInstance().settings.EASTER_COLLECTION_FILE_PATH);
             if (!collectionJSONFile.exists()) {
-                File songDataFolder = new File(Environment.getInstance().settings.SONG_DATA_FILE_PATH);
+                File songDataFolder = new File(Environment.getInstance().settings.EGG_DATA_FILE_PATH);
                 if (songDataFolder.exists() && songDataFolder.isDirectory()) {
                     repairCollectionDialog();
                 } else {
@@ -72,7 +72,7 @@ public class EasterCollectionManager extends CollectionManager {
         UIManager.put("OptionPane.yesButtonText", "Repair");
         UIManager.put("OptionPane.noButtonText", "Create");
 
-        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Repair easter egg collection", "No collection file was found but it seems you have saved songs in your easter egg data directory. Would you like to generate a collection file to repair the easter egg collection? Alternatively, you can create a new one.", JOptionPane.YES_NO_OPTION);
+        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Repair easter egg collection", "No collection file was found but it seems you have saved songs in your easter egg data directory. Would you like to generate a collection file to repair the easter egg collection? Alternatively, you can create a new collection.", JOptionPane.YES_NO_OPTION);
 
         if (resultCode == JOptionPane.YES_OPTION) {
             repairMissingCollectionFile();

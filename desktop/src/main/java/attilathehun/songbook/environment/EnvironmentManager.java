@@ -191,7 +191,17 @@ public class EnvironmentManager {
             PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
             printWriter.write("[]");
             printWriter.close();
-            //TODO: ask if the user wants to create a song right away
+            EnvironmentVerificator.SUPPRESS_WARNINGS = true;
+
+            UIManager.put("OptionPane.okButtonText", "Add");
+            UIManager.put("OptionPane.cancelButtonText", "Cancel");
+
+            int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to add your first song?", "Add a Song?", JOptionPane.OK_CANCEL_OPTION);
+
+            if (option == JOptionPane.OK_OPTION) {
+                addSongDialog(Environment.getInstance().getCollectionManager());
+            }
+
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             Environment.showWarningMessage("Warning", "Could not create a new songbook!");
@@ -214,7 +224,7 @@ public class EnvironmentManager {
         Environment.getInstance().refresh();
         Environment.getInstance().getCollectionManager().init();
         SongbookApplication.dialControlPLusRPressed();
-        Environment.showMessage("Success", "Songbook loaded successfully.");
+        //Environment.showMessage("Success", "Songbook loaded successfully.");
     }
 
     private Pair<String, String> loadSongbookInputDialog() {
@@ -229,7 +239,7 @@ public class EnvironmentManager {
                 "Token:", token
         };
 
-        int option = JOptionPane.showConfirmDialog(null, message, "Load Remote Songbook", JOptionPane.OK_CANCEL_OPTION);
+        int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), message, "Load Remote Songbook", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             return new Pair<String, String>(remoteApiEndpointURL.getText(), token.getText());
         }

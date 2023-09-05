@@ -25,4 +25,6 @@ public interface KeyEventListener {
     public void onImaginarySongOneKeyPressed(Song s);
 
     public void onImaginarySongTwoKeyPressed(Song s);
+
+    public boolean onImaginaryIsTextFieldFocusedKeyPressed();
 }

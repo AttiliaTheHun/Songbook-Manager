@@ -35,6 +35,7 @@ public class CodeEditor extends JFrame {
     private Song song;
 
     private static boolean SHIFT_PRESSED = false;
+    private static boolean CONTROL_PRESSED = false;
 
     private final RSyntaxTextArea textArea;
 
@@ -129,20 +130,22 @@ public class CodeEditor extends JFrame {
 
             @Override
             public void keyTyped(KeyEvent e) {
-               /* if (getTitle().startsWith("*")) {
-                    CodeEditor.super.setTitle("*" + getTitle());
-                }*/
+
             }
 
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
                     SHIFT_PRESSED = true;
-                } else if (SHIFT_PRESSED && e.getKeyCode() == KeyEvent.VK_S) {
+                } else if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+                    CONTROL_PRESSED = true;
+                } else if (CONTROL_PRESSED && e.getKeyCode() == KeyEvent.VK_S) {
                     saveChanges();
                     if (getTitle().startsWith("*")) {
                         CodeEditor.super.setTitle(getTitle().substring(1));
                     }
+                } else if (!getTitle().startsWith("*")) {
+                    CodeEditor.super.setTitle("*" + getTitle());
                 }
             }
 
@@ -150,6 +153,8 @@ public class CodeEditor extends JFrame {
             public void keyReleased(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
                     SHIFT_PRESSED = false;
+                } else if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+                    CONTROL_PRESSED = false;
                 }
             }
         });
@@ -158,7 +163,7 @@ public class CodeEditor extends JFrame {
     }
 
     /**
-     * @source https://stackoverflow.com/questions/309023/how-to-bring-a-window-to-the-front
+     * @source <a href="https://stackoverflow.com/questions/309023/how-to-bring-a-window-to-the-front">stackoverflow</a>
      * @author Lawrence Dol
      */
     public @Override void toFront() {
