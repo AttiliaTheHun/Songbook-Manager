@@ -1,5 +1,6 @@
 package attilathehun.songbook.ui;
 
+import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
@@ -11,14 +12,11 @@ import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.text.NumberFormat;
-import java.util.ArrayList;
 
 public class CollectionEditor extends JFrame {
 
@@ -55,10 +53,22 @@ public class CollectionEditor extends JFrame {
     public static CollectionEditor openCollectionEditor() {
         if (instance != null) {
             instance.setVisible(true);
+            instance.forceRefreshAll();
             instance.toFront();
             return null;
         }
         return new CollectionEditor();
+    }
+
+    public static CollectionEditor getInstance() {
+        return instance;
+    }
+
+    public static void forceRefreshInstance() {
+        if (instance == null) {
+            return;
+        }
+        instance.forceRefreshAll();
     }
 
     /**
@@ -158,7 +168,7 @@ public class CollectionEditor extends JFrame {
             }
 
             forceRefreshList();
-            int index = getSongIndexInSortedCollection(song);
+            int index = selectedManager.getDisplayCollectionSongIndex(song);
             if (index != -1) {
                 list.setSelectedValue(index, true);
             }
@@ -185,7 +195,26 @@ public class CollectionEditor extends JFrame {
                 Environment.showMessage("Message", "Select a song first.");
                 return;
             }
-            //TODO
+            int index = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(selectedSong);
+            if (index == -1) {
+                Environment.showMessage("Message", "Something went wrong.");
+                return;
+            }
+            if (index % 2 == 0) {
+                SongbookApplication.dialImaginarySongOneKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
+                if (index + 1 >= Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
+                    SongbookApplication.dialImaginarySongTwoKeyPressed(CollectionManager.getShadowSong());
+                } else {
+                    SongbookApplication.dialImaginarySongTwoKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index + 1));
+                }
+            } else {
+                SongbookApplication.dialImaginarySongTwoKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
+                if (index - 1 < 0) {
+                    SongbookApplication.dialImaginarySongOneKeyPressed(CollectionManager.getShadowSong());
+                } else {
+                    SongbookApplication.dialImaginarySongOneKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index - 1));
+                }
+            }
         });
         JButton previewSongPDFButton = new JButton("Preview PDF");
         previewSongPDFButton.addActionListener(e -> {
@@ -283,16 +312,6 @@ public class CollectionEditor extends JFrame {
         });
     }
 
-    private int getSongIndexInSortedCollection(Song s) {
-        ArrayList<Song> sortedCollection = selectedManager.getSortedCollection();
-        for (int i = 0; i < sortedCollection.size(); i++) {
-            if (sortedCollection.get(i).id() == s.id()) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
     private void forceRefreshList() {
         DefaultListModel listModel = new DefaultListModel();
         refreshStoredSelection();
@@ -300,6 +319,19 @@ public class CollectionEditor extends JFrame {
             listModel.addElement(song);
         }
         list.setModel(listModel);
+    }
+
+    private void forceRefreshAll() {
+        for (int i = 0; i < tabPane.getTabCount(); i++) {
+            DefaultListModel listModel = new DefaultListModel();
+            CollectionPanel panel = (CollectionPanel) tabPane.getComponentAt(i);
+            CollectionManager targetManager = panel.getCollectionManager();
+            for (Song song : targetManager.getSortedCollection()) {
+                listModel.addElement(song);
+            }
+            panel.getList().setModel(listModel);
+        }
+        logger.debug("Forcefully refreshed all lists");
     }
 
     private static class CollectionPanel extends JPanel {

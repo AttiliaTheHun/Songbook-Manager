@@ -1,5 +1,6 @@
 package attilathehun.songbook.environment;
 
+import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.plugin.PluginManager;
@@ -12,13 +13,10 @@ import com.google.gson.reflect.TypeToken;
 import javax.swing.*;
 import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 import org.apache.logging.log4j.Logger;
@@ -193,9 +191,15 @@ public final class Environment {
 
 
     public static void showErrorMessage(String title, String message) {
+        showErrorMessage(title, message, false);
+    }
+
+    public static void showErrorMessage(String title, String message, boolean fatal) {
         showMessageDialog(getAlwaysOnTopJDialog(), message, title,
                 JOptionPane.ERROR_MESSAGE);
-        getInstance().exit();
+        if (fatal) {
+            getInstance().exit();
+        }
     }
 
     public static void showMessage(String title, String message) {
@@ -292,31 +296,6 @@ public final class Environment {
         System.exit(0);
     }
 
-    public int getFormalCollectionSongIndex(Song s) {
-        if (s.id() < 0) {
-            throw new IllegalArgumentException();
-        }
-        ArrayList<Song> formalCollection = collectionManager.getFormalCollection();
-        for (int i = 0; i < formalCollection.size(); i++) {
-            if (formalCollection.get(i).equals(s)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public int getFormalCollectionSongIndex(int id) {
-        if (id < 0) {
-            throw new IllegalArgumentException();
-        }
-        ArrayList<Song> formalCollection = collectionManager.getFormalCollection();
-        for (int i = 0; i < formalCollection.size(); i++) {
-            if (formalCollection.get(i).id() == id) {
-                return i;
-            }
-        }
-        return -1;
-    }
 
     public static JDialog getAlwaysOnTopJDialog() {
         JDialog dialog = new JDialog();
@@ -324,6 +303,25 @@ public final class Environment {
         dialog.toFront();
         dialog.requestFocusInWindow();
         return dialog;
+    }
+
+    public static void navigateWebViewToSong(Song s) {
+        int index = getInstance().getCollectionManager().getFormalCollectionSongIndex(s);
+        if (index % 2 == 0) {
+            SongbookApplication.dialImaginarySongOneKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
+            if (index + 1 >= Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
+                SongbookApplication.dialImaginarySongTwoKeyPressed(CollectionManager.getShadowSong());
+            } else {
+                SongbookApplication.dialImaginarySongTwoKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index + 1));
+            }
+        } else {
+            SongbookApplication.dialImaginarySongTwoKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
+            if (index - 1 < 0) {
+                SongbookApplication.dialImaginarySongOneKeyPressed(CollectionManager.getShadowSong());
+            } else {
+                SongbookApplication.dialImaginarySongOneKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index - 1));
+            }
+        }
     }
 
 }

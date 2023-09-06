@@ -200,7 +200,7 @@ public class CodeEditor extends JFrame {
             FileWriter writer = new FileWriter(filePath, false);
             writer.write(textArea.getText());
             writer.close();
-            Environment.getInstance().getCollectionManager().updateSongRecordFromHTML(song);
+            Environment.getInstance().getCollectionManager().updateSongRecordTitleFromHTML(song);
             Environment.getInstance().refresh();
             SongbookApplication.dialControlPLusRPressed();
         } catch (IOException e) {

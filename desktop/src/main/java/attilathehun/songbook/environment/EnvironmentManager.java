@@ -4,6 +4,7 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.ui.CollectionEditor;
 import attilathehun.songbook.util.Client;
 import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.util.ZipGenerator;
@@ -184,8 +185,6 @@ public class EnvironmentManager {
         try {
             File songDataFolder = new File(Environment.getInstance().settings.SONG_DATA_FILE_PATH);
             songDataFolder.mkdirs();
-            //Environment.getInstance().getCollectionManager().createShadowSong();
-            //Environment.getInstance().getCollectionManager().createShadowSong();
             File collectionJSONFile = new File(Environment.getInstance().settings.COLLECTION_FILE_PATH);
             collectionJSONFile.createNewFile();
             PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
@@ -332,6 +331,7 @@ public class EnvironmentManager {
                 song.setAuthor(songAuthorField.getText());
                 song.setActive(songActiveSwitch.isSelected());
                 song = manager.addSong(song);
+                CollectionEditor.forceRefreshInstance();
                 return song;
             }
         } else {
@@ -340,11 +340,11 @@ public class EnvironmentManager {
                 song.setUrl(songURLField.getText());
                 song.setActive(songActiveSwitch.isSelected());
                 song = manager.updateSongRecord(song);
+                CollectionEditor.forceRefreshInstance();
                 return song;
             }
         }
         return null;
-//TODO: Refresh CollectionEditor list if an instance exists
 
     }
 
@@ -442,6 +442,7 @@ public class EnvironmentManager {
                 song.setAuthor(songAuthorField.getText());
                 song.setActive(songActiveSwitch.isSelected());
                 song = manager.addSong(song);
+                CollectionEditor.forceRefreshInstance();
                 return song;
             }
         } else {
@@ -456,11 +457,11 @@ public class EnvironmentManager {
                 song.setUrl(songURLField.getText());
                 song.setActive(songActiveSwitch.isSelected());
                 song = manager.updateSongRecord(song);
+                CollectionEditor.forceRefreshInstance();
                 return song;
             }
         }
         return null;
-//TODO: Refresh CollectionEditor list if an instance exists
 
     }
 

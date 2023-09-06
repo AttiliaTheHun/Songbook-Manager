@@ -17,6 +17,8 @@ public class EnvironmentVerificator {
 
     public static boolean SUPPRESS_WARNINGS = false;
 
+    private static boolean FATAL_FAIL = false;
+
     private boolean automated = false;
 
     public EnvironmentVerificator() {
@@ -50,7 +52,7 @@ public class EnvironmentVerificator {
     }
 
     private static void verificationFail(String message) {
-        Environment.showErrorMessage("Environment verification failed", message);
+        Environment.showErrorMessage("Environment verification failed", message, FATAL_FAIL);
     }
 
 
@@ -69,6 +71,7 @@ public class EnvironmentVerificator {
     public boolean verifyData() {
         if (!(new File(Environment.getInstance().settings.SONG_DATA_FILE_PATH).exists() && new File(Environment.getInstance().settings.SONG_DATA_FILE_PATH).isDirectory())) {
             if (automated) {
+                FATAL_FAIL = true;
                 verificationFail("No song data folder found!");
             }
             return false;
@@ -79,6 +82,7 @@ public class EnvironmentVerificator {
     public boolean verifyCollection() {
         if (!new File(Environment.getInstance().settings.COLLECTION_FILE_PATH).exists()) {
             if (automated) {
+                FATAL_FAIL = true;
                 verificationFail("No song collection found!");
             }
             return false;
@@ -89,6 +93,7 @@ public class EnvironmentVerificator {
     public boolean verifyResources() {
         if (!(new File(Environment.getInstance().settings.RESOURCE_FILE_PATH).exists() && new File(Environment.getInstance().settings.RESOURCE_FILE_PATH).isDirectory())) {
             if (automated) {
+                FATAL_FAIL = true;
                 verificationFail("No resource folder found!");
             }
             return false;
@@ -110,6 +115,7 @@ public class EnvironmentVerificator {
     public boolean verifyTemplates() {
         if (!(new File(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH).exists() && new File(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH).isDirectory())) {
             if (automated) {
+                FATAL_FAIL = true;
                 verificationFail("No HTML template folder found!");
             }
             return false;
@@ -148,6 +154,7 @@ public class EnvironmentVerificator {
             }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
+            FATAL_FAIL = true;
             verificationFail("Could not initialize temp folder!");
         }
     }

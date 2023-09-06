@@ -1,25 +1,15 @@
 package attilathehun.songbook.collection;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.text.Collator;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.plugin.DynamicSonglist;
 import attilathehun.songbook.plugin.Frontpage;
-import attilathehun.songbook.plugin.Plugin;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.ui.CodeEditor;
 import attilathehun.songbook.util.HTMLGenerator;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,6 +18,21 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import javax.swing.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 
 public class StandardCollectionManager extends CollectionManager {
@@ -72,68 +77,22 @@ public class StandardCollectionManager extends CollectionManager {
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Collection Initialisation error", "Can not load the song collection!");
-            //TODO: Wiki Troubleshooting: should be fixed by deleting collection.json and then Repairing (add guide with screenshots)
         }
         logger.debug("StandardCollectionManager initialised");
     }
 
-    private void repairSongbookDialog() {
-        UIManager.put("OptionPane.yesButtonText", "Repair");
-        UIManager.put("OptionPane.noButtonText", "Create");
-        UIManager.put("OptionPane.cancelButtonText", "Load");
-
-        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "No collection file was found but it seems you have saved songs in your songbook. Would you like to generate a collection file to repair the songbook? Alternatively, you can create a new songbook or load an existing one from a local or remote zip file.", "Repair songbook", JOptionPane.YES_NO_CANCEL_OPTION);
-
-        if (resultCode == JOptionPane.YES_OPTION) {
-            repairMissingCollectionFile();
-        } else if (resultCode == JOptionPane.NO_OPTION) {
-            new EnvironmentManager().createNewSongbook();
-        } else if (resultCode == JOptionPane.CANCEL_OPTION) {
-            new EnvironmentManager().loadSongbook();
-        } else if (resultCode == JOptionPane.CLOSED_OPTION) {
-
-        }
-
-        UIManager.put("OptionPane.yesButtonText", "Yes");
-        UIManager.put("OptionPane.noButtonText", "No");
-        UIManager.put("OptionPane.cancelButtonText", "Cancel");
-    }
-
-    private void repairMissingCollectionFile() {
-        //TODO
-    }
-
-    private void createSongbookDialog() {
-        UIManager.put("OptionPane.yesButtonText", "Create");
-        UIManager.put("OptionPane.noButtonText", "Load");
-
-        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Create a songbook", "Do you want to create a new songbook? Alternatively, you can load an existing one from a local or remote zip file.", JOptionPane.YES_NO_CANCEL_OPTION);
-
-        if (resultCode == JOptionPane.YES_OPTION) {
-            collection = new ArrayList<Song>();
-            new EnvironmentManager().createNewSongbook();
-        } else if (resultCode == JOptionPane.NO_OPTION) {
-            new EnvironmentManager().loadSongbook();
-        } else if (resultCode == JOptionPane.CANCEL_OPTION) {
-
-        } else if (resultCode == JOptionPane.CLOSED_OPTION) {
-
-        }
-
-        UIManager.put("OptionPane.yesButtonText", "Yes");
-        UIManager.put("OptionPane.noButtonText", "No");
-    }
-
     @Override
-    public String getSongFilePath(int id) {
-        return Paths.get(String.format("%s/%d.html", Environment.getInstance().settings.SONG_DATA_FILE_PATH, id)).toString();
+    public void save() {
+        try {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            FileWriter writer = new FileWriter(Environment.getInstance().settings.COLLECTION_FILE_PATH);
+            gson.toJson(collection, writer);
+            writer.close();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            Environment.showWarningMessage("Error", "Can not save the song collection!");
+        }
     }
-
-    @Override
-    public String getSongFilePath(Song s) {
-        return getSongFilePath(s.id());
-    }
-
 
     @Override
     public Collection<Song> getCollection() {
@@ -149,6 +108,12 @@ public class StandardCollectionManager extends CollectionManager {
             }
         });
         return copy;
+    }
+
+    @Override
+    public ArrayList<Song> getDisplayCollection() {
+        ArrayList<Song> displayList = new ArrayList<Song>(new ArrayList<Song>(getSortedCollection().stream().filter(Song::isActive).collect(Collectors.toList())));
+        return displayList;
     }
 
     @Override
@@ -169,72 +134,10 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public ArrayList<Song> getDisplayCollection() {
-        ArrayList<Song> displayList = new ArrayList<Song>(new ArrayList<Song>(getSortedCollection().stream().filter(Song::isActive).collect(Collectors.toList())));
-        return displayList;
-    }
-
-    @Override
-    public Song updateSongRecord(Song s) {
-        int index = getSongIndex(s);
-
-        collection.get(index).setName(s.name());
-        collection.get(index).setUrl(s.getUrl());
-        collection.get(index).setActive(s.isActive());
-
-        save();
-        Environment.getInstance().refresh();
-        SongbookApplication.dialControlPLusRPressed();
-        return  s;
-    }
-
-    //TODO: <strike>Do we want this at all? And if so, </strike>editing the record from CollectionEditor should update the HTML
-    @Override
-    public void updateSongRecordFromHTML(Song s) {
-        if (!Environment.getInstance().settings.BIND_SONG_TITLES) {
-            return;
-        }
-        try {
-            String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
-            Document document = Jsoup.parse(songHTML);
-            Element element = document.select(".song-title").first();
-            String songName = element.text();
-            System.out.println(songName);
-
-            if (!s.name().equals(songName)) {
-                collection.get(getSongIndex(s)).setName(songName);
-            }
-            save();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
-        }
-    }
-
-    private int getSongIndex(Song s) {
-        for (int i = 0; i < collection.size(); i++) {
-            if (collection.get(i).id() == s.id()) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    @Override
-    public void save() {
-        try {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(Environment.getInstance().settings.COLLECTION_FILE_PATH);
-            gson.toJson(collection, writer);
-            writer.close();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Error", "Can not save the song collection!");
-        }
-    }
-
-    @Override
     public Song addSong(Song s) {
+        if (s == null) {
+            throw new IllegalArgumentException();
+        }
         Song song = s;
         song.setId(getNextId());
 
@@ -248,31 +151,14 @@ public class StandardCollectionManager extends CollectionManager {
         editor.setSong(s);
         editor.setVisible(true);
         Environment.getInstance().refresh();
-        /*int index = 0;
-        boolean isPageOne = false;
-        ArrayList<Song> formalCollection = getFormalCollection();
-        for (int i = 0; i < formalCollection.size(); i++) {
-            if (formalCollection.get(i).equals(s)) {
-                isPageOne = i % 2 == 0 ? false : true;
-                index = i;
-                break;
-            }
-        }
-        if (isPageOne) {
-            SongbookApplication.dialImaginarySongOneKeyPressed(song);
-            SongbookApplication.dialImaginarySongTwoKeyPressed(formalCollection.get(index + 1));
-        } else {
-            SongbookApplication.dialImaginarySongOneKeyPressed(formalCollection.get(index - 1));
-            SongbookApplication.dialImaginarySongTwoKeyPressed(song);
-        }*/
-        //TODO: navigate webview to the new song if active
+        Environment.navigateWebViewToSong(collection.get(collection.size() - 1));
         SongbookApplication.dialControlPLusRPressed();
         return song;
     }
 
     @Override
     public void removeSong(Song s) {
-        collection.remove(getSongIndex(s));
+        collection.remove(getCollectionSongIndex(s));
         save();
         File songFile = new File(String.format(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/%d.html", s.id()));
         if (songFile.delete()) {
@@ -283,28 +169,221 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public void deactivateSong(Song s) {
-        collection.get(getSongIndex(s)).setActive(false);
+    public void activateSong(Song s) {
+        collection.get(getCollectionSongIndex(s)).setActive(true);
         save();
     }
 
     @Override
-    public void activateSong(Song s) {
-        collection.get(getSongIndex(s)).setActive(true);
+    public void deactivateSong(Song s) {
+        collection.get(getCollectionSongIndex(s)).setActive(false);
         save();
     }
 
-    private int getNextId() {
-        int id = -1;
-        for (Song song : collection) {
-            if (song.id() > id) {
-                id = song.id();
-            }
-        }
-        System.out.println("Highest id found: " + id);
-        return id + 1;
+    @Override
+    public Song updateSongRecord(Song s) {
+        int index = getCollectionSongIndex(s);
+
+        collection.get(index).setName(s.name());
+        collection.get(index).setUrl(s.getUrl());
+        collection.get(index).setActive(s.isActive());
+
+        save();
+        Environment.getInstance().refresh();
+        SongbookApplication.dialControlPLusRPressed();
+        return s;
     }
 
+    @Override
+    public void updateSongRecordTitleFromHTML(Song s) {
+        if (!Environment.getInstance().settings.BIND_SONG_TITLES) {
+            return;
+        }
+        if (s == null || s.id() < 0) {
+            return;
+        }
+        try {
+            String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
+            Document document = Jsoup.parse(songHTML);
+            Element element = document.select(".song-title").first();
+            String songName = element.text();
+            System.out.println(songName);
+
+            if (!s.name().equals(songName)) {
+                collection.get(getCollectionSongIndex(s)).setName(songName);
+            }
+            save();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            Environment.showWarningMessage("Warning", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
+        }
+    }
+
+    @Override
+    public void updateSongHTMLTitleFromRecord(Song s) {
+        if (!Environment.getInstance().settings.BIND_SONG_TITLES) {
+            return;
+        }
+        if (s == null || s.id() < 0) {
+            return;
+        }
+        try {
+            String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
+            Document document = Jsoup.parse(songHTML);
+            Element element = document.select(".song-title").first();
+            element.text(s.name());
+
+            FileOutputStream out = new FileOutputStream(getSongFilePath(s));
+            out.write(document.toString().getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            Environment.showWarningMessage("Warning", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
+        }
+    }
+
+    @Override
+    public void updateSongHTMLFromRecord(Song s) {
+        if (!Environment.getInstance().settings.BIND_SONG_TITLES) {
+            return;
+        }
+        try {
+            String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
+            Document document = Jsoup.parse(songHTML);
+            Element element = document.select(".song-title").first();
+            String songName = element.text();
+            System.out.println(songName);
+
+            if (!s.name().equals(songName)) {
+                collection.get(getCollectionSongIndex(s)).setName(songName);
+            }
+            save();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            Environment.showWarningMessage("Warning", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
+        }
+    }
+
+    @Override
+    public String getSongFilePath(Song s) {
+        return getSongFilePath(s.id());
+    }
+
+    @Override
+    public String getSongFilePath(int id) {
+        return Paths.get(String.format("%s/%d.html", Environment.getInstance().settings.SONG_DATA_FILE_PATH, id)).toString();
+    }
+
+    @Override
+    public int getCollectionSongIndex(Song s) {
+        int i = 0;
+        for (Song song : collection) {
+            if (song.equals(s)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    @Override
+    public int getCollectionSongIndex(int songId) {
+        if (songId< 0) {
+            throw new IllegalArgumentException();
+        }
+        int i = 0;
+        for (Song song : collection) {
+            if (song.id() == songId) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    @Override
+    public int getSortedCollectionSongIndex(Song s) {
+        int i = 0;
+        for (Song song : getSortedCollection()) {
+            if (song.equals(s)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    @Override
+    public int getSortedCollectionSongIndex(int id) {
+        if (id < 0) {
+            throw new IllegalArgumentException();
+        }
+        int i = 0;
+        for (Song song : getSortedCollection()) {
+            if (song.id() == id) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    @Override
+    public int getDisplayCollectionSongIndex(Song s) {
+        int i = 0;
+        for (Song song : getDisplayCollection()) {
+            if (song.equals(s)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    @Override
+    public int getDisplayCollectionSongIndex(int id) {
+        if (id < 0) {
+            throw new IllegalArgumentException();
+        }
+        int i = 0;
+        for (Song song : getDisplayCollection()) {
+            if (song.id() == id) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    @Override
+    public int getFormalCollectionSongIndex(Song s) {
+        int i = 0;
+        for (Song song : getFormalCollection()) {
+            if (song.equals(s)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    @Override
+    public int getFormalCollectionSongIndex(int id) {
+        if (id < 0) {
+            throw new IllegalArgumentException();
+        }
+        int i = 0;
+        for (Song song : getFormalCollection()) {
+            if (song.id() == id) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    @Override
     public Song getPlaceholderSong() {
         int min = 0;
         int max = 41;
@@ -332,6 +411,110 @@ public class StandardCollectionManager extends CollectionManager {
 
         return new Song("New Song", -1);
 
+    }
+
+
+    /* Internal helper methods */
+    private int getNextId() {
+        int id = -1;
+        for (Song song : collection) {
+            if (song.id() > id) {
+                id = song.id();
+            }
+        }
+        return id + 1;
+    }
+
+    private Song createSongRecordFromLocalFile(int songId) {
+        if (songId == -1) {
+            throw new IllegalArgumentException();
+        }
+        String songName = null;
+        try {
+            String songHTML = String.join("\n", Files.readAllLines(Paths.get(Environment.getInstance().settings.SONG_DATA_FILE_PATH + String.format("/%d.html", songId))));
+            Document document = Jsoup.parse(songHTML);
+            Element element = document.select(".song-title").first();
+            songName = element.text();
+            element = document.select("meta[name=url]").first();
+            String songURL = (element != null) ? element.attr("value") : "";
+            element = document.select("meta[name=active]").first();
+            Boolean songActiveStatus = (element != null) ? Boolean.parseBoolean(element.attr("value")) : true;
+
+            return new Song(songId, songName, songActiveStatus, songURL);
+        } catch (IOException e) {
+            logger.info(String.format("Target song: %d %s", songId, songName));
+            logger.error(e.getMessage(), e);
+        }
+
+        return null;
+    }
+
+    private void repairSongbookDialog() {
+        UIManager.put("OptionPane.yesButtonText", "Repair");
+        UIManager.put("OptionPane.noButtonText", "Create");
+        UIManager.put("OptionPane.cancelButtonText", "Load");
+
+        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "No collection file was found but it seems you have saved songs in your songbook. Would you like to generate a collection file to repair the songbook? Alternatively, you can create a new songbook or load an existing one from a local or remote zip file.", "Repair songbook", JOptionPane.YES_NO_CANCEL_OPTION);
+
+        if (resultCode == JOptionPane.YES_OPTION) {
+            repairMissingCollectionFile();
+        } else if (resultCode == JOptionPane.NO_OPTION) {
+            new EnvironmentManager().createNewSongbook();
+        } else if (resultCode == JOptionPane.CANCEL_OPTION) {
+            new EnvironmentManager().loadSongbook();
+        } else if (resultCode == JOptionPane.CLOSED_OPTION) {
+
+        }
+
+        UIManager.put("OptionPane.yesButtonText", "Yes");
+        UIManager.put("OptionPane.noButtonText", "No");
+        UIManager.put("OptionPane.cancelButtonText", "Cancel");
+    }
+
+    private void createSongbookDialog() {
+        UIManager.put("OptionPane.yesButtonText", "Create");
+        UIManager.put("OptionPane.noButtonText", "Load");
+
+        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Create a songbook", "Do you want to create a new songbook? Alternatively, you can load an existing one from a local or remote zip file.", JOptionPane.YES_NO_CANCEL_OPTION);
+
+        if (resultCode == JOptionPane.YES_OPTION) {
+            collection = new ArrayList<Song>();
+            new EnvironmentManager().createNewSongbook();
+        } else if (resultCode == JOptionPane.NO_OPTION) {
+            new EnvironmentManager().loadSongbook();
+        } else if (resultCode == JOptionPane.CANCEL_OPTION) {
+
+        } else if (resultCode == JOptionPane.CLOSED_OPTION) {
+
+        }
+
+        UIManager.put("OptionPane.yesButtonText", "Yes");
+        UIManager.put("OptionPane.noButtonText", "No");
+    }
+
+    private void repairMissingCollectionFile() {
+        logger.info("Repairing standard collection");
+        collection = new ArrayList<Song>();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(Environment.getInstance().settings.SONG_DATA_FILE_PATH))) {
+            for (Path path : stream) {
+
+                if (!Files.isDirectory(path) && path.toString().trim().endsWith(".html")) {
+                    int songId = -1;
+                    String pathString = path.toString();
+                    //System.out.println(pathString);
+                    if (pathString.contains(File.separator)) {
+                        songId = Integer.parseInt(pathString.substring(pathString.lastIndexOf(File.separator) + 1, pathString.indexOf(".html")));
+                    } else {
+                        songId = Integer.parseInt(pathString.substring(0, pathString.indexOf(".html")));
+                    }
+                    collection.add(createSongRecordFromLocalFile(songId));
+                }
+            }
+            save();
+            logger.info("Success!");
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
 }

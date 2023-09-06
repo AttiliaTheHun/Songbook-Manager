@@ -14,7 +14,7 @@ public class DynamicSonglist extends Plugin {
 
     private static final DynamicSonglist instance = new DynamicSonglist();
 
-    private String name = DynamicSonglist.class.getSimpleName();
+    private final String name = DynamicSonglist.class.getSimpleName();
 
     private DynamicSonglist() {
         super();

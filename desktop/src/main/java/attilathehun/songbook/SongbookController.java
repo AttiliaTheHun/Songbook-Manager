@@ -150,7 +150,7 @@ public class SongbookController implements KeyEventListener {
                 id = Integer.parseInt(text);
                 if (id < 0)
                     break lol;
-                int index = Environment.getInstance().getFormalCollectionSongIndex(id);
+                int index = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(id);
                 if (index > 0) {
                     SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(index);
                     SONG_ONE_INDEX = index;
@@ -184,7 +184,7 @@ public class SongbookController implements KeyEventListener {
                 id = Integer.parseInt(text);
                 if (id == -1)
                     break lol;
-                int index = Environment.getInstance().getFormalCollectionSongIndex(id);
+                int index = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(id);
                 if (index != -1) {
                     SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(index);
                     SONG_TWO_INDEX = index;
@@ -237,17 +237,14 @@ public class SongbookController implements KeyEventListener {
 
         singlepageSelection.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
             new PDFGenerator().generateSinglePage();
-
         });
 
         defaultSelection.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
             new PDFGenerator().generateDefault();
-
         });
 
         printableSelection.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
             new PDFGenerator().generatePrintable();
-
         });
 
         if (Environment.getInstance().settings.IS_IT_EASTER_ALREADY) {

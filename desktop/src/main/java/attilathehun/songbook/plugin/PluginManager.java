@@ -23,6 +23,11 @@ public class PluginManager {
 
     }
 
+    public static void loadPlugins() {
+        DynamicSonglist.getInstance();
+        Frontpage.getInstance();
+    }
+
     public static PluginManager getInstance() {
         return instance;
     }

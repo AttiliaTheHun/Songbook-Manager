@@ -37,11 +37,11 @@ public class HTMLGenerator {
     private static final String BASE_STYLE_HTML_LINK = "<link rel=\"stylesheet\" href=\"" + "style.css" + "\"></link>";
     private static final String SONG_AUTHOR_REPLACE_MARK = "<replace \"songauthor\">";
     private static final String SONG_NAME_REPLACE_MARK = "<replace \"songname\">";
+    private static final String SONG_URL_REPLACE_MARK = "<replace \"songurl\">";
+    private static final String SONG_ACTIVE_REPLACE_MARK = "<replace \"songactive\">";
     private static final String SONG_LIST_REPLACE_MARK = "<replace \"unorderedlist\">";
     private static final String FRONTPAGE_PICTURE_PATH_REPLACE_MARK = "<replace \"frontpagepic\">";
     private static final String FRONTPAGE_PICTURE_PATH = Paths.get(Environment.getInstance().settings.ASSETS_RESOURCES_FILE_PATH + "/frontpage.png").toString();
-    public static final String FRONTPAGE = "frontpage.html";
-    private static final String PAGEVIEW = "current_page.html";
     private static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/segment").toString();
 
     private static final String SHADOW_SONG_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/shadow_song.html").toString();
@@ -209,6 +209,8 @@ public class HTMLGenerator {
             String songHTML = String.join("\n", Files.readAllLines(songTemplate.toPath()));
             songHTML = songHTML.replace(SONG_NAME_REPLACE_MARK, s.name());
             songHTML = songHTML.replace(SONG_AUTHOR_REPLACE_MARK, s.getAuthor());
+            songHTML = songHTML.replace(SONG_URL_REPLACE_MARK, s.getUrl());
+            songHTML = songHTML.replace(SONG_ACTIVE_REPLACE_MARK, String.valueOf(s.isActive()));
 
             PrintWriter printWriter = new PrintWriter(new FileWriter((songFile), false));
             printWriter.write(songHTML);
