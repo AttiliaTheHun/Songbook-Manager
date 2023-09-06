@@ -25,6 +25,7 @@ public class HTMLGenerator {
     private static final String FRONTPAGE_TEMPLATE_PATH = Paths.get(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/frontpage.html").toString();
     private static final String PAGEVIEW_TEMPLATE_PATH = Paths.get(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/pageview.html").toString();
     private static final String SONG_TEMPLATE_PATH = Paths.get(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/song.html").toString();
+    private static final String SONG_WRAPPER_TEMPLATE_PATH = Paths.get(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/song_wrapper.html").toString();
     private static final String TEMP_SONGLIST_PART_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/songlist_part_%d.html").toString();
     private static final String TEMP_FRONTPAGE_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/frontpage.html").toString();
     private static final String TEMP_PAGEVIEW_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/current_page.html").toString();
@@ -250,6 +251,57 @@ public class HTMLGenerator {
         try {
             PrintWriter printWriter = new PrintWriter(new FileWriter((path), false));
             printWriter.write(generatePage(songOne, songTwo));
+            printWriter.close();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            Environment.showErrorMessage("HTML Generation Error", "Unable to generate current segment file.");
+        }
+        return path;
+    }
+
+    private String generatePrintableSong(Song s) throws  IOException {
+        String songPath = null;
+
+        if (s.name().equals("frontpage")) {
+            songPath = TEMP_FRONTPAGE_PATH;
+        } else if (s.name().startsWith("songlist")) {
+            int songlistPartNumber = Integer.parseInt(s.name().substring("songlist".length()));
+            songPath = String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber);
+        } else if (s.name().equals(CollectionManager.SHADOW_SONG_NAME)) {
+            return null;
+        } else if (s.id() != CollectionManager.INVALID_SONG_ID) {
+            songPath = Environment.getInstance().getCollectionManager().getSongFilePath(s.id());
+        }
+
+
+        if (s.name().equals("frontpage") && !new File(TEMP_FRONTPAGE_PATH).exists()) {
+            generateFrontpageFile();
+        }
+        if (s.name().startsWith("songlist")) {
+            int songlistPartNumber = Integer.parseInt(s.name().substring("songlist".length()));
+            if (!new File(String.format(TEMP_SONGLIST_PART_PATH, songlistPartNumber)).exists()) {
+                PluginManager.getInstance().getPlugin(DynamicSonglist.class.getSimpleName()).execute();
+            }
+        }
+
+        Path templatePath = Paths.get(SONG_WRAPPER_TEMPLATE_PATH);
+        String songHTML = String.join("\n", Files.readAllLines(Paths.get(songPath)));
+        String html = String.join("\n", Files.readAllLines(templatePath));
+
+        html = html.replace(HEAD_REPLACE_MARK, getHead());
+        html = html.replace(SONG_ONE_REPLACE_MARK, songHTML);
+        return html;
+    }
+
+    public String generatePrintableSongFile(Song s, int number) {
+        String path = DEFAULT_SEGMENT_PATH + number + ".html";
+        try {
+            String html = generatePrintableSong(s);
+            if (html == null) {
+                return null;
+            }
+            PrintWriter printWriter = new PrintWriter(new FileWriter((path), false));
+            printWriter.write(html);
             printWriter.close();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

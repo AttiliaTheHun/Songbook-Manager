@@ -1,14 +1,14 @@
 const HTML5ToPDF = require("html5-to-pdf")
 const path = require("path")
  
-const run = async (targetPath, number) => {
+const run = async (targetPath, number, landscape) => {
   const html5ToPDF = new HTML5ToPDF({
     inputPath: path.join(targetPath, `segment${number}.html`),
     outputPath: path.join(targetPath, `segment${number}.pdf`),
     include: [
       path.join(targetPath, "style.css"),
     ],
-	pdf: { "landscape": true }
+	pdf: { "landscape": landscape }
   })
  
   await html5ToPDF.start()
@@ -18,10 +18,11 @@ const run = async (targetPath, number) => {
  
 (async () => {
   try {
+	  const landscape = process.argv[process.argv.length - 3] === 'true';
 	  const targetPath = process.argv[process.argv.length - 2];
 	  const segmentCount = process.argv[process.argv.length - 1];
 	  for (let i = 0; i < segmentCount; i++) {
-		  await run(targetPath, i);
+		  await run(targetPath, i, landscape);
 	  }
 
     console.log("DONE converting HTML to PDF")

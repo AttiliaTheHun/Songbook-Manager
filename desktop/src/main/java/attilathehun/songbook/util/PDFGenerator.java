@@ -1,5 +1,6 @@
 package attilathehun.songbook.util;
 
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 //import attilathehun.songbook.ui.ProgressDialog;
@@ -92,21 +93,80 @@ public class PDFGenerator {
             protected Void call() {
                 double progress = 0d;
                 try {
+
+                    final String EXPORT_FILE_PATH;
+                    switch (exportOption) {
+                        case EXPORT_OPTION_PRINTABLE -> EXPORT_FILE_PATH = PRINTABLE_PDF_OUTPUT_PATH;
+                        case EXPORT_OPTION_SINGLEPAGE -> EXPORT_FILE_PATH = SINGLEPAGE_PDF_OUTPUT_PATH;
+                        default -> EXPORT_FILE_PATH = DEFAULT_PDF_OUTPUT_PATH;
+                    }
+
                     updateTitle("Exporting...");
                     updateMessage("Loading the collection.....0%");
                     ArrayList<Song> collection = Environment.getInstance().getCollectionManager().getFormalCollection();
                     HTMLGenerator htmlGenerator = new HTMLGenerator();
                     int segmentCount = 0;
-                    final double segmentProgressWeight = (double) 1 / collection.size() / 2;
-                    for (int i = 0; i < collection.size(); i += 2) {
-                        File inputHTML = new File(htmlGenerator.generateSegmentFile(collection.get(i), collection.get(i + 1), segmentCount));
-                        String segmentFilePath = htmlGenerator.generateSegmentFile(collection.get(i), collection.get(i + 1), segmentCount);
-                        segmentCount++;
-                        progress += segmentProgressWeight;
-                        updateProgress(progress, 1d);
-                        updateMessage("Generating HTML segments....." + (int) (progress * 100) + "%");
-                        Thread.sleep(100);
+                    if (exportOption == EXPORT_OPTION_DEFAULT) {
+                        final double segmentProgressWeight = ((double) 1 / collection.size() / 2) / 2;
+                        for (int i = 0; i < collection.size(); i += 2) {
+                            String segmentFilePath = htmlGenerator.generateSegmentFile(collection.get(i), collection.get(i + 1), segmentCount);
+                            segmentCount++;
+                            progress += segmentProgressWeight;
+                            updateProgress(progress, 1d);
+                            updateMessage("Generating HTML segments....." + (int) (progress * 100) + "%");
+                            Thread.sleep(100);
+                        }
+                    } else if (exportOption == EXPORT_OPTION_PRINTABLE) {
+                        final double segmentProgressWeight = ((double) 1 / collection.size() / 4) / 2;
+                        for (int i = 0; i < collection.size(); i += 4) {
+                            if (i + 4 > collection.size()) {
+                                break;
+                            }
+                            String firstSegmentFilePath = htmlGenerator.generateSegmentFile(collection.get(i), collection.get(i + 3), segmentCount++);
+                            String secondSegmentFilePath = htmlGenerator.generateSegmentFile(collection.get(i + 2), collection.get(i + 1), segmentCount++);
+                            progress += segmentProgressWeight;
+                            updateProgress(progress, 1d);
+                            updateMessage("Generating HTML segments....." + (int) (progress * 100) + "%");
+                            Thread.sleep(100);
+                        }
+                        switch (collection.size() % 4) {
+                           case 1 -> {
+                                String segmentFilePath = htmlGenerator.generateSegmentFile(collection.get(collection.size() - 1), CollectionManager.getShadowSong(), segmentCount);
+                                segmentCount++;
+                                progress += segmentProgressWeight;
+                                updateProgress(progress, 1d);
+                                updateMessage("Generating HTML segments....." + (int) (progress * 100) + "%");
+                                Thread.sleep(100);
+                            }
+                            case 2 -> {
+                                String firstSegmentFilePath = htmlGenerator.generateSegmentFile(collection.get(collection.size() - 2), CollectionManager.getShadowSong(), segmentCount++);
+                                String secondSegmentFilePath = htmlGenerator.generateSegmentFile(CollectionManager.getShadowSong(), collection.get(collection.size() - 1), segmentCount++);
+                                progress += segmentProgressWeight;
+                                updateProgress(progress, 1d);
+                                updateMessage("Generating HTML segments....." + (int) (progress * 100) + "%");
+                                Thread.sleep(100);
+                            }
+                            case 3 -> {
+                                String firstSegmentFilePath = htmlGenerator.generateSegmentFile(collection.get(collection.size() - 3), collection.get(collection.size() - 1), segmentCount++);
+                                String secondSegmentFilePath = htmlGenerator.generateSegmentFile(CollectionManager.getShadowSong(), collection.get(collection.size() - 2), segmentCount++);
+                                progress += segmentProgressWeight;
+                                updateProgress(progress, 1d);
+                                updateMessage("Generating HTML segments....." + (int) (progress * 100) + "%");
+                                Thread.sleep(100);
+                            }
+                        }
+                    }else if (exportOption == EXPORT_OPTION_SINGLEPAGE) {
+                        final double segmentProgressWeight = ((double) 1 / collection.size() / 2);
+                        for (int i = 0; i < collection.size(); i++) {
+                            String segmentFilePath = htmlGenerator.generatePrintableSongFile(collection.get(i), segmentCount);
+                            segmentCount++;
+                            progress += segmentProgressWeight;
+                            updateProgress(progress, 1d);
+                            updateMessage("Generating HTML segments....." + (int) (progress * 100) + "%");
+                            Thread.sleep(100);
+                        }
                     }
+                    System.out.println(String.format("collection size: %d segment count: %d size %% 4: %d", collection.size(), segmentCount, collection.size() % 4));
 
                     updateProgress(0.5d, 1d);
                     updateMessage("Converting HTML segments to PDF segments.....50%");
@@ -114,9 +174,8 @@ public class PDFGenerator {
                     try {
 
                         ProcessBuilder processBuilder = new ProcessBuilder();
-                        //System.out.println(String.format("cd scripts & node html_to_pdf.js %s %d", Environment.getInstance().settings.TEMP_FILE_PATH, segmentCount));
-                        processBuilder.command("cmd.exe", "/c", String.format("cd %s & node html_to_pdf.js %s %d", Environment.getInstance().settings.SCRIPTS_FILE_PATH, Environment.getInstance().settings.TEMP_FILE_PATH, segmentCount));
-                        //processBuilder.command("cmd.exe", "/c", "timeout 5");
+                        boolean landscape = exportOption == EXPORT_OPTION_SINGLEPAGE;
+                        processBuilder.command("cmd.exe", "/c", String.format("cd %s & node html_to_pdf.js %b %s %d", Environment.getInstance().settings.SCRIPTS_FILE_PATH, landscape, Environment.getInstance().settings.TEMP_FILE_PATH, segmentCount));
                         processBuilder.directory(new File(System.getProperty("user.dir")));
                         processBuilder.inheritIO();
                         Process process = processBuilder.start();
@@ -124,10 +183,12 @@ public class PDFGenerator {
                         updateMessage("Converting HTML segments to PDF segments.....85%");
                         process.waitFor();
                         updateMessage("Joining PDF segments.....85%");
-                        joinSegments(segmentCount, DEFAULT_PDF_OUTPUT_PATH);
+
+                        joinSegments(segmentCount, EXPORT_FILE_PATH);
+
                         updateMessage("Finished.....100%");
                         updateProgress(1d, 1d);
-                        Environment.showMessage("PDF generation finished", "You can view the newly generated file in this location: " + DEFAULT_PDF_OUTPUT_PATH);
+                        Environment.showMessage("PDF generation finished", "You can view the newly generated file in this location: " + EXPORT_FILE_PATH);
                     } catch (Exception e) {
                         logger.error(e.getMessage(), e);
                         Environment.showErrorMessage("PDF Generation Failed", e.getMessage());

@@ -79,7 +79,7 @@ public class CodeEditor extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent e) {
-                if (SHIFT_PRESSED) {
+                if (SHIFT_PRESSED || getTitle().startsWith("*")) {
                     removeInstance();
                     SHIFT_PRESSED = false;
                     setVisible(false);
