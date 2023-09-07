@@ -1,13 +1,10 @@
 package attilathehun.songbook.plugin;
 
-import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class PluginManager {
@@ -82,10 +79,6 @@ public class PluginManager {
             }
             return get(pluginName).enabled;
         }
-
-
-
-
 
     }
 

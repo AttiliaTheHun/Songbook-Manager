@@ -6,6 +6,7 @@ import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.environment.EnvironmentVerificator;
 import attilathehun.songbook.environment.Installer;
+import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.ui.CodeEditor;
 import attilathehun.songbook.util.KeyEventListener;
 import com.github.kwhat.jnativehook.NativeHookException;
@@ -43,6 +44,10 @@ public class SongbookApplication extends Application {
     private static final List<KeyEventListener> listeners = new ArrayList<KeyEventListener>();
 
     public static void main(String[] args) {
+
+        System.setProperty("log4j.configurationFile", "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\src\\main\\resources\\log4j2.yaml");
+        PluginManager.loadPlugins();
+
         Installer.runDiagnostics();
         Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
         EnvironmentVerificator.automated();
@@ -98,8 +103,6 @@ public class SongbookApplication extends Application {
                     if (!stage.isFocused()) {
                         return;
                     }
-                    //Environment.showMessage("Message", "Key pressed");
-                    //System.out.println("Keypress: " + nativeEvent.getKeyChar() + " : " + nativeEvent.getKeyCode());
                     switch (nativeEvent.getKeyCode()) {
                         case NativeKeyEvent.VC_CONTROL -> CONTROL_PRESSED = true;
                         case NativeKeyEvent.VC_LEFT, NativeKeyEvent.VC_PAGE_DOWN -> {

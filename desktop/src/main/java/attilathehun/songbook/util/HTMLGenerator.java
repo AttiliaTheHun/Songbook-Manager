@@ -46,6 +46,9 @@ public class HTMLGenerator {
 
     private static final String SHADOW_SONG_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/shadow_song.html").toString();
 
+    /**
+     * The default constructor. Upon instantiation the default style file and a shadow song file are created in the temp folder.
+     */
     public HTMLGenerator() {
         try {
             Files.copy(Paths.get(BASE_STYLE_FILE_PATH), Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/style.css"), StandardCopyOption.REPLACE_EXISTING);
@@ -53,16 +56,18 @@ public class HTMLGenerator {
             shadowSongFile.createNewFile();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Can not instantiate the HTML generator");
+            Environment.showErrorMessage("Error", "Can not instantiate the HTML generator", true);
         }
     }
 
-
+    /**
+     * Generates HTML file with the list of songs from a specified portion of the formal collection to the temp folder. The default Collection Manager is used.
+     * This method is part of the DynamicSonglist plugin.
+     * @param startIndex formal collection first song index (inclusive)
+     * @param endIndex formal collection last song index (exclusive)
+     * @param segmentNumber number of the part of the songlist
+     */
     public void generateSonglistSegmentFile(int startIndex, int endIndex, int segmentNumber) {
-        if (startIndex < 0 || startIndex > Environment.getInstance().getCollectionManager().getDisplayCollection().size() || endIndex > Environment.getInstance().getCollectionManager().getDisplayCollection().size()) {
-            throw new IllegalArgumentException();
-        }
-
         try {
             String path = String.format(TEMP_SONGLIST_PART_PATH, segmentNumber);
             if (Environment.fileExists(path)) {
@@ -78,7 +83,20 @@ public class HTMLGenerator {
 
     }
 
+    /**
+     * Returns an HTML string  with the list of songs from a specified portion of the formal collection.The default Collection Manager is used.
+     * This method is part of the DynamicSonglist plugin.
+     * @param startIndex formal collection first song index (inclusive)
+     * @param endIndex formal collection last song index (exclusive)
+     * @param segmentNumber number of the part of the songlist
+     * @return HTML string of a songlist part file of the specified number
+     * @throws IOException
+     */
     private String generateSonglistSegment(int startIndex, int endIndex, int segmentNumber) throws IOException {
+        if (startIndex < 0 || startIndex > Environment.getInstance().getCollectionManager().getDisplayCollection().size() || endIndex < 0 ||endIndex > Environment.getInstance().getCollectionManager().getDisplayCollection().size()) {
+            throw new IllegalArgumentException();
+        }
+
         Path path = Paths.get(SONGLIST_TEMPLATE_PATH);
 
         String html = String.join("\n", Files.readAllLines(path));
@@ -116,6 +134,11 @@ public class HTMLGenerator {
         return html;
     }
 
+    /**
+     * Returns the HTML string of the premade <head> element.
+     * @return HTML <head> string
+     * @throws IOException
+     */
     private String getHead() throws IOException {
         Path path = Paths.get(HEAD_TEMPLATE_PATH);
 
@@ -123,7 +146,23 @@ public class HTMLGenerator {
         return html.replace(BASE_STYLE_PATH_REPLACE_MARK, BASE_STYLE_HTML_LINK);
     }
 
-    private String generatePage(Song songOne, Song songTwo) throws IOException {
+    /**
+     * Returns an HTML string of a page of the songbook.
+     * @param songOne first song on the page (on the left)
+     * @param songTwo second song on the page (on the right)
+     * @param manager the collection manager to use (default if null)
+     * @return songbook page HTML string
+     * @throws IOException
+     */
+    private String generatePage(Song songOne, Song songTwo, CollectionManager manager) throws IOException {
+        if (songOne == null && songTwo == null) {
+            throw new IllegalArgumentException();
+        }
+
+        if (manager == null) {
+            manager = Environment.getInstance().getCollectionManager();
+        }
+
         String songOnePath = null;
         String songTwoPath = null;
 
@@ -135,7 +174,7 @@ public class HTMLGenerator {
         } else if (songOne.name().equals(CollectionManager.SHADOW_SONG_NAME)) {
             songOnePath = SHADOW_SONG_PATH;
         } else if (songOne.id() != CollectionManager.INVALID_SONG_ID) {
-            songOnePath = Environment.getInstance().getCollectionManager().getSongFilePath(songOne.id());
+            songOnePath = manager.getSongFilePath(songOne.id());
         }
 
         if (songTwo.name().equals("frontpage")) {
@@ -146,7 +185,7 @@ public class HTMLGenerator {
         } else if (songTwo.name().equals(CollectionManager.SHADOW_SONG_NAME)) {
             songTwoPath = SHADOW_SONG_PATH;
         } else if (songTwo.id() != CollectionManager.INVALID_SONG_ID) {
-            songTwoPath = Environment.getInstance().getCollectionManager().getSongFilePath(songTwo.id());
+            songTwoPath = manager.getSongFilePath(songTwo.id());
         }
 
 
@@ -168,8 +207,6 @@ public class HTMLGenerator {
         }
 
         Path templatePath = Paths.get(PAGEVIEW_TEMPLATE_PATH);
-        // System.out.println(songOnePath);
-        // System.out.println(songTwoPath);
         String songOneHTML = String.join("\n", Files.readAllLines(Paths.get(songOnePath)));
         String songTwoHTML = String.join("\n", Files.readAllLines(Paths.get(songTwoPath)));
         String html = String.join("\n", Files.readAllLines(templatePath));
@@ -180,10 +217,16 @@ public class HTMLGenerator {
         return html;
     }
 
+    /**
+     * Generates an HTML file with a page of the songbook to the temp folder.
+     * @param songOne first song on the page (on the left)
+     * @param songTwo second song on the page (on the right)
+     * @return path of the temp page file
+     */
     public String generatePageFile(Song songOne, Song songTwo) {
         try {
             PrintWriter printWriter = new PrintWriter(new FileWriter((TEMP_PAGEVIEW_PATH), false));
-            printWriter.write(generatePage(songOne, songTwo));
+            printWriter.write(generatePage(songOne, songTwo, Environment.getInstance().getCollectionManager()));
             printWriter.close();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -192,14 +235,24 @@ public class HTMLGenerator {
         return TEMP_PAGEVIEW_PATH;
     }
 
-    public boolean generateSongFile(Song s) {
+    /**
+     * Generates a new song file from the template to the data folder.
+     * @param s target song
+     * @param manager the collection manager to use (default if null)
+     * @return true if the file has been created
+     */
+    public boolean generateSongFile(Song s, CollectionManager manager) {
+        if (s == null || s.id() < 0) {
+            throw new IllegalArgumentException();
+        }
+
+        if (manager == null) {
+            manager = Environment.getInstance().getCollectionManager();
+        }
+
         try {
             File songFile = null;
-            if (Environment.getInstance().getCollectionManager().equals(EasterCollectionManager.getInstance())) {
-                songFile = new File(String.format(EasterCollectionManager.EASTER_SONG_DATA_FILE_PATH + "/%d.html", s.id()));
-            } else {
-                songFile = new File(String.format(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/%d.html", s.id()));
-            }
+            songFile = new File(manager.getSongFilePath(s));
 
             File songTemplate = new File(Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH + "/song.html");
             if (!songFile.createNewFile() && songFile.length() != 0) {
@@ -217,23 +270,43 @@ public class HTMLGenerator {
             printWriter.close();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("HTML Generation Error", "Unable to generate a song file.");
+            Environment.showErrorMessage("HTML Generation Error", "Unable to generate a song file.");
             return false;
         }
         return true;
     }
 
+    /**
+     * Generates a new song file from the template to the data folder. Uses the default Collection Manager.
+     * @param s target song
+     * @return true if the file has been created
+     */
+    public boolean generateSongFile(Song s) {
+        return generateSongFile(s, Environment.getInstance().getCollectionManager());
+    }
+
+    /**
+     * Returns HTML string with the frontpage.
+     * This method is part of the Frontpage plugin.
+     * @return frontpage HTML string
+     * @throws IOException
+     */
     private String generateFrontpage() throws IOException {
         Path path = Paths.get(FRONTPAGE_TEMPLATE_PATH);
 
         String html = String.join("\n", Files.readAllLines(path));
-        html = html.replace(FRONTPAGE_PICTURE_PATH_REPLACE_MARK, /*FRONTPAGE_PICTURE_PATH*/"../resources/assets/frontpage.png");
-        //System.out.println(html);
+        html = html.replace(FRONTPAGE_PICTURE_PATH_REPLACE_MARK, /*FRONTPAGE_PICTURE_PATH*/ "frontpage.png");
+
         return html;
     }
 
+    /**
+     * Generates an HTML file with the songbook frontpage to the temp folder.
+     * This method is part of the Frontpage plugin.
+     */
     public void generateFrontpageFile() {
         try {
+            Files.copy(Paths.get(FRONTPAGE_PICTURE_PATH), Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/frontpage.png"), StandardCopyOption.REPLACE_EXISTING);
             String path = TEMP_FRONTPAGE_PATH;
             if (Environment.fileExists(path)) {
                 return;
@@ -247,12 +320,23 @@ public class HTMLGenerator {
         }
     }
 
+    /**
+     * Returns HTML string of a page of the songbook. Though similar to #generatePageFile(), it is suited for exporting as you can choose name of the output file.
+     * @param songOne first song on the page (on the left)
+     * @param songTwo second song on the page (on the right)
+     * @param number number of the segment (serves as file name)
+     * @param manager the collection manager to use (default if null)
+     * @return songbook page file HTML
+     */
+    public String generateSegmentFile(Song songOne, Song songTwo, int number, CollectionManager manager) {
+        if (number < 0) {
+            throw  new IllegalArgumentException();
+        }
 
-    public String generateSegmentFile(Song songOne, Song songTwo, int number) {
         String path = DEFAULT_SEGMENT_PATH + number + ".html";
         try {
             PrintWriter printWriter = new PrintWriter(new FileWriter((path), false));
-            printWriter.write(generatePage(songOne, songTwo));
+            printWriter.write(generatePage(songOne, songTwo, manager));
             printWriter.close();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -261,7 +345,34 @@ public class HTMLGenerator {
         return path;
     }
 
-    private String generatePrintableSong(Song s) throws  IOException {
+    /**
+     * Returns an HTML string of a page of the songbook. Though similar to #generatePageFile(), it is suited for exporting as you can choose name of the output file.
+     * Uses the default Collection Manager.
+     * @param songOne first song on the page (on the left)
+     * @param songTwo second song on the page (on the right)
+     * @param number number of the segment (serves as file name)
+     * @return songbook page file HTML
+     */
+    public String generateSegmentFile(Song songOne, Song songTwo, int number) {
+        return generateSegmentFile(songOne, songTwo, number, Environment.getInstance().getCollectionManager());
+    }
+
+    /**
+     * Returns an HTML string of a standalone song file wrapped in the template.
+     * @param s target song
+     * @param manager Collection Manager to use (default if null)
+     * @return standalone song file HTML string
+     * @throws IOException
+     */
+    private String generatePrintableSong(Song s, CollectionManager manager) throws  IOException {
+        if (s == null) {
+            throw new IllegalArgumentException();
+        }
+
+        if (manager == null) {
+            manager = Environment.getInstance().getCollectionManager();
+        }
+
         String songPath = null;
 
         if (s.name().equals("frontpage")) {
@@ -272,7 +383,7 @@ public class HTMLGenerator {
         } else if (s.name().equals(CollectionManager.SHADOW_SONG_NAME)) {
             return null;
         } else if (s.id() != CollectionManager.INVALID_SONG_ID) {
-            songPath = Environment.getInstance().getCollectionManager().getSongFilePath(s.id());
+            songPath = manager.getSongFilePath(s.id());
         }
 
 
@@ -295,10 +406,20 @@ public class HTMLGenerator {
         return html;
     }
 
-    public String generatePrintableSongFile(Song s, int number) {
+    /**
+     * Generates a standalone HTML file from template for a target song to the temp folder.
+     * @param s target song
+     * @param number number of the song file (servers as a file name)
+     * @param manager the Collection Manager to use (default if null)
+     * @return path to the file
+     */
+    public String generatePrintableSongFile(Song s, int number, CollectionManager manager) {
+        if (number < 0) {
+            throw  new IllegalArgumentException();
+        }
         String path = DEFAULT_SEGMENT_PATH + number + ".html";
         try {
-            String html = generatePrintableSong(s);
+            String html = generatePrintableSong(s, manager);
             if (html == null) {
                 return null;
             }
@@ -310,5 +431,15 @@ public class HTMLGenerator {
             Environment.showErrorMessage("HTML Generation Error", "Unable to generate current segment file.");
         }
         return path;
+    }
+
+    /**
+     * Generates a standalone HTML file from template for a target song to the temp folder. Uses default Collection Manager.
+     * @param s target song
+     * @param number number of the song file (servers as a file name)
+     * @return path to the file
+     */
+    public String generatePrintableSongFile(Song s, int number) {
+        return generatePrintableSongFile(s, number, Environment.getInstance().getCollectionManager());
     }
 }

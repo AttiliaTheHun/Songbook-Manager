@@ -7,22 +7,24 @@ import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
+import attilathehun.songbook.util.PDFGenerator;
+import javafx.application.Platform;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
+import java.io.File;
 
 public class CollectionEditor extends JFrame {
 
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
 
     private static boolean CONTROL_PRESSED = false;
+
+    private static boolean SHIFT_PRESSED = false;
 
     private static CollectionEditor instance = null;
 
@@ -39,6 +41,7 @@ public class CollectionEditor extends JFrame {
 
     private CollectionEditor() {
         instance = this;
+        setContentPane(new JPanel(new BorderLayout()));
         setTitle("Collection Editor");
         setSize(800, 600);
         setResizable(false);
@@ -47,6 +50,7 @@ public class CollectionEditor extends JFrame {
         addBottomToolbar();
         registerKeyboardShortcuts();
         registerWindowListener();
+        registerKeybinds();
         setVisible(true);
     }
 
@@ -64,6 +68,80 @@ public class CollectionEditor extends JFrame {
         return instance;
     }
 
+    private void registerKeybinds() {
+        registerInputs();
+        registerActions();
+    }
+
+    private void registerInputs() {
+
+        JPanel panel = (JPanel)instance.getContentPane();
+
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0), "ctrlPressedAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, true), "ctrlReleasedAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0), "shiftPressedAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true), "shiftReleasedAction");
+
+    }
+
+    private void registerActions() {
+
+        Action deleteAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("X");
+                refreshStoredSelection();
+                if (selectedSong == null) {
+                    return;
+                }
+                int result = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
+                if (result == JOptionPane.OK_OPTION) {
+                    selectedManager.removeSong(selectedSong);
+                    forceRefreshList();
+                    selectedSong = null;
+                }
+            }
+        };
+        Action ctrlPressedAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("A");
+                CONTROL_PRESSED = true;
+            }
+        };
+        Action ctrlReleasedAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("B");
+                CONTROL_PRESSED = false;
+            }
+        };
+        Action shiftPressedAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("C");
+                SHIFT_PRESSED = true;
+            }
+        };
+        Action shiftReleasedAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("D");
+                SHIFT_PRESSED = false;
+            }
+        };
+
+        JPanel panel = (JPanel)instance.getContentPane();
+
+        panel.getActionMap().put("deleteAction", deleteAction);
+        panel.getActionMap().put("ctrlPressedAction", ctrlPressedAction);
+        panel.getActionMap().put("ctrlReleasedAction", ctrlReleasedAction);
+        panel.getActionMap().put("shiftPressedAction", shiftPressedAction);
+        panel.getActionMap().put("shiftReleasedAction", shiftReleasedAction);
+
+    }
+
     public static void forceRefreshInstance() {
         if (instance == null) {
             return;
@@ -72,7 +150,7 @@ public class CollectionEditor extends JFrame {
     }
 
     /**
-     * @source https://stackoverflow.com/questions/309023/how-to-bring-a-window-to-the-front
+     * @source <a href="https://stackoverflow.com/questions/309023/how-to-bring-a-window-to-the-front">...</a>
      * @author Lawrence Dol
      */
     public @Override void toFront() {
@@ -126,7 +204,7 @@ public class CollectionEditor extends JFrame {
 
         panel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
-        add(panel, BorderLayout.PAGE_START);
+        getContentPane().add(panel, BorderLayout.PAGE_START);
     }
 
     private void addTabbedPane() {
@@ -136,18 +214,18 @@ public class CollectionEditor extends JFrame {
         tabPane.addTab("Standard Collection", null, standardCollectionPanel,
                 "Default song collection");
 
-        if (Environment.getInstance().settings.IS_IT_EASTER_ALREADY) {
+        if (Environment.getInstance().settings.IS_IT_EASTER_ALREADY && EasterCollectionManager.getInstance().getCollection() != null) {
             JComponent easterCollectionPanel = new CollectionPanel(EasterCollectionManager.getInstance());
             tabPane.addTab("Easter Collection", null, easterCollectionPanel,
                     "Collection of easter eggs");
         }
 
         tabPane.addChangeListener(e -> {
-            System.out.println("Tab switched: " + tabPane.getSelectedIndex());
+            logger.debug("Tab switched: " + tabPane.getSelectedIndex());
             refreshStoredSelection();
         });
 
-        add(tabPane, BorderLayout.CENTER);
+        getContentPane().add(tabPane, BorderLayout.CENTER);
     }
 
     private void addBottomToolbar() {
@@ -182,7 +260,7 @@ public class CollectionEditor extends JFrame {
                 Environment.showMessage("Message", "Select a song first.");
                 return;
             }
-            CodeEditor editor = new CodeEditor();
+            CodeEditor editor = new CodeEditor(selectedManager);
             editor.setTitle(String.format("HTML editor - %s (id: %d)", selectedSong.name(), selectedSong.id()));
             editor.setSong(selectedSong);
             editor.setVisible(true);
@@ -223,7 +301,19 @@ public class CollectionEditor extends JFrame {
                 Environment.showMessage("Message", "Select a song first.");
                 return;
             }
-            //TODO
+
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Desktop.getDesktop().open(new File(new PDFGenerator(selectedManager).generatePreview(selectedSong).replace(".html", ".pdf")));
+                        } catch (Exception ex) {
+                            logger.error(ex.getMessage(), ex);
+                            Environment.showErrorMessage("Error", ex.getMessage());
+                        }
+                    }
+                });
+
         });
         JButton deleteSongButton = new JButton("Delete Song");
         deleteSongButton.addActionListener(e -> {
@@ -232,7 +322,7 @@ public class CollectionEditor extends JFrame {
                 Environment.showMessage("Message", "Select a song first.");
                 return;
             }
-            int result = JOptionPane.showConfirmDialog(null, "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
+            int result = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
             if (result == JOptionPane.OK_OPTION) {
                 selectedManager.removeSong(selectedSong);
                 forceRefreshList();
@@ -264,7 +354,7 @@ public class CollectionEditor extends JFrame {
 
         bottomToolbar.setBorder(new EmptyBorder(0, -1, 0, -1));
 
-        add(bottomToolbar, BorderLayout.PAGE_END);
+        getContentPane().add(bottomToolbar, BorderLayout.PAGE_END);
     }
 
     private void refreshStoredSelection() {
@@ -272,7 +362,7 @@ public class CollectionEditor extends JFrame {
         selectedSong = tabPanel.getSelectedSong();
         selectedManager = tabPanel.getCollectionManager();
         list = tabPanel.getList();
-        System.out.println("Selected tab CollectionManager: " + selectedManager.getClass().getName());
+        logger.debug("Selected tab CollectionManager: " + selectedManager.getClass().getName());
     }
 
     private void registerKeyboardShortcuts() {
@@ -289,10 +379,10 @@ public class CollectionEditor extends JFrame {
                     CONTROL_PRESSED = true;
                 } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                     list.ensureIndexIsVisible(list.getSelectedIndex());
+                } else if (CONTROL_PRESSED && e.getKeyCode() == KeyEvent.VK_R) {
+                    forceRefreshList();
                 }
             }
-            //TODO: when browsing standard collection, holding CTRL and clicking 'Add New Song' creates an easter copy of the selected song
-            //TODO: Ctrl+R should forceRefreshList
             @Override
             public void keyReleased(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
@@ -402,10 +492,8 @@ public class CollectionEditor extends JFrame {
         @Override
         public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 
-            //System.out.println(new Gson().toJson(value));
-            //setPreferredSize(new Dimension(getParent().getWidth()));
             setOpaque(true);
-            collectionIdLabel = new JLabel(" " + String.valueOf(index));
+            collectionIdLabel = new JLabel(" " + index);
             songNameLabel = new JLabel(((Song) value).name());
             songIdLabel = new JLabel(String.valueOf(((Song) value).id()));
             songURLLabel = new JLabel(((Song) value).getUrl());

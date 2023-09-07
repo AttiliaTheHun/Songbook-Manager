@@ -47,6 +47,10 @@ public class EasterCollectionManager extends CollectionManager {
 
     }
 
+    private EasterCollectionManager(ArrayList<Song> collection) {
+        this.collection = new ArrayList<Song>(collection);
+    }
+
     public static EasterCollectionManager getInstance() {
         return instance;
     }
@@ -75,6 +79,11 @@ public class EasterCollectionManager extends CollectionManager {
             Environment.showErrorMessage("Easter Collection Initialisation error", "Can not load the easter song collection!");
         }
         logger.debug("EasterCollectionManager initialised");
+    }
+
+    @Override
+    public CollectionManager copy() {
+        return new EasterCollectionManager(collection);
     }
 
     @Override
@@ -261,7 +270,7 @@ public class EasterCollectionManager extends CollectionManager {
             save();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
+            Environment.showErrorMessage("Error", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
         }
     }
 
@@ -420,7 +429,7 @@ public class EasterCollectionManager extends CollectionManager {
         UIManager.put("OptionPane.yesButtonText", "Repair");
         UIManager.put("OptionPane.noButtonText", "Create");
 
-        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Repair easter egg collection", "No collection file was found but it seems you have saved songs in your easter egg data directory. Would you like to generate a collection file to repair the easter egg collection? Alternatively, you can create a new collection.", JOptionPane.YES_NO_OPTION);
+        int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Repair easter egg collection", "No collection file was found but it seems you have saved songs in your easter egg data directory. Would you like to generate a collection file to repair the easter egg collection? Alternatively, you can create a new collection.", JOptionPane.YES_NO_OPTION);
 
         if (resultCode == JOptionPane.YES_OPTION) {
             repairMissingCollectionFile();
@@ -438,7 +447,7 @@ public class EasterCollectionManager extends CollectionManager {
         UIManager.put("OptionPane.okButtonText", "Create");
         UIManager.put("OptionPane.cancelButtonText", "Cancel");
 
-        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Create an easter egg collection", "Do you want to create an easter egg collection?", JOptionPane.OK_CANCEL_OPTION);
+        int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Create an easter egg collection", "Do you want to create an easter egg collection?", JOptionPane.OK_CANCEL_OPTION);
 
         if (resultCode == JOptionPane.OK_OPTION) {
             createNewCollection();
@@ -482,6 +491,7 @@ public class EasterCollectionManager extends CollectionManager {
             songDataFolder.mkdir();
             File collectionJSONFile = new File(Environment.getInstance().settings.EASTER_COLLECTION_FILE_PATH);
             collectionJSONFile.createNewFile();
+            collection = new ArrayList<Song>();
             PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
             printWriter.write("[]");
             printWriter.close();
@@ -498,7 +508,7 @@ public class EasterCollectionManager extends CollectionManager {
 
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", "Could not create a new easter song!");
+            Environment.showErrorMessage("Error", "Could not create a new easter song!");
         }
     }
 

@@ -43,7 +43,7 @@ public class Installer {
         try {
             if (!new File(RESOURCES_ZIP_FILE_PATH).exists()) {
                 if (REMOTE_RESOURCES_ZIP_FILE.equals("")) {
-                    Environment.showErrorMessage("Installation Error", "Please provide a 'resources.zip' file!");
+                    Environment.showErrorMessage("Installation Error", "Please provide a 'resources.zip' file!", true);
                 }
                 IS_TEMP_RESOURCES_ZIP_FILE = true;
                 downloadRemoteFile(REMOTE_RESOURCES_ZIP_FILE, "resources.zip");
@@ -53,7 +53,7 @@ public class Installer {
             logger.info("Finished installing resources");
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Installation Error", "Cannot install resources!");
+            Environment.showErrorMessage("Installation Error", "Cannot install resources!", true);
         }
     }
 

@@ -28,7 +28,6 @@ public class Client {
             outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
             outputStream.close();
-            //TODO: remove for production
             Environment.showMessage("Success", "Data downloaded successfully from the server.");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

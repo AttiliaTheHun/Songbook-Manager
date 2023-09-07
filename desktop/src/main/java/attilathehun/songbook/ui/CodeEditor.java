@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import attilathehun.songbook.SongbookApplication;
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
@@ -39,6 +40,8 @@ public class CodeEditor extends JFrame {
 
     private final RSyntaxTextArea textArea;
 
+    private final CollectionManager manager;
+
     public static int instanceCount() {
         return instances;
     }
@@ -55,7 +58,12 @@ public class CodeEditor extends JFrame {
         CodeEditor.isApplicationClosed = true;
     }
 
-    public CodeEditor() {
+    public CodeEditor(CollectionManager manager) {
+        if (manager == null) {
+            this.manager = Environment.getInstance().getCollectionManager();
+        } else {
+            this.manager = manager;
+        }
 
         JPanel cp = new JPanel(new BorderLayout());
 
@@ -79,14 +87,15 @@ public class CodeEditor extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent e) {
-                if (SHIFT_PRESSED || getTitle().startsWith("*")) {
+
+                if (SHIFT_PRESSED || !getTitle().trim().startsWith("*")) {
                     removeInstance();
                     SHIFT_PRESSED = false;
                     setVisible(false);
                     return;
                 }
 
-                int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Do you want to save the changes?", "Save changes?", JOptionPane.YES_NO_OPTION);
+                int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to save the changes?", "Save changes?", JOptionPane.YES_NO_OPTION);
 
                 if (resultCode == JOptionPane.YES_OPTION) {
                     saveChanges();
@@ -144,6 +153,8 @@ public class CodeEditor extends JFrame {
                     if (getTitle().startsWith("*")) {
                         CodeEditor.super.setTitle(getTitle().substring(1));
                     }
+                } else if (CONTROL_PRESSED && e.getKeyCode() == KeyEvent.VK_C) {
+
                 } else if (!getTitle().startsWith("*")) {
                     CodeEditor.super.setTitle("*" + getTitle());
                 }
@@ -162,6 +173,10 @@ public class CodeEditor extends JFrame {
         instances++;
     }
 
+    public CodeEditor() {
+        this(Environment.getInstance().getCollectionManager());
+    }
+
     /**
      * @source <a href="https://stackoverflow.com/questions/309023/how-to-bring-a-window-to-the-front">stackoverflow</a>
      * @author Lawrence Dol
@@ -177,7 +192,7 @@ public class CodeEditor extends JFrame {
     }
 
     public void setSong(Song s) {
-        this.filePath = Environment.getInstance().getCollectionManager().getSongFilePath(s);
+        this.filePath = manager.getSongFilePath(s);
         this.song = s;
 
         if (Environment.fileExists(filePath)) {
@@ -187,7 +202,7 @@ public class CodeEditor extends JFrame {
                 textArea.setText(String.join("\n", lines));
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
-                Environment.showWarningMessage("Warning", "Can not open song data file");
+                Environment.showErrorMessage("Error", "Can not open song data file");
             }
 
         } else {
@@ -200,12 +215,12 @@ public class CodeEditor extends JFrame {
             FileWriter writer = new FileWriter(filePath, false);
             writer.write(textArea.getText());
             writer.close();
-            Environment.getInstance().getCollectionManager().updateSongRecordTitleFromHTML(song);
+            manager.updateSongRecordTitleFromHTML(song);
             Environment.getInstance().refresh();
             SongbookApplication.dialControlPLusRPressed();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", "Can not save the changes! You can save them manually to the path " + filePath + "from your clipboard");
+            Environment.showErrorMessage("Error", "Can not save the changes! You can save them manually to the path " + filePath + "from your clipboard");
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(textArea.getText()), new StringSelection(textArea.getText()));
         }
     }
@@ -213,7 +228,7 @@ public class CodeEditor extends JFrame {
     @Override
     public void setTitle(String s) {
         String title = s;
-        if (Environment.getInstance().getCollectionManager().equals(EasterCollectionManager.getInstance())) {
+        if (manager.equals(EasterCollectionManager.getInstance())) {
             title = "[E] " + s;
         }
         super.setTitle(title);

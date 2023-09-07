@@ -1,3 +1,9 @@
+/**
+* Script usage syntax is: 
+* node html_to_pdf.js {temp_file_path} [{--landscape}] [{--single-segment}] {segment_count}
+*/
+
+
 const HTML5ToPDF = require("html5-to-pdf")
 const path = require("path")
  
@@ -7,6 +13,7 @@ const run = async (targetPath, number, landscape) => {
     outputPath: path.join(targetPath, `segment${number}.pdf`),
     include: [
       path.join(targetPath, "style.css"),
+	  path.join(targetPath, "frontpage.png"),
     ],
 	pdf: { "landscape": landscape }
   })
@@ -18,12 +25,19 @@ const run = async (targetPath, number, landscape) => {
  
 (async () => {
   try {
-	  const landscape = process.argv[process.argv.length - 3] === 'true';
-	  const targetPath = process.argv[process.argv.length - 2];
+	  
+	  const landscape = process.argv.includes('--landscape');
+	  const singleSegment = process.argv.includes('--single-segment');
+	  const targetPath = process.argv[2];
 	  const segmentCount = process.argv[process.argv.length - 1];
-	  for (let i = 0; i < segmentCount; i++) {
+	  if (singleSegment) {
+		  await run(targetPath, segmentCount, landscape);
+	  } else {
+		 for (let i = 0; i < segmentCount; i++) {
 		  await run(targetPath, i, landscape);
+	  } 
 	  }
+	  
 
     console.log("DONE converting HTML to PDF")
 

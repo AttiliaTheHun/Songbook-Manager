@@ -26,6 +26,14 @@ public abstract class CollectionManager {
     public abstract void init();
 
     /**
+     * Creates a Collection Manager with copy of the collection. This Collection Manager should be used when changes to the collection are undesirable
+     * e.g. exporting. It is discouraged to ever set it as default Collection Manager because many methods use the Collection Managers directly and not
+     * through the Environment API, thus a data loss is probable.
+     * @return Collection Manager with a copy of the collection
+     */
+    public abstract CollectionManager copy();
+
+    /**
      * Saves current state of the collection to its respective file. Any data manipulation should be saved automatically by the manager though.
      */
     public abstract void save();
@@ -221,5 +229,6 @@ public abstract class CollectionManager {
     public static Song getShadowSong() {
         return new Song(SHADOW_SONG_NAME, SHADOW_SONG_ID);
     };
+
 
 }

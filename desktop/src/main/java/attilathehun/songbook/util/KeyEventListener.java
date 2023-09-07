@@ -13,7 +13,7 @@ public interface KeyEventListener {
     public void onLeftArrowPressed();
 
     /**
-     * Notifies the listener that rigth arrow key has been pressed.
+     * Notifies the listener that right arrow key has been pressed.
      */
     public void onRightArrowPressed();
 

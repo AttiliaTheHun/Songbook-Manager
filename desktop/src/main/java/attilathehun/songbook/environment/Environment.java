@@ -17,7 +17,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -128,7 +127,7 @@ public final class Environment {
                 writer.close();
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
-                showWarningMessage("Warning", "Can not export the settings!");
+                showErrorMessage("Error", "Can not export the settings!");
                 return false;
             }
             return true;
@@ -152,6 +151,8 @@ public final class Environment {
     }
 
     private static final Logger logger = LogManager.getLogger(Environment.class);
+
+    public static boolean FLAG_IGNORE_SEGMENTS = false;
 
     public final Environment.Settings settings = Environment.Settings.getSettings();
 
@@ -181,7 +182,7 @@ public final class Environment {
                 return String.join("", Files.readAllLines(Path.of(settings.AUTH_FILE_PATH)));
             } catch (IOException e) {
                 logger.warn(e.getMessage(), e);
-                showWarningMessage("Warning", "Error reading auth file, continuing with default token.");
+                showErrorMessage("Error", "Error reading auth file, continuing with default token.");
             }
 
         }
@@ -215,11 +216,11 @@ public final class Environment {
     public void refresh() {
         try {
             for (File f : new File(settings.TEMP_FILE_PATH).listFiles()) {
-                if (f.getName().equals("session_timestamp.txt")) {
+                if (f.getName().equals("session_timestamp.txt") || (FLAG_IGNORE_SEGMENTS && f.getName().startsWith("segment"))) {
                     continue;
                 }
                 if (!f.delete()) {
-                    showErrorMessage("Refreshing error", "Can not clean the temp folder!");
+                    showErrorMessage("Refreshing error", "Can not clean the temp folder!", true);
                 }
             }
         } catch (NullPointerException npe) {
@@ -239,6 +240,7 @@ public final class Environment {
      * @param args series of commands
      * @return false when any error occurs
      */
+    //TODO
     public Result[] perform(String[] args) {
         Result[] output = new Result[args.length];
         boolean performSave = false, performLoad = false, targetRemote = false;
@@ -276,6 +278,10 @@ public final class Environment {
         IGNORED
     }
 
+    /**
+     * Returns the default Collection Manager.
+     * @return default Collection Manager (Standard Collection Manager if null)
+     */
     public CollectionManager getCollectionManager() {
         if (collectionManager == null) {
             return StandardCollectionManager.getInstance();

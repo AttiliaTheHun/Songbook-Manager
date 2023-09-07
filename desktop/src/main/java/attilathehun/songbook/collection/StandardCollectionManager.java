@@ -51,6 +51,10 @@ public class StandardCollectionManager extends CollectionManager {
 
     }
 
+    private StandardCollectionManager(ArrayList<Song> collection) {
+        this.collection = new ArrayList<Song>(collection);
+    }
+
     public static StandardCollectionManager getInstance() {
         return instance;
     }
@@ -76,9 +80,14 @@ public class StandardCollectionManager extends CollectionManager {
             collection = new Gson().fromJson(json, targetClassType);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Collection Initialisation error", "Can not load the song collection!");
+            Environment.showErrorMessage("Collection Initialisation error", "Can not load the song collection!", true);
         }
         logger.debug("StandardCollectionManager initialised");
+    }
+
+    @Override
+    public CollectionManager copy() {
+        return new StandardCollectionManager(collection);
     }
 
     @Override
@@ -90,7 +99,7 @@ public class StandardCollectionManager extends CollectionManager {
             writer.close();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Error", "Can not save the song collection!");
+            Environment.showErrorMessage("Error", "Can not save the song collection!");
         }
     }
 
@@ -158,6 +167,9 @@ public class StandardCollectionManager extends CollectionManager {
 
     @Override
     public void removeSong(Song s) {
+        if (s == null || s.id() < 0) {
+            throw new IllegalArgumentException();
+        }
         collection.remove(getCollectionSongIndex(s));
         save();
         File songFile = new File(String.format(Environment.getInstance().settings.SONG_DATA_FILE_PATH + "/%d.html", s.id()));
@@ -182,7 +194,7 @@ public class StandardCollectionManager extends CollectionManager {
 
     @Override
     public Song updateSongRecord(Song s) {
-        int index = getCollectionSongIndex(s);
+        int index = getCollectionSongIndex(s.id());
 
         collection.get(index).setName(s.name());
         collection.get(index).setUrl(s.getUrl());
@@ -215,7 +227,7 @@ public class StandardCollectionManager extends CollectionManager {
             save();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
+            Environment.showErrorMessage("Error", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
         }
     }
 
@@ -239,7 +251,7 @@ public class StandardCollectionManager extends CollectionManager {
             out.close();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
+            Environment.showErrorMessage("Error", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
         }
     }
 
@@ -261,7 +273,7 @@ public class StandardCollectionManager extends CollectionManager {
             save();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
+            Environment.showErrorMessage("Error", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
         }
     }
 
@@ -454,7 +466,7 @@ public class StandardCollectionManager extends CollectionManager {
         UIManager.put("OptionPane.noButtonText", "Create");
         UIManager.put("OptionPane.cancelButtonText", "Load");
 
-        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "No collection file was found but it seems you have saved songs in your songbook. Would you like to generate a collection file to repair the songbook? Alternatively, you can create a new songbook or load an existing one from a local or remote zip file.", "Repair songbook", JOptionPane.YES_NO_CANCEL_OPTION);
+        int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "No collection file was found but it seems you have saved songs in your songbook. Would you like to generate a collection file to repair the songbook? Alternatively, you can create a new songbook or load an existing one from a local or remote zip file.", "Repair songbook", JOptionPane.YES_NO_CANCEL_OPTION);
 
         if (resultCode == JOptionPane.YES_OPTION) {
             repairMissingCollectionFile();
@@ -475,7 +487,7 @@ public class StandardCollectionManager extends CollectionManager {
         UIManager.put("OptionPane.yesButtonText", "Create");
         UIManager.put("OptionPane.noButtonText", "Load");
 
-        int resultCode = JOptionPane.showConfirmDialog(new JDialog(), "Create a songbook", "Do you want to create a new songbook? Alternatively, you can load an existing one from a local or remote zip file.", JOptionPane.YES_NO_CANCEL_OPTION);
+        int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Create a songbook", "Do you want to create a new songbook? Alternatively, you can load an existing one from a local or remote zip file.", JOptionPane.YES_NO_CANCEL_OPTION);
 
         if (resultCode == JOptionPane.YES_OPTION) {
             collection = new ArrayList<Song>();

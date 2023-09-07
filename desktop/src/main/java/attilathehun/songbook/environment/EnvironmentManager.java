@@ -48,7 +48,7 @@ public class EnvironmentManager {
                 client.downloadData();
 
             } else if (!new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH).exists()) {
-                Environment.showWarningMessage("Warning", "Could not file a local data zip file.");
+                Environment.showErrorMessage("Error", "Could not file a local data zip file.");
                 return;
             }
             if (!unzipData()) {
@@ -56,7 +56,7 @@ public class EnvironmentManager {
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", "Could not load the data");
+            Environment.showErrorMessage("Error", "Could not load the data");
             return;
         }
         Environment.showMessage("Success", "Data loaded successfully");
@@ -79,7 +79,7 @@ public class EnvironmentManager {
                 client.downloadData(remoteApiEndpointURL.endsWith("/") ? remoteApiEndpointURL + "download/" : remoteApiEndpointURL + "/download/");
 
             } else if (!new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH).exists()) {
-                Environment.showWarningMessage("Warning", "Could not load a local data zip file.");
+                Environment.showErrorMessage("Error", "Could not load a local data zip file.");
                 return;
             }
             if (!unzipData()) {
@@ -88,7 +88,7 @@ public class EnvironmentManager {
 
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", "Could not load the data");
+            Environment.showErrorMessage("Error", "Could not load the data");
             return;
         }
         Environment.showMessage("Success", "Data loaded successfully");
@@ -113,15 +113,16 @@ public class EnvironmentManager {
                         return;
                     }
                     client.uploadData();
+                } else {
+                    Environment.showMessage("No way", "This should never have happened");
+                    return;
                 }
-                Environment.showMessage("No way", "This should never have happened");
-                return;
 
             }
 
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", "Could not save the data");
+            Environment.showErrorMessage("Error", "Could not save the data");
             return;
         }
         Environment.showMessage("Success", "Data saved successfully");
@@ -132,7 +133,7 @@ public class EnvironmentManager {
             new ZipGenerator().extractZip(Environment.getInstance().settings.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.DATA_FILE_PATH);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", "Could not unzip the data");
+            Environment.showErrorMessage("Error", "Could not unzip the data");
             return false;
         }
         return true;
@@ -144,7 +145,7 @@ public class EnvironmentManager {
             new ZipGenerator(false).createZip(Environment.getInstance().settings.DATA_FILE_PATH, Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", "Could not zip the data");
+            Environment.showErrorMessage("Error", "Could not zip the data");
             return false;
         }
         return true;
@@ -203,7 +204,7 @@ public class EnvironmentManager {
 
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Warning", "Could not create a new songbook!");
+            Environment.showErrorMessage("Error", "Could not create a new songbook!", true);
         }
     }
 
@@ -433,7 +434,7 @@ public class EnvironmentManager {
         if (action == ACTION_ADD) {
             if (option == JOptionPane.OK_OPTION) {
                 if (songIdField.getText().equals("")) {
-                    Environment.showWarningMessage("Warning", "Invalid Id value!");
+                    Environment.showErrorMessage("Error", "Invalid Id value!");
                     return null;
                 }
 
@@ -448,7 +449,7 @@ public class EnvironmentManager {
         } else {
             if (option == JOptionPane.OK_OPTION) {
                 if (songIdField.getText().equals("")) {
-                    Environment.showWarningMessage("Warning", "Invalid Id value!");
+                    Environment.showErrorMessage("Error", "Invalid Id value!");
                     return null;
                 }
 

@@ -1,6 +1,5 @@
 package attilathehun.songbook.plugin;
 
-import attilathehun.songbook.environment.Environment;
 
 public class Frontpage extends Plugin {
 

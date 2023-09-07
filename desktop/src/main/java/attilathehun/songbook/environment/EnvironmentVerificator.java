@@ -6,10 +6,9 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Objects;
 
 /**
- * Upon loading this class performs a verification of the environment, eventually notifying the user what is wrong.
+ * This class performs a verification check of the environment, eventually notifying the user what is wrong.
  */
 public class EnvironmentVerificator {
 
@@ -42,8 +41,6 @@ public class EnvironmentVerificator {
 
         verifyData();
 
-        verifyEaster();
-
     }
 
     public static void automated() {
@@ -53,19 +50,6 @@ public class EnvironmentVerificator {
 
     private static void verificationFail(String message) {
         Environment.showErrorMessage("Environment verification failed", message, FATAL_FAIL);
-    }
-
-
-    public boolean verifyEaster() {
-        if (Environment.getInstance().settings.IS_IT_EASTER_ALREADY) {
-            if (!(new File(Environment.getInstance().settings.EGG_DATA_FILE_PATH).exists() && new File(Environment.getInstance().settings.EGG_DATA_FILE_PATH).isDirectory())) {
-                if (automated && !SUPPRESS_WARNINGS) {
-                    Environment.showMessage("Warning", "No easter egg folder found!");
-                }
-                return false;
-            }
-        }
-        return true;
     }
 
     public boolean verifyData() {
