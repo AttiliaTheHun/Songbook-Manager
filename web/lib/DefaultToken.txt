@@ -7,7 +7,8 @@
 		"READ_PERMISSION": true,
 		"WRITE_PERMISSION": false,
 		"BACKUP_PERMISSION": false,
-		"RESTORE_PERMISSION": false
+		"RESTORE_PERMISSION": false,
+		"MANAGE_TOKENS_PERMISSION": false
 	}
 
 }

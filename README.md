@@ -1,20 +1,14 @@
-# Songbook-Manager
-Program for creation and maintenance of simple printable HTML-based songbooks with chord support.
-## ⚠️ This project is still in developement
-No stable release, no packages, just messy code and lotta promises.
-## Features!.....exactly!
-The application consist of a desktop client and a web server part.
-### Client features
-- [x] Browse songbook
-- [x] Edit songs
-- [x] Generate Frontpage and Songlist
-- [ ] Edit collection
-- [ ] Export to PDF
-- [ ] Save/Load data to/from server
-### Server features
-- [ ] Browse songbook
-- [ ] Generate Frontpage and Songlist
-- [ ] Export to PDF
-- [ ] Send/Accept data to/from client(s)
-- [ ] Manage data backups
+# Songbook Manager
+Songbook Manager is a program for creation and management of a printable songbook with lyrics and chords alike.
+[Client screenshot]
+The songbook is made in HTML format (which means you should know the basics of HTML and CSS) to ensure easy printability and a web version.
 
+The Manager is a standalone desktop program, but you can choose to pair it with a webserver for online preview of the songbook and also for collaboration with other people.
+[Server screenshot]
+
+For more information about the project visit the [wiki](https://github.com/AttiliaTheHun/Songbook-Manager/wiki).
+## Relevant Pages
+ - [How To Build](https://github.com/AttiliaTheHun/Songbook-Manager/wiki/How-To-Build)
+ - [User Guide](https://github.com/AttiliaTheHun/Songbook-Manager/wiki/User-Guide)
+ - [Contributing](https://github.com/AttiliaTheHun/Songbook-Manager/wiki/Contributing)
+ - [Submitting Issues](https://github.com/AttiliaTheHun/Songbook-Manager/wiki/Submitting-Issues)

@@ -1,0 +1,111 @@
+html, body {
+	text-align: center;
+	top: 0;
+	left: 0;
+	width: 100%;
+	
+}
+
+.navbar {
+	position: relative;
+	display: inline-block;
+	font-family: 'Dekko';
+}
+
+.content {
+	border: 1px red;
+	width: 40%;
+	margin: auto;
+}
+
+.footer {
+	border: 1px green;
+}
+
+.navbar-logo {
+	margin-bottom: -10px;
+}
+
+.navbar h1 {
+	display: inline;
+	margin-bottom: auto;
+	font-size: 62px;
+	top: 0;
+}
+
+.content h1 {
+	margin-left: -20%;
+	border-bottom: 3px dashed #5D707F;
+}
+
+.browse-songbook-button {
+	display: block;
+	background-color: #059E24;
+	border: none;
+	color: white;
+	padding: 16px;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-size: 26px;
+	margin: 4px 2px;
+	border-radius: 12px;
+	margin: auto;
+	width: 60%;
+}
+
+.browse-songbook-button:hover {
+	background-color: #78C091;
+	
+}
+
+
+a,
+a:active,
+a:visited {
+    color: #DB7F67;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #5D707F;
+    text-decoration: underline;
+}
+
+ul {
+	text-align: left;
+	display: inline-block;
+}
+
+hr {
+    width: 0%;
+	min-width: 25%;
+	max-width: 100%;
+	margin: 0px auto;
+	border: none;
+	border-bottom: 4px solid #666;
+	position: relative;
+	transition: box-shadow 200ms ease-in-out;
+	box-shadow: 0px 0px 0px 0px #f9f9f9;
+}
+
+.full-width-hr {
+	width: 0%;
+	min-width: 100%;
+	max-width: 100%;
+	margin: 0 auto;
+	border: none;
+	border-bottom: 2px solid #666;
+	position: relative;
+	transition: box-shadow 200ms ease-in-out;
+	box-shadow: 0px 0px 0px 0px #f9f9f9;
+}
+
+/**
+Palette:
+$burnt-sienna: #DB7F67;
+$mint: #78C091;
+$pigment-green: #059E24;
+$paynes-gray: #5D707F;
+$vivid-sky-blue: #23C9FF;
+*/

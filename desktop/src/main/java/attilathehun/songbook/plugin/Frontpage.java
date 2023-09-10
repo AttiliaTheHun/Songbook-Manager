@@ -23,6 +23,7 @@ public class Frontpage extends Plugin {
         return 0;
     }
 
+    @Override
     public PluginSettings getSettings() {
         return new Plugin.PluginSettings();
     }
