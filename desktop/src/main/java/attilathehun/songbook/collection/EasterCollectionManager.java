@@ -33,7 +33,7 @@ public class EasterCollectionManager extends CollectionManager {
 
     private static final Logger logger = LogManager.getLogger(EasterCollectionManager.class);
 
-    public static final String EASTER_SONG_DATA_FILE_PATH = Paths.get(Environment.getInstance().settings.DATA_FILE_PATH + "/songs/egg/").toString();
+    public static final String EASTER_SONG_DATA_FILE_PATH = Paths.get(Environment.getInstance().settings.environment.DATA_FILE_PATH + "/songs/egg/").toString();
     private static final EasterCollectionManager instance;
 
     static {
@@ -58,9 +58,9 @@ public class EasterCollectionManager extends CollectionManager {
     @Override
     public void init() {
         try {
-            File collectionJSONFile = new File(Environment.getInstance().settings.EASTER_COLLECTION_FILE_PATH);
+            File collectionJSONFile = new File(Environment.getInstance().settings.environment.EASTER_COLLECTION_FILE_PATH);
             if (!collectionJSONFile.exists()) {
-                File songDataFolder = new File(Environment.getInstance().settings.EGG_DATA_FILE_PATH);
+                File songDataFolder = new File(Environment.getInstance().settings.environment.EGG_DATA_FILE_PATH);
                 if (songDataFolder.exists() && songDataFolder.isDirectory()) {
                     repairCollectionDialog();
                 } else {
@@ -90,7 +90,7 @@ public class EasterCollectionManager extends CollectionManager {
     public void save() {
         try {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(Environment.getInstance().settings.EASTER_COLLECTION_FILE_PATH);
+            FileWriter writer = new FileWriter(Environment.getInstance().settings.environment.EASTER_COLLECTION_FILE_PATH);
             gson.toJson(collection, writer);
             writer.close();
         } catch (IOException e) {
@@ -251,7 +251,7 @@ public class EasterCollectionManager extends CollectionManager {
 
     @Override
     public void updateSongHTMLFromRecord(Song s) {
-        if (!Environment.getInstance().settings.BIND_SONG_TITLES) {
+        if (!Environment.getInstance().settings.user.BIND_SONG_TITLES) {
             return;
         }
         if (s == null || s.id() < 0) {
@@ -489,7 +489,7 @@ public class EasterCollectionManager extends CollectionManager {
         try {
             File songDataFolder = new File(EASTER_SONG_DATA_FILE_PATH);
             songDataFolder.mkdir();
-            File collectionJSONFile = new File(Environment.getInstance().settings.EASTER_COLLECTION_FILE_PATH);
+            File collectionJSONFile = new File(Environment.getInstance().settings.environment.EASTER_COLLECTION_FILE_PATH);
             collectionJSONFile.createNewFile();
             collection = new ArrayList<Song>();
             PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));

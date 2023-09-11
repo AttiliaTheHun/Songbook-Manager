@@ -48,7 +48,7 @@ public class Installer {
                 IS_TEMP_RESOURCES_ZIP_FILE = true;
                 downloadRemoteFile(REMOTE_RESOURCES_ZIP_FILE, "resources.zip");
             }
-            new ZipGenerator().extractZip(RESOURCES_ZIP_FILE_PATH, Environment.getInstance().settings.RESOURCE_FILE_PATH);
+            new ZipGenerator().extractZip(RESOURCES_ZIP_FILE_PATH, Environment.getInstance().settings.environment.RESOURCE_FILE_PATH);
             new File(RESOURCES_ZIP_FILE_PATH).delete();
             logger.info("Finished installing resources");
         } catch (IOException e) {
@@ -68,7 +68,7 @@ public class Installer {
                 IS_TEMP_SCRIPTS_ZIP_FILE = true;
                 downloadRemoteFile(REMOTE_SCRIPTS_ZIP_FILE, "scripts.zip");
             }
-            new ZipGenerator().extractZip(SCRIPTS_ZIP_FILE_PATH, Environment.getInstance().settings.SCRIPTS_FILE_PATH);
+            new ZipGenerator().extractZip(SCRIPTS_ZIP_FILE_PATH, Environment.getInstance().settings.environment.SCRIPTS_FILE_PATH);
             logger.info("Finished installing scripts");
         } catch (IOException e) {
             logger.error(e.getMessage(), e);

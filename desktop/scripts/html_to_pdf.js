@@ -15,7 +15,10 @@ const run = async (targetPath, number, landscape) => {
       path.join(targetPath, "style.css"),
 	  path.join(targetPath, "frontpage.png"),
     ],
-	pdf: { "landscape": landscape }
+	pdf: { 
+	"landscape": landscape
+	},
+	renderDelay: 500
   })
  
   await html5ToPDF.start()

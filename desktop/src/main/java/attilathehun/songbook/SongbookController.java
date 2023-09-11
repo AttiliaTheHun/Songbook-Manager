@@ -216,7 +216,7 @@ public class SongbookController implements KeyEventListener {
 
         editSongOneHTML.setOnAction(event -> {
             if (SONG_ONE.id() < 0) {
-                Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH);
+                Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH);
                 return;
             }
             CodeEditor editor = new CodeEditor();
@@ -227,7 +227,7 @@ public class SongbookController implements KeyEventListener {
 
         editSongTwoHTML.setOnAction(event -> {
             if (SONG_TWO.id() < 0) {
-                Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.TEMPLATE_RESOURCES_FILE_PATH);
+                Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH);
                 return;
             }
             CodeEditor editor = new CodeEditor();
@@ -261,7 +261,7 @@ public class SongbookController implements KeyEventListener {
             }
         });
 
-        if (Environment.getInstance().settings.IS_IT_EASTER_ALREADY) {
+        if (Environment.getInstance().settings.environment.IS_IT_EASTER_ALREADY) {
             easterSwitch.setManaged(true);
             easterSwitch.setVisible(true);
         } else {

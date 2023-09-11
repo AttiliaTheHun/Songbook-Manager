@@ -3,18 +3,12 @@ package attilathehun.songbook.environment;
 import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
-import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.util.Client;
 import attilathehun.songbook.collection.CollectionManager;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 
 import javax.swing.*;
 import java.io.*;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -25,136 +19,11 @@ import static javax.swing.JOptionPane.showMessageDialog;
 
 public final class Environment {
 
-    public static class Settings implements Serializable {
-
-        private static final Logger logger = LogManager.getLogger(Settings.class);
-
-        public static final String SETTINGS_FILE_PATH = "settings.json";
-        public static final String EASTER_EXE_FILE_PATH = "easter.exe";
-        public static final long SESSION_TIMESTAMP = System.currentTimeMillis();
-        public final transient boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
-        public final String COLLECTION_FILE_PATH;
-        public final String EASTER_COLLECTION_FILE_PATH;
-        public final String SONG_DATA_FILE_PATH;
-        public final String EGG_DATA_FILE_PATH;
-        public final String RESOURCE_FILE_PATH;
-        public final String CSS_RESOURCES_FILE_PATH;
-        public final String TEMPLATE_RESOURCES_FILE_PATH;
-        public final String DATA_ZIP_FILE_PATH;
-        public final String EDIT_LOG_FILE_PATH;
-        public final String TEMP_FILE_PATH;
-        public final String ASSETS_RESOURCES_FILE_PATH;
-        public final String OUTPUT_FILE_PATH;
-        public final String DATA_FILE_PATH;
-        public final String TEMP_TIMESTAMP_FILE_PATH;
-        private final String AUTH_FILE_PATH;
-        public final String LOG_FILE_PATH;
-        public final String SCRIPTS_FILE_PATH;
-        public final boolean REMOTE_SAVE_LOAD_ENABLED;
-        public final String REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL;
-        public final String REMOTE_DATA_ZIP_FILE_UPLOAD_URL;
-        public final String REMOTE_DATA_FILE_HASH_URL;
-        public final String REMOTE_DATA_FILE_LAST_EDITED_URL;
-        public final boolean AUTO_LOAD_DATA;
-        public final boolean LOG_ENABLED;
-        public final boolean BIND_SONG_TITLES;
-        public final Environment.Settings.AuthType AUTH_TYPE;
-        private final String DEFAULT_READ_TOKEN;
-        public final PluginManager.Settings plugins;
-
-
-        private Settings() {
-            DATA_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/data/").toString();
-            COLLECTION_FILE_PATH = Paths.get(DATA_FILE_PATH + "/collection.json").toString();
-            EASTER_COLLECTION_FILE_PATH = Paths.get(DATA_FILE_PATH + "/easter_collection.json").toString();
-            SONG_DATA_FILE_PATH = Paths.get(DATA_FILE_PATH + "/songs/html/").toString();
-            EGG_DATA_FILE_PATH = Paths.get(DATA_FILE_PATH + "/songs/egg/").toString();
-            RESOURCE_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/resources/").toString();
-            CSS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/css/").toString();
-            TEMPLATE_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/templates/").toString();
-            DATA_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/data.zip").toString();
-            EDIT_LOG_FILE_PATH = Paths.get(DATA_FILE_PATH + "/last_modified_by.txt").toString();
-            AUTO_LOAD_DATA = false;
-            REMOTE_SAVE_LOAD_ENABLED = false;
-            TEMP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/temp/").toString();
-            TEMP_TIMESTAMP_FILE_PATH = Paths.get(TEMP_FILE_PATH + "/session_timestamp.txt").toString();
-            ASSETS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/assets/").toString();
-            OUTPUT_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/pdf/").toString();
-            REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL = "http://hrabozpevnik.clanweb.eu/api/data/download/";
-            REMOTE_DATA_ZIP_FILE_UPLOAD_URL = "http://hrabozpevnik.clanweb.eu/api/data/upload/";
-            REMOTE_DATA_FILE_HASH_URL = "http://hrabozpevnik.clanweb.eu/api/data/hash/";
-            REMOTE_DATA_FILE_LAST_EDITED_URL = "http://hrabozpevnik.clanweb.eu/api/data/modify-date/";
-            DEFAULT_READ_TOKEN = "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h";
-            AUTH_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/.auth").toString();
-            LOG_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/log.txt").toString();
-            AUTH_TYPE = Environment.Settings.AuthType.TOKEN;
-            LOG_ENABLED = true;
-            SCRIPTS_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/scripts/").toString();
-            BIND_SONG_TITLES = true;
-            plugins = PluginManager.getInstance().getSettings();
-        }
-
-        static Environment.Settings getSettings() {
-            try {
-                Path path = Paths.get(Environment.Settings.SETTINGS_FILE_PATH);
-
-                String json = String.join("\n", Files.readAllLines(path));
-
-                Type targetClassType = new TypeToken<Environment.Settings>() {
-                }.getType();
-                Environment.Settings settings = new Gson().fromJson(json, targetClassType);
-                PluginManager.getInstance().setSettings(settings.plugins);
-                logger.info("Loaded local environment settings");
-                return settings;
-            } catch (NoSuchFileException nsf) {
-
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-            }
-            Environment.Settings settings = new Environment.Settings();
-            if (!Environment.fileExists(SETTINGS_FILE_PATH)) {
-                save(settings);
-            }
-
-            return settings;
-        }
-
-        public static boolean save(Settings settings) {
-            try {
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                FileWriter writer = new FileWriter(SETTINGS_FILE_PATH, false);
-                gson.toJson(settings, writer);
-                writer.close();
-            } catch (IOException e) {
-                logger.error(e.getMessage(), e);
-                showErrorMessage("Error", "Can not export the settings!");
-                return false;
-            }
-            return true;
-        }
-
-        public enum AuthType implements Serializable {
-            TOKEN {
-                @Override
-                public String toString() {
-                    return "token";
-                }
-            },
-            PHRASE {
-                @Override
-                public String toString() {
-                    return "phrase";
-                }
-            }
-        }
-
-    }
-
     private static final Logger logger = LogManager.getLogger(Environment.class);
 
     public static boolean FLAG_IGNORE_SEGMENTS = false;
 
-    public final Environment.Settings settings = Environment.Settings.getSettings();
+    public final Settings settings = Settings.getSettings();
 
     private static final Environment instance = new Environment();
 
@@ -172,14 +41,15 @@ public final class Environment {
         return instance;
     }
 
+
     public String acquireToken(Client.Certificate certificate) {
         if (tokenInMemory != null) {
             return tokenInMemory;
         }
 
-        if (fileExists(settings.AUTH_FILE_PATH)) {
+        if (fileExists(settings.user.getAuthFilePath(new Certificate()))) {
             try {
-                return String.join("", Files.readAllLines(Path.of(settings.AUTH_FILE_PATH)));
+                return String.join("", Files.readAllLines(Path.of(settings.user.getAuthFilePath(new Certificate()))));
             } catch (IOException e) {
                 logger.warn(e.getMessage(), e);
                 showErrorMessage("Error", "Error reading auth file, continuing with default token.");
@@ -187,7 +57,7 @@ public final class Environment {
 
         }
 
-        return settings.DEFAULT_READ_TOKEN;
+        return settings.user.getDefaultReadToken(new Certificate());
     }
 
 
@@ -215,7 +85,7 @@ public final class Environment {
 
     public void refresh() {
         try {
-            for (File f : new File(settings.TEMP_FILE_PATH).listFiles()) {
+            for (File f : new File(settings.environment.TEMP_FILE_PATH).listFiles()) {
                 if (f.getName().equals("session_timestamp.txt") || (FLAG_IGNORE_SEGMENTS && f.getName().startsWith("segment"))) {
                     continue;
                 }
@@ -327,6 +197,67 @@ public final class Environment {
             } else {
                 SongbookApplication.dialImaginarySongOneKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index - 1));
             }
+        }
+    }
+
+    public static class EnvironmentSettings implements Serializable {
+        private static final Logger logger = LogManager.getLogger(attilathehun.songbook.environment.Environment.EnvironmentSettings.class);
+
+        public static final String SETTINGS_FILE_PATH = "settings.json";
+        public static final String EASTER_EXE_FILE_PATH = "easter.exe";
+        public static final long SESSION_TIMESTAMP = System.currentTimeMillis();
+        public final transient boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
+        public final String COLLECTION_FILE_PATH;
+        public final String EASTER_COLLECTION_FILE_PATH;
+        public final String SONG_DATA_FILE_PATH;
+        public final String EGG_DATA_FILE_PATH;
+        public final String RESOURCE_FILE_PATH;
+        public final String CSS_RESOURCES_FILE_PATH;
+        public final String TEMPLATE_RESOURCES_FILE_PATH;
+        public final String DATA_ZIP_FILE_PATH;
+        public final String EDIT_LOG_FILE_PATH;
+        public final String TEMP_FILE_PATH;
+        public final String ASSETS_RESOURCES_FILE_PATH;
+        public final String OUTPUT_FILE_PATH;
+        public final String DATA_FILE_PATH;
+        public final String TEMP_TIMESTAMP_FILE_PATH;
+        public final String LOG_FILE_PATH;
+        public final String SCRIPTS_FILE_PATH;
+        public final String REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL;
+        public final String REMOTE_DATA_ZIP_FILE_UPLOAD_URL;
+        public final String REMOTE_DATA_FILE_HASH_URL;
+        public final String REMOTE_DATA_FILE_LAST_EDITED_URL;
+
+
+        public EnvironmentSettings() {
+            DATA_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/data/").toString();
+            COLLECTION_FILE_PATH = Paths.get(DATA_FILE_PATH + "/collection.json").toString();
+            EASTER_COLLECTION_FILE_PATH = Paths.get(DATA_FILE_PATH + "/easter_collection.json").toString();
+            SONG_DATA_FILE_PATH = Paths.get(DATA_FILE_PATH + "/songs/html/").toString();
+            EGG_DATA_FILE_PATH = Paths.get(DATA_FILE_PATH + "/songs/egg/").toString();
+            RESOURCE_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/resources/").toString();
+            CSS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/css/").toString();
+            TEMPLATE_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/templates/").toString();
+            DATA_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/data.zip").toString();
+            EDIT_LOG_FILE_PATH = Paths.get(DATA_FILE_PATH + "/last_modified_by.txt").toString();
+            TEMP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/temp/").toString();
+            TEMP_TIMESTAMP_FILE_PATH = Paths.get(TEMP_FILE_PATH + "/session_timestamp.txt").toString();
+            ASSETS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/assets/").toString();
+            OUTPUT_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/pdf/").toString();
+            REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/download/";
+            REMOTE_DATA_ZIP_FILE_UPLOAD_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/upload/";
+            REMOTE_DATA_FILE_HASH_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/hash/";
+            REMOTE_DATA_FILE_LAST_EDITED_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/modify-date/";
+            LOG_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/log.txt").toString();
+            SCRIPTS_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/scripts/").toString();
+        }
+
+
+    }
+
+    public static final class Certificate {
+        private Certificate() {
+
         }
     }
 

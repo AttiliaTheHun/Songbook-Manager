@@ -33,13 +33,13 @@ public class EnvironmentManager {
 
     public void loadData() {
         try {
-            if (Environment.getInstance().settings.REMOTE_SAVE_LOAD_ENABLED) {
-                File dataFile = new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
+            if (Environment.getInstance().settings.user.REMOTE_SAVE_LOAD_ENABLED) {
+                File dataFile = new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
                 Client client = new Client();
                 if (dataFile.exists()) {
                     String content = String.join("\n", Files.readAllLines(dataFile.toPath()));
                     String localHash = createSHAHash(content);
-                    String remoteHash = client.httpGet(Environment.getInstance().settings.REMOTE_DATA_FILE_HASH_URL);
+                    String remoteHash = client.httpGet(Environment.getInstance().settings.environment.REMOTE_DATA_FILE_HASH_URL);
                     if (localHash.equals(remoteHash)) {
                         Environment.showMessage("Success", "The local version of data is up to date with the remote one");
                         return;
@@ -47,7 +47,7 @@ public class EnvironmentManager {
                 }
                 client.downloadData();
 
-            } else if (!new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH).exists()) {
+            } else if (!new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH).exists()) {
                 Environment.showErrorMessage("Error", "Could not file a local data zip file.");
                 return;
             }
@@ -64,8 +64,8 @@ public class EnvironmentManager {
 
     public void loadData(String remoteApiEndpointURL) {
         try {
-            if (Environment.getInstance().settings.REMOTE_SAVE_LOAD_ENABLED) {
-                File dataFile = new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
+            if (Environment.getInstance().settings.user.REMOTE_SAVE_LOAD_ENABLED) {
+                File dataFile = new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
                 Client client = new Client();
                 if (dataFile.exists()) {
                     String content = String.join("\n", Files.readAllLines(dataFile.toPath()));
@@ -78,7 +78,7 @@ public class EnvironmentManager {
                 }
                 client.downloadData(remoteApiEndpointURL.endsWith("/") ? remoteApiEndpointURL + "download/" : remoteApiEndpointURL + "/download/");
 
-            } else if (!new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH).exists()) {
+            } else if (!new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH).exists()) {
                 Environment.showErrorMessage("Error", "Could not load a local data zip file.");
                 return;
             }
@@ -101,13 +101,13 @@ public class EnvironmentManager {
                 return;
             }
 
-            if (Environment.getInstance().settings.REMOTE_SAVE_LOAD_ENABLED) {
-                File dataFile = new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
+            if (Environment.getInstance().settings.user.REMOTE_SAVE_LOAD_ENABLED) {
+                File dataFile = new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
                 Client client = new Client();
                 if (dataFile.exists()) {
                     String content = String.join("\n", Files.readAllLines(dataFile.toPath()));
                     String localHash = createSHAHash(content);
-                    String remoteHash = client.httpGet(Environment.getInstance().settings.REMOTE_DATA_FILE_HASH_URL);
+                    String remoteHash = client.httpGet(Environment.getInstance().settings.environment.REMOTE_DATA_FILE_HASH_URL);
                     if (localHash.equals(remoteHash)) {
                         Environment.showMessage("Success", "The remote version of data is up to date with the local one");
                         return;
@@ -130,7 +130,7 @@ public class EnvironmentManager {
 
     private boolean unzipData() {
         try {
-            new ZipGenerator().extractZip(Environment.getInstance().settings.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.DATA_FILE_PATH);
+            new ZipGenerator().extractZip(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.environment.DATA_FILE_PATH);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Error", "Could not unzip the data");
@@ -142,7 +142,7 @@ public class EnvironmentManager {
 
     private boolean zipData() {
         try {
-            new ZipGenerator(false).createZip(Environment.getInstance().settings.DATA_FILE_PATH, Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
+            new ZipGenerator(false).createZip(Environment.getInstance().settings.environment.DATA_FILE_PATH, Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Error", "Could not zip the data");
@@ -177,16 +177,16 @@ public class EnvironmentManager {
         LocalDateTime now = LocalDateTime.now();
         final String date = dtf.format(now);
         final String username = System.getProperty("user.name");
-        PrintWriter printWriter = new PrintWriter(new FileWriter((Environment.getInstance().settings.EDIT_LOG_FILE_PATH), true));
+        PrintWriter printWriter = new PrintWriter(new FileWriter((Environment.getInstance().settings.environment.EDIT_LOG_FILE_PATH), true));
         printWriter.write(date + " " + username + "\n");
         printWriter.close();
     }
 
     public void createNewSongbook() {
         try {
-            File songDataFolder = new File(Environment.getInstance().settings.SONG_DATA_FILE_PATH);
+            File songDataFolder = new File(Environment.getInstance().settings.environment.SONG_DATA_FILE_PATH);
             songDataFolder.mkdirs();
-            File collectionJSONFile = new File(Environment.getInstance().settings.COLLECTION_FILE_PATH);
+            File collectionJSONFile = new File(Environment.getInstance().settings.environment.COLLECTION_FILE_PATH);
             collectionJSONFile.createNewFile();
             PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
             printWriter.write("[]");
@@ -209,7 +209,7 @@ public class EnvironmentManager {
     }
 
     public void loadSongbook() {
-        if (Environment.getInstance().settings.REMOTE_SAVE_LOAD_ENABLED) {
+        if (Environment.getInstance().settings.user.REMOTE_SAVE_LOAD_ENABLED) {
             Pair<String, String> input = loadSongbookInputDialog();
             if (input.getKey() == null) {
                 Environment.showWarningMessage("Warning", "Songbook loading aborted");

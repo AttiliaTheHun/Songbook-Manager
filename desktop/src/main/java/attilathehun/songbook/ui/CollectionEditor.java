@@ -214,7 +214,7 @@ public class CollectionEditor extends JFrame {
         tabPane.addTab("Standard Collection", null, standardCollectionPanel,
                 "Default song collection");
 
-        if (Environment.getInstance().settings.IS_IT_EASTER_ALREADY && EasterCollectionManager.getInstance().getCollection() != null) {
+        if (Environment.getInstance().settings.environment.IS_IT_EASTER_ALREADY && EasterCollectionManager.getInstance().getCollection() != null) {
             JComponent easterCollectionPanel = new CollectionPanel(EasterCollectionManager.getInstance());
             tabPane.addTab("Easter Collection", null, easterCollectionPanel,
                     "Collection of easter eggs");

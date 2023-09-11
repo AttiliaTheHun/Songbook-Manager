@@ -1,5 +1,7 @@
 #Desktop client
 desktop/scripts/node_modules/
+desktop/scripts/package.json
+desktop/scripts/package-lock.json
 desktop/temp/
 desktop/target/
 desktop/log.txt

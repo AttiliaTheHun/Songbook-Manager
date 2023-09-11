@@ -1,5 +1,5 @@
-ErrorDocument 403 /403.php
-ErrorDocument 404 /404.php
+ErrorDocument 403 /resources/pages/403.php
+ErrorDocument 404 /resources/pages/404.php
 Options -Indexes
 
 DirectoryIndex homepage.php

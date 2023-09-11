@@ -39,11 +39,11 @@ public class PDFGenerator {
 
     private static final Logger logger = LogManager.getLogger(PDFGenerator.class);
 
-    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.OUTPUT_FILE_PATH + "/DefaultExport.pdf").toString();
-    private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.OUTPUT_FILE_PATH + "/SinglepageExport.pdf").toString();
-    private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.OUTPUT_FILE_PATH + "/PrintableExport.pdf").toString();
-    private static final String EASTER_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.OUTPUT_FILE_PATH + "/DeluxeExport.pdf").toString();
-    private static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.TEMP_FILE_PATH + "/segment").toString();
+    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + "/DefaultExport.pdf").toString();
+    private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + "/SinglepageExport.pdf").toString();
+    private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + "/PrintableExport.pdf").toString();
+    private static final String EASTER_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + "/DeluxeExport.pdf").toString();
+    private static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment").toString();
 
     private final CollectionManager manager;
 
@@ -66,7 +66,7 @@ public class PDFGenerator {
             this.manager = manager.copy();
         }
         try {
-            new File(Environment.getInstance().settings.OUTPUT_FILE_PATH).mkdirs();
+            new File(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH).mkdirs();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("PDF Generation Error", "Cannot initialize the output folder!");
@@ -227,7 +227,7 @@ public class PDFGenerator {
                         if (exportOption != EXPORT_OPTION_SINGLEPAGE) {
                             options = SCRIPT_OPTION_LANDSCAPE;
                         }
-                        processBuilder.command("cmd.exe", "/c", String.format("cd %s & node html_to_pdf.js %s %s %d", Environment.getInstance().settings.SCRIPTS_FILE_PATH, Environment.getInstance().settings.TEMP_FILE_PATH, options, segmentCount));
+                        processBuilder.command("cmd.exe", "/c", String.format("cd %s & node html_to_pdf.js %s %s %d", Environment.getInstance().settings.environment.SCRIPTS_FILE_PATH, Environment.getInstance().settings.environment.TEMP_FILE_PATH, options, segmentCount));
                         processBuilder.directory(new File(System.getProperty("user.dir")));
                         processBuilder.inheritIO();
                         Process process = processBuilder.start();
@@ -265,10 +265,10 @@ public class PDFGenerator {
     private void joinSegments(int segmentCount, String documentName) throws IOException {
         PDFMergerUtility ut = new PDFMergerUtility();
         for (int i = 0; i < segmentCount; i++) {
-            ut.addSource(Environment.getInstance().settings.TEMP_FILE_PATH + "/segment" + i + ".pdf");
+            ut.addSource(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment" + i + ".pdf");
         }
         ut.setDestinationFileName(documentName);
-        MemoryUsageSetting settings = MemoryUsageSetting.setupMainMemoryOnly().setTempDir(new File(Environment.getInstance().settings.TEMP_FILE_PATH));
+        MemoryUsageSetting settings = MemoryUsageSetting.setupMainMemoryOnly().setTempDir(new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH));
         ut.mergeDocuments(settings);
     }
 
@@ -297,7 +297,7 @@ public class PDFGenerator {
                     Environment.FLAG_IGNORE_SEGMENTS = true;
                     ProcessBuilder processBuilder = new ProcessBuilder();
                     String options = SCRIPT_OPTION_SINGLE_SEGMENT;
-                    processBuilder.command("cmd.exe", "/c", String.format("cd %s & node html_to_pdf.js %s %s %d", Environment.getInstance().settings.SCRIPTS_FILE_PATH, Environment.getInstance().settings.TEMP_FILE_PATH, options, PREVIEW_SEGMENT_NUMBER));
+                    processBuilder.command("cmd.exe", "/c", String.format("cd %s & node html_to_pdf.js %s %s %d", Environment.getInstance().settings.environment.SCRIPTS_FILE_PATH, Environment.getInstance().settings.environment.TEMP_FILE_PATH, options, PREVIEW_SEGMENT_NUMBER));
                     processBuilder.directory(new File(System.getProperty("user.dir")));
                     processBuilder.inheritIO();
                     Process process = processBuilder.start();
@@ -344,7 +344,7 @@ public class PDFGenerator {
                     Environment.FLAG_IGNORE_SEGMENTS = true;
                     ProcessBuilder processBuilder = new ProcessBuilder();
                     String options = String.format("%s %s", SCRIPT_OPTION_LANDSCAPE, SCRIPT_OPTION_SINGLE_SEGMENT);
-                    processBuilder.command("cmd.exe", "/c", String.format("cd %s & node html_to_pdf.js %s %s  %d", Environment.getInstance().settings.SCRIPTS_FILE_PATH, Environment.getInstance().settings.TEMP_FILE_PATH, options, PREVIEW_SEGMENT_NUMBER));
+                    processBuilder.command("cmd.exe", "/c", String.format("cd %s & node html_to_pdf.js %s %s  %d", Environment.getInstance().settings.environment.SCRIPTS_FILE_PATH, Environment.getInstance().settings.environment.TEMP_FILE_PATH, options, PREVIEW_SEGMENT_NUMBER));
                     processBuilder.directory(new File(System.getProperty("user.dir")));
                     processBuilder.inheritIO();
                     Process process = processBuilder.start();

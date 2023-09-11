@@ -1,0 +1,4 @@
+#Options +FollowSymLinks -MultiViews
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME}.php -f [NC]
+RewriteRule ^(.+?)/?$ $1.php [L]

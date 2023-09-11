@@ -29,7 +29,7 @@ public class Export extends Plugin {
 
     @Override
     public PluginSettings getSettings() {
-        return null;
+        return new PluginSettings();
     }
 
     public static Plugin getInstance() {
@@ -37,7 +37,7 @@ public class Export extends Plugin {
     }
 
     public static class PluginSettings extends Plugin.PluginSettings {
-        public final boolean enabled;
+        //public final boolean enabled;
         public final ConversionMethod conversionMethod;
         public final String conversionURL;
         public final String defaultExportName;
@@ -45,7 +45,8 @@ public class Export extends Plugin {
         public final String defaultPrintableName;
 
         protected PluginSettings() {
-            enabled = true;
+            super();
+           // enabled = true;
             conversionMethod = ConversionMethod.THIRD_PARTY_API;
             conversionURL = "";
             defaultExportName = DEFAULT_EXPORT_NAME;

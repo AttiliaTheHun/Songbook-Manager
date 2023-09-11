@@ -1,3 +1,20 @@
 {
-	"MAX_BACKUP_COUNT": 10
+    "backup": {
+        "auto_backup": true,
+	    "max_backup_count": 10,
+	    "backup_save_requests": true
+    },
+	"plugin": {
+	    "Frontpage": {
+	        "enabled": true
+	    },
+	    "DynamicSonglist": {
+	        "enabled": true
+	    },
+	    "Export": {
+	        
+	    }
+	    
+	    
+	}
 }

@@ -16,13 +16,13 @@ public class Client {
     private static final Logger logger = LogManager.getLogger(Client.class);
 
     public void downloadData() {
-        downloadData(Environment.getInstance().settings.REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL);
+        downloadData(Environment.getInstance().settings.environment.REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL);
     }
 
     public void downloadData(String remoteDataZipFileDownloadURL) {
         try {
             String fileContent = getFile(remoteDataZipFileDownloadURL, Environment.getInstance().acquireToken(new Certificate()));
-            File file = new File(Environment.getInstance().settings.DATA_ZIP_FILE_PATH);
+            File file = new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
             file.createNewFile();
             FileOutputStream outputStream = new FileOutputStream(file, false);
             outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));
@@ -35,7 +35,7 @@ public class Client {
     }
 
     public void uploadData() {
-        uploadData(Environment.getInstance().settings.REMOTE_DATA_ZIP_FILE_UPLOAD_URL);
+        uploadData(Environment.getInstance().settings.environment.REMOTE_DATA_ZIP_FILE_UPLOAD_URL);
     }
 
     public void uploadData(String remoteDataZipFileUploadURL) {
@@ -60,7 +60,7 @@ public class Client {
 
         conn.connect();
         if (conn.getResponseCode() == 400) {
-            String fileContent = String.join("\n", Files.readAllLines(Paths.get(Environment.getInstance().settings.DATA_ZIP_FILE_PATH)));
+            String fileContent = String.join("\n", Files.readAllLines(Paths.get(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH)));
             OutputStream outputStream = conn.getOutputStream();
             outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
@@ -92,7 +92,7 @@ public class Client {
         return result.toString();
     }
 
-    public static class Certificate {
+    public static final class Certificate {
         private Certificate() {
         }
     }
