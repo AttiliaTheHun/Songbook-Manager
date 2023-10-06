@@ -14,9 +14,9 @@ import java.io.*;
  * @author halex
  * @author AttilaTheHun
  */
-public class ZipGenerator {
+public class ZipUtil {
 
-    private static final Logger logger = LogManager.getLogger(ZipGenerator.class);
+    private static final Logger logger = LogManager.getLogger(ZipUtil.class);
 
     private static final int BUFFER_SIZE = 4096;
 
@@ -24,11 +24,11 @@ public class ZipGenerator {
 
     private String SOURCE_FOLDER_NAME;
 
-    public ZipGenerator() {
+    public ZipUtil() {
         this(true);
     }
 
-    public ZipGenerator(Boolean includeTargetFolder) {
+    public ZipUtil(Boolean includeTargetFolder) {
         this.INCLUDE_SOURCE_FOLDER = includeTargetFolder;
     }
 

@@ -3,7 +3,7 @@ package attilathehun.songbook.environment;
 import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
-import attilathehun.songbook.util.Client;
+import attilathehun.songbook.vcs.Client;
 import attilathehun.songbook.collection.CollectionManager;
 
 import javax.swing.*;
@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import attilathehun.songbook.vcs.VCSAdmin;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -31,10 +32,20 @@ public final class Environment {
 
     private String tokenInMemory = null;
 
+    private long songbookVersionTimestamp;
+
     private Environment() {
-        //System.setProperty("log4j.configurationFile", settings.LOG_FILE_PATH);
         refresh();
         logger.info("Environment instantiated");
+        //TODO: init timestamp
+    }
+
+    public long getSongbookVersionTimestamp() {
+        return songbookVersionTimestamp;
+    }
+
+    public void setSongbookVersionTimestamp(long songbookVersionTimestamp) {
+        this.songbookVersionTimestamp = songbookVersionTimestamp;
     }
 
     public static Environment getInstance() {
@@ -42,7 +53,7 @@ public final class Environment {
     }
 
 
-    public String acquireToken(Client.Certificate certificate) {
+    public String acquireToken(VCSAdmin.Certificate certificate) {
         if (tokenInMemory != null) {
             return tokenInMemory;
         }
@@ -223,10 +234,6 @@ public final class Environment {
         public final String TEMP_TIMESTAMP_FILE_PATH;
         public final String LOG_FILE_PATH;
         public final String SCRIPTS_FILE_PATH;
-        public final String REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL;
-        public final String REMOTE_DATA_ZIP_FILE_UPLOAD_URL;
-        public final String REMOTE_DATA_FILE_HASH_URL;
-        public final String REMOTE_DATA_FILE_LAST_EDITED_URL;
 
 
         public EnvironmentSettings() {
@@ -244,10 +251,6 @@ public final class Environment {
             TEMP_TIMESTAMP_FILE_PATH = Paths.get(TEMP_FILE_PATH + "/session_timestamp.txt").toString();
             ASSETS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/assets/").toString();
             OUTPUT_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/pdf/").toString();
-            REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/download/";
-            REMOTE_DATA_ZIP_FILE_UPLOAD_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/upload/";
-            REMOTE_DATA_FILE_HASH_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/hash/";
-            REMOTE_DATA_FILE_LAST_EDITED_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/modify-date/";
             LOG_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/log.txt").toString();
             SCRIPTS_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/scripts/").toString();
         }

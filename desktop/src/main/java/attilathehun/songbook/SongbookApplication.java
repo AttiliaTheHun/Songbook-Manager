@@ -7,7 +7,7 @@ import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.environment.EnvironmentVerificator;
 import attilathehun.songbook.environment.Installer;
 import attilathehun.songbook.plugin.PluginManager;
-import attilathehun.songbook.ui.CodeEditor;
+import attilathehun.songbook.window.CodeEditor;
 import attilathehun.songbook.util.KeyEventListener;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;

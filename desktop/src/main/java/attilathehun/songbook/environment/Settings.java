@@ -1,6 +1,7 @@
 package attilathehun.songbook.environment;
 
 import attilathehun.songbook.plugin.PluginManager;
+import attilathehun.songbook.vcs.VCSAdmin;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -23,13 +24,17 @@ public class Settings implements Serializable {
 
     public final Environment.EnvironmentSettings environment;
     public final UserSettings user;
+    public final SongbookSettings songbook;
     public final PluginManager.Settings plugins;
+    public final VCSAdmin.VCSSettings vcs;
 
 
     private Settings() {
         environment = new Environment.EnvironmentSettings();
         user = new UserSettings();
+        songbook = new SongbookSettings();
         plugins = PluginManager.getInstance().getSettings();
+        vcs = new VCSAdmin.VCSSettings();
     }
 
     static Settings getSettings() {
@@ -76,20 +81,16 @@ public class Settings implements Serializable {
     public static class UserSettings implements Serializable {
         private static final Logger logger = LogManager.getLogger(UserSettings.class);
         private final String AUTH_FILE_PATH;
-        public final boolean REMOTE_SAVE_LOAD_ENABLED;
         public final boolean AUTO_LOAD_DATA;
-        public final boolean BIND_SONG_TITLES;
         public final AuthType AUTH_TYPE;
         private final String DEFAULT_READ_TOKEN;
 
 
         private UserSettings() {
             AUTO_LOAD_DATA = false;
-            REMOTE_SAVE_LOAD_ENABLED = false;
             DEFAULT_READ_TOKEN = "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h";
             AUTH_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/.auth").toString();
             AUTH_TYPE = AuthType.TOKEN;
-            BIND_SONG_TITLES = true;
         }
 
         public String getDefaultReadToken(Environment.Certificate certificate) {
@@ -104,13 +105,13 @@ public class Settings implements Serializable {
             TOKEN {
                 @Override
                 public String toString() {
-                    return "token";
+                    return "TOKEN";
                 }
             },
             PHRASE {
                 @Override
                 public String toString() {
-                    return "phrase";
+                    return "PHRASE";
                 }
             }
         }
@@ -119,8 +120,14 @@ public class Settings implements Serializable {
     }
 
     public static class SongbookSettings implements Serializable {
+        private static final Logger logger = LogManager.getLogger(SongbookSettings.class);
+        public final boolean BIND_SONG_TITLES;
+
+        public SongbookSettings() {
+            BIND_SONG_TITLES = true;
+        }
+
         //TODO: make another title-author display options
-        //TODO: move BIND_SONG_TITLES
     }
 
 }

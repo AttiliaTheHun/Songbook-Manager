@@ -1,4 +1,4 @@
-package attilathehun.songbook.ui;
+package attilathehun.songbook.window;
 
 import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.collection.CollectionManager;

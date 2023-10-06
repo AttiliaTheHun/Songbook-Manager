@@ -4,10 +4,10 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
-import attilathehun.songbook.ui.CollectionEditor;
-import attilathehun.songbook.util.Client;
+import attilathehun.songbook.window.CollectionEditor;
+import attilathehun.songbook.vcs.Client;
 import attilathehun.songbook.SongbookApplication;
-import attilathehun.songbook.util.ZipGenerator;
+import attilathehun.songbook.util.ZipUtil;
 import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -130,7 +130,7 @@ public class EnvironmentManager {
 
     private boolean unzipData() {
         try {
-            new ZipGenerator().extractZip(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.environment.DATA_FILE_PATH);
+            new ZipUtil().extractZip(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.environment.DATA_FILE_PATH);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Error", "Could not unzip the data");
@@ -142,7 +142,7 @@ public class EnvironmentManager {
 
     private boolean zipData() {
         try {
-            new ZipGenerator(false).createZip(Environment.getInstance().settings.environment.DATA_FILE_PATH, Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
+            new ZipUtil(false).createZip(Environment.getInstance().settings.environment.DATA_FILE_PATH, Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Error", "Could not zip the data");

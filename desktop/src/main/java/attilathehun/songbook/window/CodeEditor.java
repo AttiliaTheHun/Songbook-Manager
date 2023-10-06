@@ -1,4 +1,4 @@
-package attilathehun.songbook.ui;
+package attilathehun.songbook.window;
 
 import javax.swing.*;
 import java.awt.*;

@@ -6,8 +6,9 @@ import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
-import attilathehun.songbook.ui.CodeEditor;
-import attilathehun.songbook.ui.CollectionEditor;
+import attilathehun.songbook.plugin.Export;
+import attilathehun.songbook.window.CodeEditor;
+import attilathehun.songbook.window.CollectionEditor;
 import attilathehun.songbook.util.HTMLGenerator;
 import attilathehun.songbook.util.KeyEventListener;
 import attilathehun.songbook.util.PDFGenerator;
@@ -25,8 +26,6 @@ import javafx.scene.control.MenuItem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.controlsfx.control.ToggleSwitch;
-
-import javax.swing.*;
 
 import java.awt.*;
 import java.io.File;
@@ -235,6 +234,19 @@ public class SongbookController implements KeyEventListener {
             editor.setSong(SONG_TWO);
             editor.setVisible(true);
         });
+
+        exportButton.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
+            if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
+                Environment.showMessage("Exporting disabled", "It seems like exporting has been disabled in the settings. You can modify the settings and restart or read more in the documentation.");
+            }
+
+        });
+
+        if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
+            singlepageSelection.setVisible(false);
+            defaultSelection.setVisible(false);
+            printableSelection.setVisible(false);
+        }
 
         singlepageSelection.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
             try {

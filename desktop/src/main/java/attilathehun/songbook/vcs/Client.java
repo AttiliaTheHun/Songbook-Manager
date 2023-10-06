@@ -1,4 +1,4 @@
-package attilathehun.songbook.util;
+package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.environment.Environment;
 import org.apache.logging.log4j.LogManager;
@@ -14,42 +14,10 @@ import java.nio.file.Paths;
 public class Client {
 
     private static final Logger logger = LogManager.getLogger(Client.class);
-
-    public void downloadData() {
-        downloadData(Environment.getInstance().settings.environment.REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL);
-    }
-
-    public void downloadData(String remoteDataZipFileDownloadURL) {
-        try {
-            String fileContent = getFile(remoteDataZipFileDownloadURL, Environment.getInstance().acquireToken(new Certificate()));
-            File file = new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
-            file.createNewFile();
-            FileOutputStream outputStream = new FileOutputStream(file, false);
-            outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));
-            outputStream.flush();
-            outputStream.close();
-            Environment.showMessage("Success", "Data downloaded successfully from the server.");
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    public void uploadData() {
-        uploadData(Environment.getInstance().settings.environment.REMOTE_DATA_ZIP_FILE_UPLOAD_URL);
-    }
-
-    public void uploadData(String remoteDataZipFileUploadURL) {
-        try {
-            postFile(remoteDataZipFileUploadURL, Environment.getInstance().acquireToken(new Certificate()));
-            Environment.showMessage("Success", "Data uploaded successfully to the server.");
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-
-    }
+    private Status status = null;
 
 
-    private void postFile(String targetUrl, String authToken) throws Exception {
+    public void postFile(String targetUrl, String fileUrl, String authToken) throws Exception {
         URL url = new URL(targetUrl);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
@@ -73,8 +41,19 @@ public class Client {
 
     }
 
-    private String getFile(String targetUrl, String authToken) throws Exception {
-
+    public String getFile(String targetUrl, String fileUrl, String authToken) throws Exception {
+        try {
+            String fileContent = getFile(remoteDataZipFileDownloadURL, Environment.getInstance().acquireToken(new Certificate()));
+            File file = new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
+            file.createNewFile();
+            FileOutputStream outputStream = new FileOutputStream(file, false);
+            outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));
+            outputStream.flush();
+            outputStream.close();
+            Environment.showMessage("Success", "Data downloaded successfully from the server.");
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
         return null;
     }
 
@@ -92,8 +71,28 @@ public class Client {
         return result.toString();
     }
 
-    public static final class Certificate {
-        private Certificate() {
+    public Status getStatus() {
+        return status;
+    }
+
+    public static class Status {
+        public static final int SUCCESS = 0;
+        public static final int FAILURE = 1;
+        public static final int OTHER = 2;
+        private int state;
+        private Exception error = null;
+
+        public Status(int state, Exception e) {
+            this.state = state;
+            this.error = e;
+        }
+
+        public int getCode() {
+            return state;
+        }
+
+        public Exception getError() {
+            return error;
         }
     }
 }

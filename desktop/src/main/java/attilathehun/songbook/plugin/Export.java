@@ -1,16 +1,22 @@
 package attilathehun.songbook.plugin;
 
+import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.environment.Settings;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.Serializable;
 
 public class Export extends Plugin {
+    private static final Logger logger = LogManager.getLogger(Export.class);
 
-    private static final String DEFAULT_EXPORT_NAME = "ExportDefault.pdf";
-    private static final String SINGLEPAGE_EXPORT_NAME = "ExportSinglepage.pdf";
-    private static final String PRINTABLE_EXPORT_NAME = "ExportPrintable.pdf";
+    private static final String DEFAULT_EXPORT_NAME = "DefaultExport.pdf";
+    private static final String SINGLEPAGE_EXPORT_NAME = "SinglepageExport.pdf";
+    private static final String PRINTABLE_EXPORT_NAME = "PrintableExport.pdf";
 
     private static final Export instance = new Export();
 
-    private String name = Export.class.getSimpleName();
+    private final String name = Export.class.getSimpleName();
 
     private Export() {
         super();
@@ -24,6 +30,17 @@ public class Export extends Plugin {
 
     @Override
     public int execute() {
+        switch (((PluginSettings) Environment.getInstance().settings.plugins.get(name)).conversionMethod) {
+            //TODO: ask for the remote conversion url the way you ask for token
+            case REMOTE:
+                break;
+            case THIRD_PARTY_API:
+                break;
+            case LOCAL_HEADLESS:
+                break;
+            case LOCAL_DEFAULT:
+            default:
+        }
         return 0;
     }
 
@@ -54,7 +71,7 @@ public class Export extends Plugin {
             defaultPrintableName = PRINTABLE_EXPORT_NAME;
         }
 
-        public static enum ConversionMethod implements Serializable {
+        public enum ConversionMethod implements Serializable {
             REMOTE {
                 @Override
                 public String toString() {

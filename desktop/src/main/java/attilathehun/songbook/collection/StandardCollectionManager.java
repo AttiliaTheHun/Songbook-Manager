@@ -6,7 +6,7 @@ import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.plugin.DynamicSonglist;
 import attilathehun.songbook.plugin.Frontpage;
 import attilathehun.songbook.plugin.PluginManager;
-import attilathehun.songbook.ui.CodeEditor;
+import attilathehun.songbook.window.CodeEditor;
 import attilathehun.songbook.util.HTMLGenerator;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
