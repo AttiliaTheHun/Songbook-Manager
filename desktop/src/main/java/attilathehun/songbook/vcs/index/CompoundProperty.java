@@ -1,38 +1,38 @@
 package attilathehun.songbook.vcs.index;
 
-import attilathehun.songbook.environment.Settings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Arrays;
+import java.util.HashMap;
 
-public class CompoundProperty extends Property {
+/**
+ * A compound property is a HashMap of Properties to simplify structuring JSON structures.
+ */
+public class CompoundProperty extends HashMap<String, Property> implements Property {
 
     private static final Logger logger = LogManager.getLogger(CompoundProperty.class);
-    public Property[] content;
 
-    public CompoundProperty(Property[] content) {
-        this.content = content;
-    }
 
-    public CompoundProperty() {
-        this.content = new Property[0];
-    }
 
-    public void addProperty(Property property) {
-        if (property == null) {
-            throw new IllegalArgumentException();
-        }
-        this.content = Arrays.copyOf(content, content.length + 1);
-        this.content[this.content.length - 1] = property;
-    }
-
-    public void setProperties(Property[] properties) {
-        this.content = properties;
+    @Override
+    public HashMap<String, Property> getContent() {
+        return this;
     }
 
     @Override
-    public Object[] getContent() {
-        return content;
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof CompoundProperty)) {
+            return false;
+        }
+
+        if (!((CompoundProperty) o).keySet().equals(keySet())) {
+            return false;
+        }
+
+        return ((CompoundProperty) o).values().equals(values());
     }
 }

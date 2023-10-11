@@ -56,6 +56,7 @@ public class Export extends Plugin {
     public static class PluginSettings extends Plugin.PluginSettings {
         //public final boolean enabled;
         public final ConversionMethod conversionMethod;
+        public final int localConversionThreadCount;
         public final String conversionURL;
         public final String defaultExportName;
         public final String defaultSinglepageName;
@@ -65,6 +66,7 @@ public class Export extends Plugin {
             super();
            // enabled = true;
             conversionMethod = ConversionMethod.THIRD_PARTY_API;
+            localConversionThreadCount = 20;
             conversionURL = "";
             defaultExportName = DEFAULT_EXPORT_NAME;
             defaultSinglepageName = SINGLEPAGE_EXPORT_NAME;

@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.Serializable;
+import java.nio.file.Paths;
 
 /**
  * The Version Control System Administrator. This class is the main class of the Version Control System and provides a simple API to interact with.
@@ -65,6 +66,9 @@ public class VCSAdmin {
         public final String REMOTE_DATA_FILE_HASH_URL;
         public final String REMOTE_DATA_FILE_LAST_EDITED_URL;
         public final String REQUEST_ZIP_FILE_PATH;
+        public final String VCS_CACHE_FILE_PATH;
+        public final String LOCAL_INDEX_FILE_PATH;
+        public final int VCS_THREAD_COUNT;
 
         public VCSSettings() {
             REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/download/";
@@ -73,6 +77,9 @@ public class VCSAdmin {
             REMOTE_DATA_FILE_LAST_EDITED_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/modify-date/";
             REMOTE_SAVE_LOAD_ENABLED = false;
             REQUEST_ZIP_FILE_PATH = "request.zip";
+            VCS_CACHE_FILE_PATH = Paths.get(System.getProperty("user.dir"), "vcs").toString();
+            LOCAL_INDEX_FILE_PATH = Paths.get(Environment.getInstance().settings.vcs.VCS_CACHE_FILE_PATH, "vcs").toString();
+            VCS_THREAD_COUNT = 20;
         }
 
 
