@@ -3,10 +3,7 @@ package attilathehun.songbook.window;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -135,40 +132,9 @@ public class CodeEditor extends JFrame {
             }
         });
 
-        textArea.addKeyListener(new KeyListener() {
+        registerInputs();
+        registerActions();
 
-            @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
-                    SHIFT_PRESSED = true;
-                } else if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    CONTROL_PRESSED = true;
-                } else if (CONTROL_PRESSED && e.getKeyCode() == KeyEvent.VK_S) {
-                    saveChanges();
-                    if (getTitle().startsWith("*")) {
-                        CodeEditor.super.setTitle(getTitle().substring(1));
-                    }
-                } else if (CONTROL_PRESSED && e.getKeyCode() == KeyEvent.VK_C) {
-
-                } else if (!getTitle().startsWith("*")) {
-                    CodeEditor.super.setTitle("*" + getTitle());
-                }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
-                    SHIFT_PRESSED = false;
-                } else if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    CONTROL_PRESSED = false;
-                }
-            }
-        });
         toFront();
         instances++;
     }
@@ -176,6 +142,106 @@ public class CodeEditor extends JFrame {
     public CodeEditor() {
         this(Environment.getInstance().getCollectionManager());
     }
+
+    private void registerInputs() {
+
+        JPanel panel = (JPanel)getContentPane();
+
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0), "ctrlPressedAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, true), "ctrlReleasedAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0), "shiftPressedAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true), "shiftReleasedAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_S, 0), "sAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0), "vAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_C, 0), "cAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.KEY_TYPED, 0), "keyTypedAction");
+
+    }
+
+    private void registerActions() {
+
+        Action ctrlPressedAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("A");
+                CONTROL_PRESSED = true;
+            }
+        };
+        Action ctrlReleasedAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("B");
+                CONTROL_PRESSED = false;
+            }
+        };
+        Action shiftPressedAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("C");
+                SHIFT_PRESSED = true;
+            }
+        };
+        Action shiftReleasedAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("D");
+                SHIFT_PRESSED = false;
+            }
+        };
+        Action sAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("E");
+                if (SHIFT_PRESSED) {
+                    saveChanges();
+                    if (getTitle().startsWith("*")) {
+                        CodeEditor.super.setTitle(getTitle().substring(1));
+                    }
+                }
+
+            }
+        };
+        Action vAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("F");
+                if (SHIFT_PRESSED) {
+
+                }
+            }
+        };
+        Action cAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("G");
+                if (SHIFT_PRESSED) {
+
+                }
+            }
+        };
+        Action keyTypedAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("H");
+                if (!getTitle().startsWith("*")) {
+                    CodeEditor.super.setTitle("*" + getTitle());
+                }
+            }
+        };
+
+
+        JPanel panel = (JPanel)getContentPane();
+
+        panel.getActionMap().put("ctrlPressedAction", ctrlPressedAction);
+        panel.getActionMap().put("ctrlReleasedAction", ctrlReleasedAction);
+        panel.getActionMap().put("shiftPressedAction", shiftPressedAction);
+        panel.getActionMap().put("shiftReleasedAction", shiftReleasedAction);
+        panel.getActionMap().put("sAction", sAction);
+        panel.getActionMap().put("vAction", vAction);
+        panel.getActionMap().put("cAction", cAction);
+        panel.getActionMap().put("keyTypedAction", keyTypedAction);
+    }
+
 
     /**
      * @source <a href="https://stackoverflow.com/questions/309023/how-to-bring-a-window-to-the-front">stackoverflow</a>

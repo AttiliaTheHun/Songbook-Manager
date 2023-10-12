@@ -23,7 +23,7 @@ public class IndexBuilder {
 
     public SaveIndex createSaveIndex(Index local, Index remote) {
         Collection standardAdditions = getExtraItems((Collection) remote.getData().getContent().get("standard").getContent(), (Collection) local.getData().getContent().get("standard").getContent());
-
+        Collection easterAdditions = getExtraItems((Collection) remote.getData().getContent().get("easter").getContent(), (Collection) local.getData().getContent().get("easter").getContent());
 
         return null;
     }

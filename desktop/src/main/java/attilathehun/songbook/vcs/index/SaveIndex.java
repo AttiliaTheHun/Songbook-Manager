@@ -33,4 +33,20 @@ public class SaveIndex extends PartialIndex {
     public void setChanges(CompoundProperty changes) {
         this.changes = changes;
     }
+
+    public CompoundProperty getAdditions() {
+        return additions;
+    }
+
+    public CompoundProperty getDeletions() {
+        return deletions;
+    }
+
+    public CompoundProperty getChanges() {
+        return changes;
+    }
+
+    public long getVersionTimestamp() {
+        return versionTimestamp;
+    }
 }

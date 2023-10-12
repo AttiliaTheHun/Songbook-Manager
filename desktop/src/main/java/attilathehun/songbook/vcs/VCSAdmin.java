@@ -14,6 +14,17 @@ public class VCSAdmin {
 
     private static final Logger logger = LogManager.getLogger(VCSAdmin.class);
 
+    private VCSAdmin instance;
+
+    public VCSAdmin getInstance() {
+
+    }
+
+
+    public VCSAgent getAgent() {
+
+    }
+
     public void saveLocalChanges() {
         if (!Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
             Environment.showMessage("Remote saving and loading disabled","Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation");
@@ -65,6 +76,7 @@ public class VCSAdmin {
         public final String REMOTE_DATA_ZIP_FILE_UPLOAD_URL;
         public final String REMOTE_DATA_FILE_HASH_URL;
         public final String REMOTE_DATA_FILE_LAST_EDITED_URL;
+        public final String REQUEST_TEMP_FILE_PATH;
         public final String REQUEST_ZIP_FILE_PATH;
         public final String VCS_CACHE_FILE_PATH;
         public final String LOCAL_INDEX_FILE_PATH;
@@ -77,6 +89,7 @@ public class VCSAdmin {
             REMOTE_DATA_FILE_LAST_EDITED_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/modify-date/";
             REMOTE_SAVE_LOAD_ENABLED = false;
             REQUEST_ZIP_FILE_PATH = "request.zip";
+            REQUEST_TEMP_FILE_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH, "request").toString();
             VCS_CACHE_FILE_PATH = Paths.get(System.getProperty("user.dir"), "vcs").toString();
             LOCAL_INDEX_FILE_PATH = Paths.get(Environment.getInstance().settings.vcs.VCS_CACHE_FILE_PATH, "vcs").toString();
             VCS_THREAD_COUNT = 20;
