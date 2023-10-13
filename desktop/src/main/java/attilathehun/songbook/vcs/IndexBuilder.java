@@ -46,12 +46,12 @@ public class IndexBuilder {
         String easterCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.environment.EASTER_COLLECTION_FILE_PATH));
         Index index = new Index(null);
         CompoundProperty data = new CompoundProperty();
-        data.put("standard", new SimpleProperty<>(standardSongs.keySet().toArray()));
-        data.put("easter", new SimpleProperty<>(easterSongs.keySet().toArray()));
+        data.put("standard", new SimpleProperty<>(standardSongs.keySet()));
+        data.put("easter", new SimpleProperty<>(easterSongs.keySet()));
         index.setData(data);
         CompoundProperty hashes = new CompoundProperty();
-        hashes.put("standard", new SimpleProperty<>(standardSongs.values().toArray()));
-        hashes.put("easter", new SimpleProperty<>(easterSongs.values().toArray()));
+        hashes.put("standard", new SimpleProperty<>(standardSongs.values()));
+        hashes.put("easter", new SimpleProperty<>(easterSongs.values()));
         index.setHashes(hashes);
         index.setMetadata(null);
         CompoundProperty collections = new CompoundProperty();
@@ -59,6 +59,7 @@ public class IndexBuilder {
         data.put("easter", new SimpleProperty<>(easterCollectionHash));
         index.setCollections(collections);
         index.setDefaultSettings(null);
+        index.setVersionTimestamp(Environment.getInstance().getSongbookVersionTimestamp());
         return index;
     }
 

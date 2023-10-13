@@ -208,7 +208,7 @@ public class StandardCollectionManager extends CollectionManager {
 
     @Override
     public void updateSongRecordTitleFromHTML(Song s) {
-        if (!Environment.getInstance().settings.user.BIND_SONG_TITLES) {
+        if (!Environment.getInstance().settings.songbook.BIND_SONG_TITLES) {
             return;
         }
         if (s == null || s.id() < 0) {
@@ -233,7 +233,7 @@ public class StandardCollectionManager extends CollectionManager {
 
     @Override
     public void updateSongHTMLTitleFromRecord(Song s) {
-        if (!Environment.getInstance().settings.user.BIND_SONG_TITLES) {
+        if (!Environment.getInstance().settings.songbook.BIND_SONG_TITLES) {
             return;
         }
         if (s == null || s.id() < 0) {
@@ -257,7 +257,7 @@ public class StandardCollectionManager extends CollectionManager {
 
     @Override
     public void updateSongHTMLFromRecord(Song s) {
-        if (!Environment.getInstance().settings.user.BIND_SONG_TITLES) {
+        if (!Environment.getInstance().settings.songbook.BIND_SONG_TITLES) {
             return;
         }
         try {

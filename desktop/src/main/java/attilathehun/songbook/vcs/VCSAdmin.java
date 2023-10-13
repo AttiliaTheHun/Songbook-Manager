@@ -4,8 +4,10 @@ import attilathehun.songbook.environment.Environment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * The Version Control System Administrator. This class is the main class of the Version Control System and provides a simple API to interact with.
@@ -14,23 +16,41 @@ public class VCSAdmin {
 
     private static final Logger logger = LogManager.getLogger(VCSAdmin.class);
 
-    private VCSAdmin instance;
+    private final VCSAdmin instance = new VCSAdmin();
+    private final VCSAgent defaultAgent = new VCSAgent();
 
     public VCSAdmin getInstance() {
-
+        return instance;
     }
 
 
     public VCSAgent getAgent() {
+        return defaultAgent;
+    }
+
+    /**
+     * Push local changes to the server. Upon overshadowing danger, ask the user what to do. Request an access token if none
+     * is loaded.
+     */
+    public void push() {
+        try {
+            saveLocalChanges();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    public void pull() {
 
     }
 
-    public void saveLocalChanges() {
+    private void saveLocalChanges() throws IOException, NoSuchAlgorithmException {
         if (!Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
             Environment.showMessage("Remote saving and loading disabled","Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation");
             return;
         }
-        if (!new VCSAgent().verifyLocalChanges()) {
+        VCSAgent agent = new VCSAgent();
+        if (!agent.verifyLocalChanges()) {
             Environment.showMessage("Already up to date", "The remote version of the songbook matches the local version.");
             return;
         }
@@ -42,7 +62,9 @@ public class VCSAdmin {
                 return;
             }
         }
-        RequestFileAssembler RFAssembler = new RequestFileAssembler().assembleSaveFile(new IndexBuilder().createSaveIndex());
+        IndexBuilder indexBuilder = new IndexBuilder();
+        CacheManager.getInstance().cacheIndex(indexBuilder.createLocalIndex());
+        RequestFileAssembler RFAssembler = new RequestFileAssembler().assembleSaveFile(new IndexBuilder().createSaveIndex(CacheManager.getInstance().getCachedIndex(), agent.getRemoteIndex()));
         //Client client = new Client().postFile(Environment.getInstance().settings.vcs.REMOTE_DATA_ZIP_FILE_UPLOAD_URL, RFAssembler.getOutputFilePath(), token);
 
        /* if (client.getStatus().getCode() == Client.Status.SUCCESS) {
@@ -82,6 +104,8 @@ public class VCSAdmin {
         public final String LOCAL_INDEX_FILE_PATH;
         public final int VCS_THREAD_COUNT;
 
+        public final String CHANGE_LOG_FILE_PATH;
+
         public VCSSettings() {
             REMOTE_DATA_ZIP_FILE_DOWNLOAD_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/download/";
             REMOTE_DATA_ZIP_FILE_UPLOAD_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/upload/";
@@ -93,6 +117,7 @@ public class VCSAdmin {
             VCS_CACHE_FILE_PATH = Paths.get(System.getProperty("user.dir"), "vcs").toString();
             LOCAL_INDEX_FILE_PATH = Paths.get(Environment.getInstance().settings.vcs.VCS_CACHE_FILE_PATH, "vcs").toString();
             VCS_THREAD_COUNT = 20;
+            CHANGE_LOG_FILE_PATH = Paths.get(Environment.getInstance().settings.environment.DATA_FILE_PATH, "change_log.txt").toString();;
         }
 
 

@@ -13,6 +13,7 @@ public class Index implements Serializable {
     public CompoundProperty metadata;
     public CompoundProperty collections;
     public CompoundProperty defaultSettings;
+    public long versionTimestamp;
 
     /**
      * An absolutely pointless constructor, use the default one instead.
@@ -62,6 +63,14 @@ public class Index implements Serializable {
 
     public CompoundProperty getMetadata() {
         return metadata;
+    }
+
+    public void setVersionTimestamp(long versionTimestamp) {
+        this.versionTimestamp = versionTimestamp;
+    }
+
+    public long getVersionTimestamp() {
+        return versionTimestamp;
     }
 }
 

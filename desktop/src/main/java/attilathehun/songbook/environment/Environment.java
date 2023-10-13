@@ -32,12 +32,11 @@ public final class Environment {
 
     private String tokenInMemory = null;
 
-    private long songbookVersionTimestamp;
+    private long songbookVersionTimestamp = -1;
 
     private Environment() {
         refresh();
         logger.info("Environment instantiated");
-        //TODO: init timestamp
     }
 
     public long getSongbookVersionTimestamp() {
