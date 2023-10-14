@@ -31,6 +31,7 @@ public class EnvironmentManager {
     private static final int ACTION_EDIT = 0;
     private static final int ACTION_ADD = 1;
 
+    @Deprecated
     public void loadData() {
         try {
             if (Environment.getInstance().settings.user.REMOTE_SAVE_LOAD_ENABLED) {
@@ -62,6 +63,7 @@ public class EnvironmentManager {
         Environment.showMessage("Success", "Data loaded successfully");
     }
 
+    @Deprecated
     public void loadData(String remoteApiEndpointURL) {
         try {
             if (Environment.getInstance().settings.user.REMOTE_SAVE_LOAD_ENABLED) {
@@ -94,6 +96,7 @@ public class EnvironmentManager {
         Environment.showMessage("Success", "Data loaded successfully");
     }
 
+    @Deprecated
     public void saveData() {
         try {
             logEditingUser();
@@ -128,6 +131,7 @@ public class EnvironmentManager {
         Environment.showMessage("Success", "Data saved successfully");
     }
 
+    @Deprecated
     private boolean unzipData() {
         try {
             new ZipUtil().extractZip(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.environment.DATA_FILE_PATH);
@@ -140,6 +144,7 @@ public class EnvironmentManager {
     }
 
 
+    @Deprecated
     private boolean zipData() {
         try {
             new ZipUtil(false).createZip(Environment.getInstance().settings.environment.DATA_FILE_PATH, Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
@@ -152,6 +157,7 @@ public class EnvironmentManager {
     }
 
 
+    @Deprecated
     public String createSHAHash(String input) throws NoSuchAlgorithmException {
 
         String hashtext = null;
@@ -163,6 +169,7 @@ public class EnvironmentManager {
         return hashtext;
     }
 
+    @Deprecated
     private String convertToHex(final byte[] messageDigest) {
         BigInteger bigint = new BigInteger(1, messageDigest);
         String hexText = bigint.toString(16);
@@ -172,6 +179,7 @@ public class EnvironmentManager {
         return hexText;
     }
 
+    @Deprecated
     public void logEditingUser() throws IOException {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
@@ -208,8 +216,9 @@ public class EnvironmentManager {
         }
     }
 
+    @Deprecated
     public void loadSongbook() {
-        if (Environment.getInstance().settings.user.REMOTE_SAVE_LOAD_ENABLED) {
+        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
             Pair<String, String> input = loadSongbookInputDialog();
             if (input.getKey() == null) {
                 Environment.showWarningMessage("Warning", "Songbook loading aborted");
@@ -227,6 +236,7 @@ public class EnvironmentManager {
         //Environment.showMessage("Success", "Songbook loaded successfully.");
     }
 
+    @Deprecated
     private Pair<String, String> loadSongbookInputDialog() {
         JLabel label = new JLabel("Leave the field blank to use the default value.");
         JTextField remoteApiEndpointURL = new JTextField();
@@ -468,7 +478,7 @@ public class EnvironmentManager {
 
 
 
-
+    @Deprecated
     public static class Certificate {
         private Certificate() {
         }

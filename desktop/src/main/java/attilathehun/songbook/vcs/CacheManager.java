@@ -1,6 +1,5 @@
 package attilathehun.songbook.vcs;
 
-import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.vcs.index.Index;
 import com.google.gson.Gson;
@@ -12,10 +11,12 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CacheManager {
     private static final Logger logger = LogManager.getLogger(CacheManager.class);
@@ -73,6 +74,72 @@ public class CacheManager {
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }
+    }
+
+    public long getCachedSongbookVersionTimestamp() {
+        try {
+            return Long.parseLong(Files.readAllLines(Paths.get(Environment.getInstance().settings.vcs.VERSION_TIMESTAMP_FILE_PATH)).get(0));
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+        return -1;
+    }
+
+    public File getCachedSongbookVersionTimestampFile() {
+        return new File(Environment.getInstance().settings.vcs.VERSION_TIMESTAMP_FILE_PATH);
+    }
+
+    protected void cacheSongbookVersionTimestamp(long versionTimestamp) {
+        if (versionTimestamp < 0) {
+            throw new IllegalArgumentException();
+        }
+        try {
+            PrintWriter printWriter = new PrintWriter(new FileWriter((Environment.getInstance().settings.vcs.VERSION_TIMESTAMP_FILE_PATH), false));
+            printWriter.write(String.valueOf(versionTimestamp));
+            printWriter.close();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+
+    }
+
+    /**
+     * Scan all the songbook files to find the newest modify date which becomes the new version timestamp.
+     */
+    public void cacheSongbookVersionTimestamp() throws IOException {
+        long timestamp = -1;
+        long tempStamp;
+
+        for (File file : Stream.of(new File(Environment.getInstance().settings.environment.SONG_DATA_FILE_PATH).listFiles())
+                .filter(file -> !file.isDirectory())
+                .toList()) {
+            tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();
+            if (tempStamp > timestamp) {
+                timestamp = tempStamp;
+            }
+        }
+
+        for (File file : Stream.of(new File(Environment.getInstance().settings.environment.EGG_DATA_FILE_PATH).listFiles())
+                .filter(file -> !file.isDirectory())
+                .toList()) {
+            tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();
+            if (tempStamp > timestamp) {
+                timestamp = tempStamp;
+            }
+        }
+
+        for (File file : Stream.of(new File(Environment.getInstance().settings.environment.DATA_FILE_PATH).listFiles())
+                .filter(file -> !file.isDirectory())
+                .filter(file -> file.getName().endsWith(".json"))
+                .toList()) {
+            tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();
+            if (tempStamp > timestamp) {
+                timestamp = tempStamp;
+            }
+        }
+
+
+        cacheSongbookVersionTimestamp(timestamp);
     }
 
 

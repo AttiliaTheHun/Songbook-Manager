@@ -1,5 +1,7 @@
 package attilathehun.songbook.vcs;
 
+import attilathehun.songbook.collection.EasterCollectionManager;
+import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.util.SHA256HashGenerator;
 import attilathehun.songbook.vcs.index.*;
@@ -21,15 +23,49 @@ public class IndexBuilder {
 
     private static final Logger logger = LogManager.getLogger(IndexBuilder.class);
 
+    /**
+     * Generates a save request index mapping all the files and data we need to pass to the server.
+     * @param local local songbook index
+     * @param remote remote songbook index
+     * @return save index of the differences
+     */
     public SaveIndex createSaveIndex(Index local, Index remote) {
-        Collection standardAdditions = getExtraItems((Collection) remote.getData().getContent().get("standard").getContent(), (Collection) local.getData().getContent().get("standard").getContent());
-        Collection easterAdditions = getExtraItems((Collection) remote.getData().getContent().get("easter").getContent(), (Collection) local.getData().getContent().get("easter").getContent());
-
-        return null;
+        Collection<String> standardAdditions = getExtraItems((Collection) remote.getData().getContent().get("standard").getContent(), (Collection) local.getData().getContent().get("standard").getContent());
+        Collection<String> easterAdditions = getExtraItems((Collection) remote.getData().getContent().get("easter").getContent(), (Collection) local.getData().getContent().get("easter").getContent());
+        Collection<String> standardDeletions = getMissingItems((Collection) remote.getData().getContent().get("standard").getContent(), (Collection) local.getData().getContent().get("standard").getContent());
+        Collection<String> easterDeletions = getMissingItems((Collection) remote.getData().getContent().get("easter").getContent(), (Collection) local.getData().getContent().get("easter").getContent());
+        Collection<String> standardChanges = getChanges();
+        Collection<String> easterChanges = getChanges();
+        SaveIndex index = new SaveIndex(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
+        index.getAdditions().put("standard", new SimpleProperty(standardAdditions));
+        index.getAdditions().put("easter", new SimpleProperty(easterAdditions));
+        index.getDeletions().put("standard", new SimpleProperty(standardDeletions));
+        index.getDeletions().put("easter", new SimpleProperty(easterDeletions));
+        index.getChanges().put("standard", new SimpleProperty(standardChanges));
+        index.getChanges().put("easter", new SimpleProperty(easterChanges));
+        index.getCollections().put("standard", new SimpleProperty(StandardCollectionManager.getInstance().getCollection()));
+        index.getCollections().put("easter", new SimpleProperty(EasterCollectionManager.getInstance().getCollection()));
+        return index;
     }
 
+    /**
+     * Generates a load request index mapping the files we need to obtain from the server.
+     * //TODO make the collections part of the index, to be only received when there are changes to them (same for saving) to save bandwidth
+     * @param local local songbook index
+     * @param remote remote songbook index
+     * @return load index of the differences
+     */
     public LoadIndex createLoadIndex(Index local, Index remote) {
-        return null;
+        Collection<String> standardMissing = getExtraItems((Collection) remote.getData().getContent().get("standard").getContent(), (Collection) local.getData().getContent().get("standard").getContent());
+        Collection<String> easterMissing = getExtraItems((Collection) remote.getData().getContent().get("easter").getContent(), (Collection) local.getData().getContent().get("easter").getContent());
+        Collection<String> standardOutdated = getChanges();
+        Collection<String> easterOutdated = getChanges();
+        LoadIndex index = new LoadIndex();
+        index.getMissing().put("standard", new SimpleProperty(standardMissing));
+        index.getMissing().put("easter", new SimpleProperty(easterMissing));
+        index.getOutdated().put("standard", new SimpleProperty(standardOutdated));
+        index.getOutdated().put("easter", new SimpleProperty(easterOutdated));
+        return index;
     }
 
     /**
@@ -98,7 +134,7 @@ public class IndexBuilder {
      * @param current to collection to compare
      * @return elements from old absent in current
      */
-    private Collection getMissingItems(Collection old, Collection current) {
+    private Collection<String> getMissingItems(Collection<String> old, Collection<String> current) {
         Collection missing = new ArrayList<>();
         for (Object o : old) {
             if (!current.contains(o)) {
@@ -114,8 +150,13 @@ public class IndexBuilder {
      * @param current to collection to compare
      * @return elements from current absent in old
      */
-    private Collection getExtraItems(Collection old, Collection current) {
+    private Collection<String> getExtraItems(Collection<String> old, Collection<String> current) {
         return getMissingItems(current, old);
+    }
+
+    private Collection<String> getChanges() {
+        //TODO
+        return null;
     }
 
     /**
@@ -169,7 +210,7 @@ public class IndexBuilder {
         }
 
         /**
-         * PerformBuildTask method. Executes the preconfigured task upon a given data set. Should block the thread until the task
+         * PerformBuildTask method. Executes the preconfigured task upon a given data set. Blocks the thread until the task
          * is finished.
          * @param collection task input data
          */

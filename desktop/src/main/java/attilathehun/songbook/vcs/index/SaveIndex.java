@@ -12,6 +12,7 @@ public class SaveIndex extends PartialIndex {
     private CompoundProperty additions;
     private CompoundProperty deletions;
     private CompoundProperty changes;
+    private CompoundProperty collections;
 
     private long versionTimestamp;
 
@@ -19,6 +20,7 @@ public class SaveIndex extends PartialIndex {
         this.versionTimestamp = versionTimestamp;
         this.additions = new CompoundProperty();
         this.deletions = new CompoundProperty();
+        this.collections = new CompoundProperty();
         this.changes = new CompoundProperty();
     }
 
@@ -34,6 +36,10 @@ public class SaveIndex extends PartialIndex {
         this.changes = changes;
     }
 
+    public void setCollections(CompoundProperty collections) {
+        this.collections = collections;
+    }
+
     public CompoundProperty getAdditions() {
         return additions;
     }
@@ -44,6 +50,10 @@ public class SaveIndex extends PartialIndex {
 
     public CompoundProperty getChanges() {
         return changes;
+    }
+
+    public CompoundProperty getCollections() {
+        return collections;
     }
 
     public long getVersionTimestamp() {

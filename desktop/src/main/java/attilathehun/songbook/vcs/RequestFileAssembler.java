@@ -2,7 +2,6 @@ package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.util.ZipBuilder;
-import attilathehun.songbook.vcs.index.LoadIndex;
 import attilathehun.songbook.vcs.index.SaveIndex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,6 +15,13 @@ public class RequestFileAssembler {
     private static final Logger logger = LogManager.getLogger(RequestFileAssembler.class);
     private String outputFilePath = null;
 
+    /**
+     * Create a request.zip file to the temp folder. The file contains all songbook files that changes have been made to,
+     * the songbook changelog and the save request index.
+     * @param index the save request index
+     * @return this
+     * @throws IOException
+     */
     public RequestFileAssembler assembleSaveFile(SaveIndex index) throws IOException {
         if (index == null) {
             throw new IllegalArgumentException();
@@ -41,6 +47,7 @@ public class RequestFileAssembler {
         builder.addFile(new File(Environment.getInstance().settings.environment.EASTER_COLLECTION_FILE_PATH), "/data");
         builder.addFile(new File(Environment.getInstance().settings.vcs.CHANGE_LOG_FILE_PATH), "/");
         builder.addFile(CacheManager.getInstance().getCachedIndexFile(), "/");
+        builder.finish();
         return this;
     }
 

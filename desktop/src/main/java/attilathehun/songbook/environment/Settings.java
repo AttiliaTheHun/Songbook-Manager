@@ -86,7 +86,7 @@ public class Settings implements Serializable {
         private final String DEFAULT_READ_TOKEN;
 
 
-        private UserSettings() {
+        public UserSettings() {
             AUTO_LOAD_DATA = false;
             DEFAULT_READ_TOKEN = "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h";
             AUTH_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/.auth").toString();

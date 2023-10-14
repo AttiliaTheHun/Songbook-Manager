@@ -12,10 +12,26 @@ public class LoadIndex extends PartialIndex {
     private CompoundProperty missing;
     private CompoundProperty outdated;
 
-    public LoadIndex(SimpleProperty[] missingSongs, SimpleProperty[] outdatedSongs) {
-        SimpleProperty[] missing = {new ArrayProperty<SimpleProperty>(missingSongs)};
-        this.missing = new CompoundProperty(missing);
-        SimpleProperty[] outdated = {new ArrayProperty<SimpleProperty>(outdatedSongs)};
-        this.outdated = new CompoundProperty(outdated);
+    public LoadIndex() {
+       this.missing = new CompoundProperty();
+       this.outdated = new CompoundProperty();
+    }
+
+
+    public void setMissing(CompoundProperty missing) {
+        this.missing = missing;
+    }
+
+    public void setOutdated(CompoundProperty outdated) {
+        this.outdated = outdated;
+    }
+
+
+    public CompoundProperty getMissing() {
+        return missing;
+    }
+
+    public CompoundProperty getOutdated() {
+        return outdated;
     }
 }

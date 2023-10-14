@@ -62,7 +62,7 @@ public final class Environment {
                 return String.join("", Files.readAllLines(Path.of(settings.user.getAuthFilePath(new Certificate()))));
             } catch (IOException e) {
                 logger.warn(e.getMessage(), e);
-                showErrorMessage("Error", "Error reading auth file, continuing with default token.");
+                showWarningMessage("Error", "Error reading auth file, continuing with default token.");
             }
 
         }

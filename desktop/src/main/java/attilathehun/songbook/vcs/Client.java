@@ -6,62 +6,94 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * An HTTP utility class.
+ */
 public class Client {
 
     private static final Logger logger = LogManager.getLogger(Client.class);
     private Status status = null;
 
 
-    public void postFile(String targetUrl, String fileUrl, String authToken) throws Exception {
+    public void postRequestFile(String targetUrl, String requestFileUrl, String authToken) throws IOException {
         URL url = new URL(targetUrl);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "Application/zip; charset=utf-8");
-        conn.setRequestProperty("Content-Disposition", "attachments; filename=data.zip");
+        conn.setRequestProperty("Content-Disposition", "attachments; filename=request.zip");
         conn.setRequestProperty("Authorization", "Bearer " + authToken);
 
         conn.connect();
         if (conn.getResponseCode() == 400) {
-            String fileContent = String.join("\n", Files.readAllLines(Paths.get(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH)));
+            String fileContent = String.join("\n", Files.readAllLines(Paths.get(requestFileUrl)));
             OutputStream outputStream = conn.getOutputStream();
             outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
             outputStream.close();
             conn.disconnect();
         } else {
-            //Environment.getInstance().log("Error uploading data: Response code " + conn.getResponseCode());
             Environment.showMessage("Could not upload the data", "HTTP response code: " + conn.getResponseCode());
         }
 
     }
 
-    public String getFile(String targetUrl, String fileUrl, String authToken) throws Exception {
-        try {
-            String fileContent = getFile(remoteDataZipFileDownloadURL, Environment.getInstance().acquireToken(new Certificate()));
-            File file = new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
-            file.createNewFile();
-            FileOutputStream outputStream = new FileOutputStream(file, false);
+    public String getResponseFile(String targetUrl, String indexFileUrl, String authToken) throws IOException {
+        URL url = new URL(targetUrl);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "Application/json; charset=utf-8");
+        conn.setRequestProperty("Content-Disposition", "attachments; filename=index.json");
+        conn.setRequestProperty("Authorization", "Bearer " + authToken);
+
+        conn.connect();
+        if (conn.getResponseCode() == 400) {
+            Path outputPath = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH, "response.zip");
+            String fileContent = String.join("\n", Files.readAllLines(Paths.get(indexFileUrl)));
+            OutputStream outputStream = conn.getOutputStream();
             outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
             outputStream.close();
-            Environment.showMessage("Success", "Data downloaded successfully from the server.");
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            InputStream in = conn.getInputStream();
+            Files.copy(in, outputPath);
+            in.close();
+            conn.disconnect();
+            return outputPath.toString();
+        } else {
+            Environment.showMessage("Could not upload the data", "HTTP response code: " + conn.getResponseCode());
         }
+
         return null;
     }
 
-    public String httpGet(String urlToRead) throws Exception {
+    public String httpGet(String urlToRead) throws IOException {
         StringBuilder result = new StringBuilder();
         URL url = new URL(urlToRead);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(conn.getInputStream()))) {
+            for (String line; (line = reader.readLine()) != null; ) {
+                result.append(line);
+            }
+        }
+        return result.toString();
+    }
+
+    public String httpGet(String urlToRead, String token) throws IOException {
+        StringBuilder result = new StringBuilder();
+        URL url = new URL(urlToRead);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Authorization", "Bearer " + token);
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(conn.getInputStream()))) {
             for (String line; (line = reader.readLine()) != null; ) {
