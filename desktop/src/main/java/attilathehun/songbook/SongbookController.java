@@ -120,11 +120,11 @@ public class SongbookController implements KeyEventListener {
         });
 
         loadDataButton.setOnAction(event -> {
-            new EnvironmentManager().loadData();
+            new EnvironmentManager().load();
         });
 
         saveDataButton.setOnAction(event -> {
-            new EnvironmentManager().saveData();
+            new EnvironmentManager().save();
         });
 
         songOneIdField.setOnKeyPressed(keyEvent -> {

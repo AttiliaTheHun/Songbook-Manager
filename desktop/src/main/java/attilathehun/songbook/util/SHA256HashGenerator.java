@@ -8,12 +8,17 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * This is a utility class to generate file and text checksums.
+ * A utility class to generate file and text checksums. This class uses MessageDigest which is not considered
+ * thread-safe, thus this class is not thread-safe!
  */
 public class SHA256HashGenerator {
+    private final MessageDigest digest;
 
-    public String getHash(String message) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    public SHA256HashGenerator() throws NoSuchAlgorithmException {
+        digest = MessageDigest.getInstance("SHA-256");
+    }
+
+    public String getHash(String message)  {
         byte[] encodedhash = digest.digest(
                 message.getBytes(StandardCharsets.UTF_8));
         return bytesToHex(encodedhash);

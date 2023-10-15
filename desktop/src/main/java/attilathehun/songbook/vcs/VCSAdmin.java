@@ -1,9 +1,11 @@
 package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.environment.Environment;
+import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.swing.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -108,8 +110,19 @@ public class VCSAdmin {
     }
 
     private String requestOneTimeToken() {
-        //TODO: ask the user to fill the token to a textfield for a one-time use
-        return "";
+        JLabel label = new JLabel("Fill in the access token to access the remote server. Depending on the operation, the token must have READ or WRITE permission.");
+        JTextField token = new JPasswordField();
+        token.setToolTipText("The authentication token.");
+        Object[] message = {
+                label,
+                "Token:", token
+        };
+
+        int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), message, "Load Remote Songbook", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            return token.getText();
+        }
+        return null;
     }
 
     private void updateSongbookChangeLog() throws IOException {

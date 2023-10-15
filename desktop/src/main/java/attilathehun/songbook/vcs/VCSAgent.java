@@ -74,7 +74,13 @@ public class VCSAgent {
         return false;
     }
 
-    public Index getRemoteIndex(String token) throws IOException{
+    /**
+     * Obtain remote songbook index.
+     * @param token the authentication token with read access
+     * @return remote songbook index
+     * @throws IOException
+     */
+    public Index getRemoteIndex(String token) throws IOException {
         Client client = new Client();
         Type targetClassType = new TypeToken<Index>() {
         }.getType();

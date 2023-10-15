@@ -173,7 +173,7 @@ public final class Environment {
         this.collectionManager = collectionManager;
     }
 
-    public void loadTokenToMemory(String token, EnvironmentManager.Certificate certificate) {
+    public void loadTokenToMemory(String token, VCSAdmin.Certificate certificate) {
         tokenInMemory = token;
     }
 

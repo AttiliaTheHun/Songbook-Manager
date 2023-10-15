@@ -4,25 +4,17 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.util.ZipBuilder;
+import attilathehun.songbook.vcs.VCSAdmin;
 import attilathehun.songbook.window.CollectionEditor;
-import attilathehun.songbook.vcs.Client;
 import attilathehun.songbook.SongbookApplication;
-import attilathehun.songbook.util.ZipUtil;
-import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
 import java.io.*;
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class EnvironmentManager {
 
@@ -31,164 +23,56 @@ public class EnvironmentManager {
     private static final int ACTION_EDIT = 0;
     private static final int ACTION_ADD = 1;
 
-    @Deprecated
-    public void loadData() {
-        try {
-            if (Environment.getInstance().settings.user.REMOTE_SAVE_LOAD_ENABLED) {
-                File dataFile = new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
-                Client client = new Client();
-                if (dataFile.exists()) {
-                    String content = String.join("\n", Files.readAllLines(dataFile.toPath()));
-                    String localHash = createSHAHash(content);
-                    String remoteHash = client.httpGet(Environment.getInstance().settings.environment.REMOTE_DATA_FILE_HASH_URL);
-                    if (localHash.equals(remoteHash)) {
-                        Environment.showMessage("Success", "The local version of data is up to date with the remote one");
-                        return;
-                    }
-                }
-                client.downloadData();
 
-            } else if (!new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH).exists()) {
-                Environment.showErrorMessage("Error", "Could not file a local data zip file.");
-                return;
-            }
-            if (!unzipData()) {
-                return;
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Could not load the data");
+    public void load() {
+        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
+            VCSAdmin.getInstance().pull();
+            return;
+        }
+        if (!new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH).exists()) {
+            Environment.showErrorMessage("Error", "Could not file a local data zip file.");
+            return;
+        }
+        if (!extractLocalDataFile()) {
             return;
         }
         Environment.showMessage("Success", "Data loaded successfully");
     }
 
-    @Deprecated
-    public void loadData(String remoteApiEndpointURL) {
+    private boolean extractLocalDataFile() {
         try {
-            if (Environment.getInstance().settings.user.REMOTE_SAVE_LOAD_ENABLED) {
-                File dataFile = new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
-                Client client = new Client();
-                if (dataFile.exists()) {
-                    String content = String.join("\n", Files.readAllLines(dataFile.toPath()));
-                    String localHash = createSHAHash(content);
-                    String remoteHash = client.httpGet(remoteApiEndpointURL.endsWith("/") ? remoteApiEndpointURL + "hash/" : remoteApiEndpointURL + "/hash/");
-                    if (localHash.equals(remoteHash)) {
-                        Environment.showMessage("Success", "The local version of data is up to date with the remote one");
-                        return;
-                    }
-                }
-                client.downloadData(remoteApiEndpointURL.endsWith("/") ? remoteApiEndpointURL + "download/" : remoteApiEndpointURL + "/download/");
-
-            } else if (!new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH).exists()) {
-                Environment.showErrorMessage("Error", "Could not load a local data zip file.");
-                return;
-            }
-            if (!unzipData()) {
-                return;
-            }
-
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Could not load the data");
-            return;
-        }
-        Environment.showMessage("Success", "Data loaded successfully");
-    }
-
-    @Deprecated
-    public void saveData() {
-        try {
-            logEditingUser();
-            if (!zipData()) {
-                return;
-            }
-
-            if (Environment.getInstance().settings.user.REMOTE_SAVE_LOAD_ENABLED) {
-                File dataFile = new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
-                Client client = new Client();
-                if (dataFile.exists()) {
-                    String content = String.join("\n", Files.readAllLines(dataFile.toPath()));
-                    String localHash = createSHAHash(content);
-                    String remoteHash = client.httpGet(Environment.getInstance().settings.environment.REMOTE_DATA_FILE_HASH_URL);
-                    if (localHash.equals(remoteHash)) {
-                        Environment.showMessage("Success", "The remote version of data is up to date with the local one");
-                        return;
-                    }
-                    client.uploadData();
-                } else {
-                    Environment.showMessage("No way", "This should never have happened");
-                    return;
-                }
-
-            }
-
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Could not save the data");
-            return;
-        }
-        Environment.showMessage("Success", "Data saved successfully");
-    }
-
-    @Deprecated
-    private boolean unzipData() {
-        try {
-            new ZipUtil().extractZip(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.environment.DATA_FILE_PATH);
+            ZipBuilder.extract(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.environment.DATA_FILE_PATH);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Could not unzip the data");
+            Environment.showErrorMessage("Error", "Could not extract the data");
             return false;
         }
         return true;
     }
 
+    public void save() {
+        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
+            VCSAdmin.getInstance().push();
+            return;
+        }
+        if (!archiveDataToLocalFile()) {
+            return;
+        }
 
-    @Deprecated
-    private boolean zipData() {
+    }
+
+    private boolean archiveDataToLocalFile() {
         try {
-            new ZipUtil(false).createZip(Environment.getInstance().settings.environment.DATA_FILE_PATH, Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
+            ZipBuilder builder = new ZipBuilder(Environment.getInstance().settings.environment.DATA_FILE_PATH, Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
+            builder.finish();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Could not zip the data");
+            Environment.showErrorMessage("Error", "Could not archive the data");
             return false;
         }
         return true;
     }
 
-
-    @Deprecated
-    public String createSHAHash(String input) throws NoSuchAlgorithmException {
-
-        String hashtext = null;
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] messageDigest =
-                md.digest(input.getBytes(StandardCharsets.UTF_8));
-
-        hashtext = convertToHex(messageDigest);
-        return hashtext;
-    }
-
-    @Deprecated
-    private String convertToHex(final byte[] messageDigest) {
-        BigInteger bigint = new BigInteger(1, messageDigest);
-        String hexText = bigint.toString(16);
-        while (hexText.length() < 32) {
-            hexText = "0".concat(hexText);
-        }
-        return hexText;
-    }
-
-    @Deprecated
-    public void logEditingUser() throws IOException {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        final String date = dtf.format(now);
-        final String username = System.getProperty("user.name");
-        PrintWriter printWriter = new PrintWriter(new FileWriter((Environment.getInstance().settings.environment.EDIT_LOG_FILE_PATH), true));
-        printWriter.write(date + " " + username + "\n");
-        printWriter.close();
-    }
 
     public void createNewSongbook() {
         try {
@@ -219,42 +103,16 @@ public class EnvironmentManager {
     @Deprecated
     public void loadSongbook() {
         if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
-            Pair<String, String> input = loadSongbookInputDialog();
-            if (input.getKey() == null) {
-                Environment.showWarningMessage("Warning", "Songbook loading aborted");
-                return;
-            }
-            Environment.getInstance().loadTokenToMemory(input.getValue(), new Certificate());
-            loadData(input.getKey());
-
+            VCSAdmin.getInstance().pull();
             return;
         }
-        unzipData();
+        extractLocalDataFile();
         Environment.getInstance().refresh();
         Environment.getInstance().getCollectionManager().init();
         SongbookApplication.dialControlPLusRPressed();
-        //Environment.showMessage("Success", "Songbook loaded successfully.");
+        Environment.showMessage("Success", "Songbook loaded successfully.");
     }
 
-    @Deprecated
-    private Pair<String, String> loadSongbookInputDialog() {
-        JLabel label = new JLabel("Leave the field blank to use the default value.");
-        JTextField remoteApiEndpointURL = new JTextField();
-        remoteApiEndpointURL.setToolTipText("For example http://example.org/api/data/");
-        JTextField token = new JPasswordField();
-        token.setToolTipText("The token must have READ permission.");
-        Object[] message = {
-                label,
-                "Remote API Endpoint:", remoteApiEndpointURL,
-                "Token:", token
-        };
-
-        int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), message, "Load Remote Songbook", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
-            return new Pair<String, String>(remoteApiEndpointURL.getText(), token.getText());
-        }
-        return new Pair<>(null, null);
-    }
 
 
     public static Song addSongDialog(CollectionManager manager) {
@@ -476,11 +334,11 @@ public class EnvironmentManager {
 
     }
 
-
-
-    @Deprecated
-    public static class Certificate {
-        private Certificate() {
+    public void autoLoad() {
+        if (Environment.getInstance().settings.user.AUTO_LOAD_DATA) {
+            load();
         }
     }
+
+
 }

@@ -49,6 +49,7 @@ public class SongbookApplication extends Application {
         PluginManager.loadPlugins();
 
         Installer.runDiagnostics();
+        new EnvironmentManager().autoLoad();
         Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
         EnvironmentVerificator.automated();
         launch(args);
@@ -125,12 +126,12 @@ public class SongbookApplication extends Application {
                         }
                         case NativeKeyEvent.VC_S -> { //save
                             if (CONTROL_PRESSED) {
-                                new EnvironmentManager().saveData();
+                                new EnvironmentManager().save();
                             }
                         }
                         case NativeKeyEvent.VC_L -> { //load
                             if (CONTROL_PRESSED) {
-                                new EnvironmentManager().loadData();
+                                new EnvironmentManager().load();
                             }
                         }
                         case NativeKeyEvent.VC_H -> { //load

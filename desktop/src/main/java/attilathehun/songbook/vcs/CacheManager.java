@@ -15,7 +15,6 @@ import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CacheManager {
@@ -29,8 +28,17 @@ public class CacheManager {
         return instance;
     }
 
+    /**
+     * Clears Version Control System cache folder.
+     */
     public void clearCache() {
-
+        try {
+            for (File f : new File(Environment.getInstance().settings.vcs.VCS_CACHE_FILE_PATH).listFiles()) {
+                f.delete();
+            }
+        } catch (NullPointerException npe) {
+            logger.error(npe.getMessage(), npe);
+        }
     }
 
     /**
@@ -104,7 +112,7 @@ public class CacheManager {
     }
 
     /**
-     * Scan all the songbook files to find the newest modify date which becomes the new version timestamp.
+     * Scans all the songbook files to find the newest modify date which becomes the new version timestamp.
      */
     public void cacheSongbookVersionTimestamp() throws IOException {
         long timestamp = -1;
