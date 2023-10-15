@@ -78,11 +78,11 @@ public class CollectionEditor extends JFrame {
         JPanel panel = (JPanel)instance.getContentPane();
 
         panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0), "ctrlPressedAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, false), "ctrlPressedAction");
         panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, true), "ctrlReleasedAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0), "shiftPressedAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, false), "shiftPressedAction");
         panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true), "shiftReleasedAction");
-
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_R, 0), "rAction");
     }
 
     private void registerActions() {
@@ -95,8 +95,13 @@ public class CollectionEditor extends JFrame {
                 if (selectedSong == null) {
                     return;
                 }
-                int result = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
-                if (result == JOptionPane.OK_OPTION) {
+                int result;
+                if (SHIFT_PRESSED) {
+                    result = JOptionPane.OK_OPTION;
+                } else {
+                    result = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
+                }
+               if (result == JOptionPane.OK_OPTION) {
                     selectedManager.removeSong(selectedSong);
                     forceRefreshList();
                     selectedSong = null;
@@ -132,6 +137,20 @@ public class CollectionEditor extends JFrame {
             }
         };
 
+        Action rAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("Q");
+                refreshStoredSelection();
+
+                int result;
+                if (!CONTROL_PRESSED) {
+                    return;
+                }
+                forceRefreshAll();
+            }
+        };
+
         JPanel panel = (JPanel)instance.getContentPane();
 
         panel.getActionMap().put("deleteAction", deleteAction);
@@ -139,6 +158,7 @@ public class CollectionEditor extends JFrame {
         panel.getActionMap().put("ctrlReleasedAction", ctrlReleasedAction);
         panel.getActionMap().put("shiftPressedAction", shiftPressedAction);
         panel.getActionMap().put("shiftReleasedAction", shiftReleasedAction);
+        panel.getActionMap().put("rAction", rAction);
 
     }
 
@@ -322,7 +342,12 @@ public class CollectionEditor extends JFrame {
                 Environment.showMessage("Message", "Select a song first.");
                 return;
             }
-            int result = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
+            int result;
+            if (SHIFT_PRESSED) {
+                result = JOptionPane.OK_OPTION;
+            } else {
+                result = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
+            }
             if (result == JOptionPane.OK_OPTION) {
                 selectedManager.removeSong(selectedSong);
                 forceRefreshList();

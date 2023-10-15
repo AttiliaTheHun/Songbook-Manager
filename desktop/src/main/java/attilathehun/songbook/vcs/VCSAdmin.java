@@ -146,13 +146,14 @@ public class VCSAdmin {
         public final String REMOTE_DATA_UPLOAD_URL;
         public final String REMOTE_DATA_INDEX_URL;
         public final String REMOTE_DATA_VERSION_TIMESTAMP_URL;
-        public final String REQUEST_TEMP_FILE_PATH;
-        public final String REQUEST_ZIP_FILE_PATH;
         public final String VCS_CACHE_FILE_PATH;
-        public final String LOCAL_INDEX_FILE_PATH;
-        public final int VCS_THREAD_COUNT;
+        public final String REQUEST_ZIP_TEMP_FILE_PATH;
         public final String CHANGE_LOG_FILE_PATH;
         public final String VERSION_TIMESTAMP_FILE_PATH;
+        public final String LOCAL_INDEX_FILE_PATH;
+        public final int VCS_THREAD_COUNT;
+
+
 
         public VCSSettings() {
             REMOTE_DATA_DOWNLOAD_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/download/";
@@ -160,12 +161,11 @@ public class VCSAdmin {
             REMOTE_DATA_INDEX_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/index/";
             REMOTE_DATA_VERSION_TIMESTAMP_URL = "http://beta-hrabozpevnik.clanweb.eu/api/data/version-timestamp/";
             REMOTE_SAVE_LOAD_ENABLED = false;
-            REQUEST_ZIP_FILE_PATH = "request.zip";
-            REQUEST_TEMP_FILE_PATH = Environment.getInstance().settings.environment.TEMP_FILE_PATH;
+            REQUEST_ZIP_TEMP_FILE_PATH = Paths.get(new Environment.EnvironmentSettings().TEMP_FILE_PATH, "request.zip").toString();
             VCS_CACHE_FILE_PATH = Paths.get(System.getProperty("user.dir"), "vcs").toString();
-            LOCAL_INDEX_FILE_PATH = Paths.get(Environment.getInstance().settings.vcs.VCS_CACHE_FILE_PATH, "vcs").toString();
+            LOCAL_INDEX_FILE_PATH = Paths.get(VCS_CACHE_FILE_PATH, "index.json").toString();
             VCS_THREAD_COUNT = 20;
-            CHANGE_LOG_FILE_PATH = Paths.get(Environment.getInstance().settings.environment.DATA_FILE_PATH, "change_log.txt").toString();;
+            CHANGE_LOG_FILE_PATH = Paths.get(new Environment.EnvironmentSettings().DATA_FILE_PATH, "change_log.txt").toString();
             VERSION_TIMESTAMP_FILE_PATH = Paths.get(VCS_CACHE_FILE_PATH, "timestamp.txt").toString();
         }
 

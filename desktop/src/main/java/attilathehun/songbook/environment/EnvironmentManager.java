@@ -63,7 +63,10 @@ public class EnvironmentManager {
 
     private boolean archiveDataToLocalFile() {
         try {
-            ZipBuilder builder = new ZipBuilder(Environment.getInstance().settings.environment.DATA_FILE_PATH, Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
+            ZipBuilder builder = new ZipBuilder();
+            builder.setIncludeSourceFolder(false);
+            builder.setOutputPath(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
+            builder.addFolder(new File(Environment.getInstance().settings.environment.DATA_FILE_PATH), "/");
             builder.finish();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);

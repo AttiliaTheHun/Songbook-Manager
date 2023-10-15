@@ -261,11 +261,11 @@ public class ZipBuilder {
      * Extracts a zip entry (single file) from the zip file.
      * @param zipIn target zip input stream
      * @param filePath where to extract the file to
-     * @throws IOException the thingy you gotta catch
+     * @throws IOException
      */
     private static void extractFile(ZipInputStream zipIn, String filePath) throws IOException {
         new File(filePath).getParentFile().mkdirs();
-        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath));
+        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath, false));
         byte[] bytesIn = new byte[BUFFER_SIZE];
         int read = 0;
         while ((read = zipIn.read(bytesIn)) != -1) {

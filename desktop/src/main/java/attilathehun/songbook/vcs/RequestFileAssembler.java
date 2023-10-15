@@ -26,7 +26,7 @@ public class RequestFileAssembler {
         if (index == null) {
             throw new IllegalArgumentException();
         }
-        outputFilePath = Environment.getInstance().settings.vcs.REQUEST_ZIP_FILE_PATH;
+        outputFilePath = Environment.getInstance().settings.vcs.REQUEST_ZIP_TEMP_FILE_PATH;
         ZipBuilder builder = new ZipBuilder()
                 .setOutputPath(outputFilePath);
 
