@@ -16,11 +16,8 @@ public interface KeyEventListener {
      * Notifies the listener that right arrow key has been pressed.
      */
     public void onRightArrowPressed();
-
-    /**
-     * Notifies the listeners that Ctrl + R keyboard shortcut has been utilised.
-     */
     public void onControlPlusRPressed();
+    public void onDeletePressed();
 
     public void onImaginarySongOneKeyPressed(Song s);
 

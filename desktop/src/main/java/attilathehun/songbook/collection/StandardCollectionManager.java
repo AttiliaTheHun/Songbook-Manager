@@ -82,7 +82,7 @@ public class StandardCollectionManager extends CollectionManager {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Collection Initialisation error", "Can not load the song collection!", true);
         }
-        logger.debug("StandardCollectionManager initialised");
+        logger.info("StandardCollectionManager initialized");
     }
 
     @Override

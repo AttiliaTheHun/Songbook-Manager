@@ -7,6 +7,7 @@ import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
+import attilathehun.songbook.util.KeyEventListener;
 import attilathehun.songbook.util.PDFGenerator;
 import javafx.application.Platform;
 import org.apache.logging.log4j.LogManager;
@@ -18,17 +19,23 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 
-public class CollectionEditor extends JFrame {
+public class CollectionEditor extends JFrame implements KeyEventListener {
 
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
 
+    @Deprecated
     private static boolean CONTROL_PRESSED = false;
-
+    @Deprecated
     private static boolean SHIFT_PRESSED = false;
+
+    @Deprecated
+    private static boolean IS_FOCUSED = false;
 
     private static CollectionEditor instance = null;
 
+    @Deprecated
     private static final int ACTION_EDIT = 0;
+    @Deprecated
     private static final int ACTION_ADD = 1;
 
     private JTabbedPane tabPane;
@@ -48,12 +55,19 @@ public class CollectionEditor extends JFrame {
         addTableHeader();
         addTabbedPane();
         addBottomToolbar();
-        registerKeyboardShortcuts();
+        //registerKeyboardShortcuts();
         registerWindowListener();
-        registerKeybinds();
+        registerWindowFocusListener();
+        //registerKeybinds();
         setVisible(true);
+        SongbookApplication.addListener(this);
+        logger.info("CollectionEditor instantiated");
     }
 
+    /**
+     * Opens the CollectionEditor and pushes it to the front. Initializes the instance if it was not open before.
+     * @return newly created CollectionEditor or null if it did not create any.
+     */
     public static CollectionEditor openCollectionEditor() {
         if (instance != null) {
             instance.setVisible(true);
@@ -64,27 +78,39 @@ public class CollectionEditor extends JFrame {
         return new CollectionEditor();
     }
 
+    /**
+     * Returns the CollectionEditor instance. Before first call to #openCollectionEditor() this method return null;
+     * @return CollectionEditor instance or null if it was not opened yet
+     */
     public static CollectionEditor getInstance() {
         return instance;
     }
 
+    @Deprecated
+    public static boolean focused() {
+        return IS_FOCUSED;
+    }
+
+    @Deprecated
     private void registerKeybinds() {
         registerInputs();
         registerActions();
     }
 
+    @Deprecated
     private void registerInputs() {
 
         JPanel panel = (JPanel)instance.getContentPane();
 
         panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, false), "ctrlPressedAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL , 0, false), "ctrlPressedAction");
         panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, true), "ctrlReleasedAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, false), "shiftPressedAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true), "shiftReleasedAction");
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT , 0), "shiftPressedAction");
+        //panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true), "shiftReleasedAction");
         panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_R, 0), "rAction");
     }
 
+    @Deprecated
     private void registerActions() {
 
         Action deleteAction = new AbstractAction() {
@@ -157,16 +183,9 @@ public class CollectionEditor extends JFrame {
         panel.getActionMap().put("ctrlPressedAction", ctrlPressedAction);
         panel.getActionMap().put("ctrlReleasedAction", ctrlReleasedAction);
         panel.getActionMap().put("shiftPressedAction", shiftPressedAction);
-        panel.getActionMap().put("shiftReleasedAction", shiftReleasedAction);
+        //panel.getActionMap().put("shiftReleasedAction", shiftReleasedAction);
         panel.getActionMap().put("rAction", rAction);
 
-    }
-
-    public static void forceRefreshInstance() {
-        if (instance == null) {
-            return;
-        }
-        instance.forceRefreshAll();
     }
 
     /**
@@ -181,8 +200,12 @@ public class CollectionEditor extends JFrame {
         super.toFront();
         super.requestFocusInWindow();
         super.setAlwaysOnTop(false);
+        logger.debug("CollectionEditor pushed to front");
     }
 
+    /**
+     * Creates a line of labels for the ListView item properties.
+     */
     private void addTableHeader() {
         JPanel panel = new JPanel(new GridBagLayout());
 
@@ -227,6 +250,9 @@ public class CollectionEditor extends JFrame {
         getContentPane().add(panel, BorderLayout.PAGE_START);
     }
 
+    /**
+     * Initializes the tab layout.
+     */
     private void addTabbedPane() {
         tabPane = new JTabbedPane();
         tabPane.setTabPlacement(JTabbedPane.BOTTOM);
@@ -248,6 +274,9 @@ public class CollectionEditor extends JFrame {
         getContentPane().add(tabPane, BorderLayout.CENTER);
     }
 
+    /**
+     * Creates the bottom toolbar of buttons.
+     */
     private void addBottomToolbar() {
         JPanel bottomToolbar = new JPanel(new GridLayout(1, 6));
 
@@ -343,7 +372,8 @@ public class CollectionEditor extends JFrame {
                 return;
             }
             int result;
-            if (SHIFT_PRESSED) {
+            logger.debug("shiftPressed" + SongbookApplication.isShiftPressed());
+            if (SongbookApplication.isShiftPressed()) {
                 result = JOptionPane.OK_OPTION;
             } else {
                 result = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
@@ -358,7 +388,8 @@ public class CollectionEditor extends JFrame {
         addNewSongButton.addActionListener(e -> {
             refreshStoredSelection();
             Song song;
-            if (CONTROL_PRESSED) {
+            logger.debug("shiftPressed" + SongbookApplication.isControlPressed());
+            if (SongbookApplication.isControlPressed()) {
                 song = EnvironmentManager.addEasterSongFromTemplateDialog(selectedSong, selectedManager);
             } else {
                 song = EnvironmentManager.addSongDialog(selectedManager);
@@ -390,33 +421,6 @@ public class CollectionEditor extends JFrame {
         logger.debug("Selected tab CollectionManager: " + selectedManager.getClass().getName());
     }
 
-    private void registerKeyboardShortcuts() {
-        addKeyListener(new KeyListener() {
-
-            @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    CONTROL_PRESSED = true;
-                } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    list.ensureIndexIsVisible(list.getSelectedIndex());
-                } else if (CONTROL_PRESSED && e.getKeyCode() == KeyEvent.VK_R) {
-                    forceRefreshList();
-                }
-            }
-            @Override
-            public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-                    CONTROL_PRESSED = false;
-                }
-            }
-        });
-    }
-
     private void registerWindowListener() {
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -427,6 +431,26 @@ public class CollectionEditor extends JFrame {
         });
     }
 
+    private void registerWindowFocusListener() {
+        addWindowFocusListener(new WindowAdapter() {
+
+            //To check window gained focus
+            public void windowGainedFocus(WindowEvent e) {
+                IS_FOCUSED = true;
+                logger.debug("CollectionEditor focused");
+            }
+
+            //To check window lost focus
+            public void windowLostFocus(WindowEvent e) {
+                IS_FOCUSED = false;
+                logger.debug("CollectionEditor focus lost");
+            }
+        });
+    }
+
+    /**
+     * Refreshes the currently open/visible ListView.
+     */
     private void forceRefreshList() {
         DefaultListModel listModel = new DefaultListModel();
         refreshStoredSelection();
@@ -434,8 +458,12 @@ public class CollectionEditor extends JFrame {
             listModel.addElement(song);
         }
         list.setModel(listModel);
+        logger.debug("Forcefully current list");
     }
 
+    /**
+     * Refreshes ListViews in all tabs.
+     */
     private void forceRefreshAll() {
         for (int i = 0; i < tabPane.getTabCount(); i++) {
             DefaultListModel listModel = new DefaultListModel();
@@ -449,6 +477,76 @@ public class CollectionEditor extends JFrame {
         logger.debug("Forcefully refreshed all lists");
     }
 
+    /**
+     * Refreshes the UI of the CollectionEditor.
+     */
+    public static void forceRefreshInstance() {
+        if (instance == null) {
+            return;
+        }
+        instance.forceRefreshAll();
+        logger.debug("CollectionEditor force refreshed");
+    }
+
+    @Override
+    public void onLeftArrowPressed() {
+
+    }
+
+    @Override
+    public void onRightArrowPressed() {
+
+    }
+
+    @Override
+    public void onControlPlusRPressed() {
+        logger.debug("CollectionEditor ctrl+R pressed");
+        refreshStoredSelection();
+
+        forceRefreshAll();
+    }
+
+    @Override
+    public void onDeletePressed() {
+        logger.debug("CollectionEditor delete pressed");
+        if (!isFocused()) {
+            return;
+        }
+        refreshStoredSelection();
+        if (selectedSong == null) {
+            return;
+        }
+        int result;
+        if (SongbookApplication.isShiftPressed()) {
+            result = JOptionPane.OK_OPTION;
+        } else {
+            result = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
+        }
+        if (result == JOptionPane.OK_OPTION) {
+            selectedManager.removeSong(selectedSong);
+            forceRefreshList();
+            selectedSong = null;
+        }
+    }
+
+    @Override
+    public void onImaginarySongOneKeyPressed(Song s) {
+
+    }
+
+    @Override
+    public void onImaginarySongTwoKeyPressed(Song s) {
+
+    }
+
+    @Override
+    public boolean onImaginaryIsTextFieldFocusedKeyPressed() {
+        return false;
+    }
+
+    /**
+     * This class represents a tab in the TabLayout.
+     */
     private static class CollectionPanel extends JPanel {
 
         private static final Logger logger = LogManager.getLogger(CollectionPanel.class);
@@ -501,7 +599,11 @@ public class CollectionEditor extends JFrame {
         }
     }
 
+    /**
+     * A custom list cell renderer responsible for the looks of the tab lists.
+     */
     private static class CollectionPanelListRenderer extends JPanel implements ListCellRenderer {
+        private static final Logger logger = LogManager.getLogger(CollectionPanelListRenderer.class);
 
         private JLabel collectionIdLabel;
         private JLabel songNameLabel;
@@ -513,7 +615,15 @@ public class CollectionEditor extends JFrame {
             super(new GridBagLayout());
         }
 
-
+        /**
+         *
+         * @param list The JList we're painting.
+         * @param value The value returned by list.getModel().getElementAt(index). A Song object.
+         * @param index The cells index.
+         * @param isSelected True if the specified cell was selected.
+         * @param cellHasFocus True if the specified cell has the focus.
+         * @return A corresponding item in the ListView.
+         */
         @Override
         public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 

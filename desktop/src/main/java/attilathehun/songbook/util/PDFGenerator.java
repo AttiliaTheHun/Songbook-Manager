@@ -25,6 +25,7 @@ import java.util.ArrayList;
  * This class serves as a middleware between the rest of the code and the underlying scripts used for the conversion of
  * HTML into a PDF file.
  */
+@Deprecated
 public class PDFGenerator {
 
     private static final int EXPORT_OPTION_DEFAULT = 0;
@@ -224,9 +225,7 @@ public class PDFGenerator {
 
                         ProcessBuilder processBuilder = new ProcessBuilder();
                         String options = "";
-                        if (exportOption != EXPORT_OPTION_SINGLEPAGE) {
-                            options = SCRIPT_OPTION_LANDSCAPE;
-                        }
+
                         processBuilder.command("cmd.exe", "/c", String.format("cd %s & node html_to_pdf.js %s %s %d", Environment.getInstance().settings.environment.SCRIPTS_FILE_PATH, Environment.getInstance().settings.environment.TEMP_FILE_PATH, options, segmentCount));
                         processBuilder.directory(new File(System.getProperty("user.dir")));
                         processBuilder.inheritIO();

@@ -78,7 +78,7 @@ public class EasterCollectionManager extends CollectionManager {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Easter Collection Initialisation error", "Can not load the easter song collection!");
         }
-        logger.debug("EasterCollectionManager initialised");
+        logger.info("EasterCollectionManager initialized");
     }
 
     @Override

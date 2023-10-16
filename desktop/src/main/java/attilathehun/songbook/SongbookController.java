@@ -173,6 +173,7 @@ public class SongbookController implements KeyEventListener {
             refreshWebView();
         });
 
+        //TODO: when inputing "songlist0" this throws @NumberFormatException, fix it!
         applySongTwoId.setOnAction(event -> {
             String text = songTwoIdField.getText().trim().toLowerCase();
             if (text.length() == 0) {
@@ -349,11 +350,15 @@ public class SongbookController implements KeyEventListener {
             if (SONG_TWO_INDEX == Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
                 SONG_TWO = CollectionManager.getShadowSong();
             } else {
-                SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX + 1);
+                SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
             }
         }
 
         refreshWebView();
+    }
+
+    @Override
+    public void onDeletePressed() {
     }
 
     @Override

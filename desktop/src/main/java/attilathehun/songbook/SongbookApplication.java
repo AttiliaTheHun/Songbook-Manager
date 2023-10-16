@@ -9,6 +9,7 @@ import attilathehun.songbook.environment.Installer;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.window.CodeEditor;
 import attilathehun.songbook.util.KeyEventListener;
+import attilathehun.songbook.window.CollectionEditor;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
@@ -40,6 +41,7 @@ public class SongbookApplication extends Application {
     private static final Logger logger = LogManager.getLogger(SongbookApplication.class);
 
     private static boolean CONTROL_PRESSED = false;
+    private static boolean SHIFT_PRESSED = false;
 
     private static final List<KeyEventListener> listeners = new ArrayList<KeyEventListener>();
 
@@ -56,7 +58,7 @@ public class SongbookApplication extends Application {
         if (Arrays.asList(Environment.getInstance().perform(args)).contains(Environment.Result.FAILURE)) {
             Environment.showWarningMessage("Warning", "Could not resolve the command line arguments. See log file");
         }
-
+        logger.debug("Application started successfully");
     }
 
     @Override
@@ -96,16 +98,27 @@ public class SongbookApplication extends Application {
                 public void nativeKeyReleased(NativeKeyEvent nativeEvent) {
                     if (nativeEvent.getKeyCode() == NativeKeyEvent.VC_CONTROL) {
                         CONTROL_PRESSED = false;
+                        //dialControlReleased();
+                    } else if (nativeEvent.getKeyCode() == NativeKeyEvent.VC_SHIFT) {
+                        SHIFT_PRESSED = false;
+                        //dialShiftReleased();
                     }
                 }
 
                 @Override
                 public void nativeKeyPressed(NativeKeyEvent nativeEvent) {
-                    if (!stage.isFocused()) {
+                    if (!stage.isFocused() && !CollectionEditor.focused()) {
                         return;
                     }
                     switch (nativeEvent.getKeyCode()) {
-                        case NativeKeyEvent.VC_CONTROL -> CONTROL_PRESSED = true;
+                        case NativeKeyEvent.VC_CONTROL -> {
+                            CONTROL_PRESSED = true;
+                            //dialControlPress();
+                        }
+                        case NativeKeyEvent.VC_SHIFT -> {
+                            SHIFT_PRESSED = true;
+                            //dialShiftPressed();
+                        }
                         case NativeKeyEvent.VC_LEFT, NativeKeyEvent.VC_PAGE_DOWN -> {
                             if (!listeners.get(0).onImaginaryIsTextFieldFocusedKeyPressed()) {
                                 dialLeftArrowPressed();
@@ -199,16 +212,21 @@ public class SongbookApplication extends Application {
 
                             }
                         }
+                        case NativeKeyEvent.VC_DELETE -> {
+                            dialDeletePressed();
+                        }
                     }
                 }
             });
         } catch (NativeHookException e) {
             logger.error(e.getMessage(), e);
         }
+        logger.debug("Native Hook registered");
     }
 
     public static void addListener(KeyEventListener listener) {
         listeners.add(listener);
+        logger.debug("registered listener: " + listener.getClass().getName());
     }
 
     private static void dialLeftArrowPressed() {
@@ -220,6 +238,12 @@ public class SongbookApplication extends Application {
     private static void dialRightArrowPressed() {
         for (KeyEventListener listener : listeners) {
             listener.onRightArrowPressed();
+        }
+    }
+
+    private static void dialDeletePressed() {
+        for (KeyEventListener listener : listeners) {
+            listener.onDeletePressed();
         }
     }
 
@@ -239,6 +263,14 @@ public class SongbookApplication extends Application {
         for (KeyEventListener listener : listeners) {
             listener.onImaginarySongTwoKeyPressed(s);
         }
+    }
+
+    public static boolean isControlPressed() {
+        return CONTROL_PRESSED;
+    }
+
+    public static boolean isShiftPressed() {
+        return SHIFT_PRESSED;
     }
 
 }

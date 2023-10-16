@@ -33,7 +33,7 @@ public class PluginManager {
     public static void registerPlugin(Plugin plugin) {
         plugins.put(plugin.getName(), plugin);
         Settings.getInstance().registerPlugin(plugin);
-        logger.debug("Plugin registered: " + plugin.getName());
+        logger.info("Plugin registered: " + plugin.getName());
     }
 
     public Plugin getPlugin(String name) {
