@@ -15,24 +15,30 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.util.KeyEventListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.*;
 import org.fife.ui.rsyntaxtextarea.*;
 
-public class CodeEditor extends JFrame {
+public class CodeEditor extends JFrame implements KeyEventListener {
 
     private static final Logger logger = LogManager.getLogger(CodeEditor.class);
 
     private static int instances = 0;
 
     private static boolean isApplicationClosed = false;
+    private static int focusedInstances = 0;
 
     private String filePath;
 
     private Song song;
 
+    private boolean IS_FOCUSED = false;
+
+    @Deprecated
     private static boolean SHIFT_PRESSED = false;
+    @Deprecated
     private static boolean CONTROL_PRESSED = false;
 
     private final RSyntaxTextArea textArea;
@@ -49,6 +55,18 @@ public class CodeEditor extends JFrame {
             Environment.getInstance().exit();
         }
 
+    }
+
+    public static boolean hasFocusedInstance() {
+        return focusedInstances != 0;
+    }
+
+    private void addFocusedInstance() {
+        focusedInstances += 1;
+    }
+
+    private void removeFocusedInstance() {
+        focusedInstances -= 1;
     }
 
     public static void setApplicationClosed() {
@@ -76,18 +94,24 @@ public class CodeEditor extends JFrame {
         pack();
         setLocationRelativeTo(null);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-        addWindowListener(new WindowListener() {
-            @Override
-            public void windowOpened(WindowEvent e) {
 
-            }
+        registerWindowListener();
+        registerWindowFocusListener();
+        SongbookApplication.addListener(this);
 
-            @Override
-            public void windowClosing(WindowEvent e) {
+        //registerInputs();
+        //registerActions();
 
-                if (SHIFT_PRESSED || !getTitle().trim().startsWith("*")) {
+        toFront();
+        instances++;
+    }
+
+    private void registerWindowListener() {
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent ev) {
+                if (SongbookApplication.isShiftPressed() || !getTitle().trim().startsWith("*")) {
                     removeInstance();
-                    SHIFT_PRESSED = false;
                     setVisible(false);
                     return;
                 }
@@ -104,45 +128,34 @@ public class CodeEditor extends JFrame {
                 } else if (resultCode == JOptionPane.CLOSED_OPTION) {
 
                 }
-
-            }
-
-            @Override
-            public void windowClosed(WindowEvent e) {
-            }
-
-            @Override
-            public void windowIconified(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowDeiconified(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowActivated(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowDeactivated(WindowEvent e) {
-
             }
         });
-
-        registerInputs();
-        registerActions();
-
-        toFront();
-        instances++;
     }
+
+    private void registerWindowFocusListener() {
+        addWindowFocusListener(new WindowAdapter() {
+
+            //To check window gained focus
+            public void windowGainedFocus(WindowEvent e) {
+                addFocusedInstance();
+                IS_FOCUSED = true;
+            }
+
+            //To check window lost focus
+            public void windowLostFocus(WindowEvent e) {
+                removeFocusedInstance();
+                IS_FOCUSED = false;
+            }
+        });
+    }
+
+
 
     public CodeEditor() {
         this(Environment.getInstance().getCollectionManager());
     }
 
+    @Deprecated
     private void registerInputs() {
 
         JPanel panel = (JPanel)getContentPane();
@@ -158,6 +171,7 @@ public class CodeEditor extends JFrame {
 
     }
 
+    @Deprecated
     private void registerActions() {
 
         Action ctrlPressedAction = new AbstractAction() {
@@ -298,5 +312,40 @@ public class CodeEditor extends JFrame {
             title = "[E] " + s;
         }
         super.setTitle(title);
+    }
+
+    @Override
+    public void onLeftArrowPressed() {
+
+    }
+
+    @Override
+    public void onRightArrowPressed() {
+
+    }
+
+    @Override
+    public void onControlPlusRPressed() {
+
+    }
+
+    @Override
+    public void onDeletePressed() {
+
+    }
+
+    @Override
+    public void onImaginarySongOneKeyPressed(Song s) {
+
+    }
+
+    @Override
+    public void onImaginarySongTwoKeyPressed(Song s) {
+
+    }
+
+    @Override
+    public boolean onImaginaryIsTextFieldFocusedKeyPressed() {
+        return false;
     }
 }

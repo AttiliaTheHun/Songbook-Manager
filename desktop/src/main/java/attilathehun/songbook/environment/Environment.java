@@ -225,7 +225,6 @@ public final class Environment {
         public final String CSS_RESOURCES_FILE_PATH;
         public final String TEMPLATE_RESOURCES_FILE_PATH;
         public final String DATA_ZIP_FILE_PATH;
-        public final String EDIT_LOG_FILE_PATH;
         public final String TEMP_FILE_PATH;
         public final String ASSETS_RESOURCES_FILE_PATH;
         public final String OUTPUT_FILE_PATH;
@@ -245,7 +244,6 @@ public final class Environment {
             CSS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/css/").toString();
             TEMPLATE_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/templates/").toString();
             DATA_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/data.zip").toString();
-            EDIT_LOG_FILE_PATH = Paths.get(DATA_FILE_PATH + "/last_modified_by.txt").toString();
             TEMP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/temp/").toString();
             TEMP_TIMESTAMP_FILE_PATH = Paths.get(TEMP_FILE_PATH + "/session_timestamp.txt").toString();
             ASSETS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/assets/").toString();

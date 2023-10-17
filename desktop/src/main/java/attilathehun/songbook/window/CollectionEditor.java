@@ -7,6 +7,8 @@ import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
+import attilathehun.songbook.plugin.Export;
+import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.util.KeyEventListener;
 import attilathehun.songbook.util.PDFGenerator;
 import javafx.application.Platform;
@@ -23,12 +25,6 @@ public class CollectionEditor extends JFrame implements KeyEventListener {
 
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
 
-    @Deprecated
-    private static boolean CONTROL_PRESSED = false;
-    @Deprecated
-    private static boolean SHIFT_PRESSED = false;
-
-    @Deprecated
     private static boolean IS_FOCUSED = false;
 
     private static CollectionEditor instance = null;
@@ -86,107 +82,10 @@ public class CollectionEditor extends JFrame implements KeyEventListener {
         return instance;
     }
 
-    @Deprecated
     public static boolean focused() {
         return IS_FOCUSED;
     }
 
-    @Deprecated
-    private void registerKeybinds() {
-        registerInputs();
-        registerActions();
-    }
-
-    @Deprecated
-    private void registerInputs() {
-
-        JPanel panel = (JPanel)instance.getContentPane();
-
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL , 0, false), "ctrlPressedAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, true), "ctrlReleasedAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT , 0), "shiftPressedAction");
-        //panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true), "shiftReleasedAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_R, 0), "rAction");
-    }
-
-    @Deprecated
-    private void registerActions() {
-
-        Action deleteAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("X");
-                refreshStoredSelection();
-                if (selectedSong == null) {
-                    return;
-                }
-                int result;
-                if (SHIFT_PRESSED) {
-                    result = JOptionPane.OK_OPTION;
-                } else {
-                    result = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
-                }
-               if (result == JOptionPane.OK_OPTION) {
-                    selectedManager.removeSong(selectedSong);
-                    forceRefreshList();
-                    selectedSong = null;
-                }
-            }
-        };
-        Action ctrlPressedAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("A");
-                CONTROL_PRESSED = true;
-            }
-        };
-        Action ctrlReleasedAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("B");
-                CONTROL_PRESSED = false;
-            }
-        };
-        Action shiftPressedAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("C");
-                SHIFT_PRESSED = true;
-            }
-        };
-        Action shiftReleasedAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("D");
-                SHIFT_PRESSED = false;
-            }
-        };
-
-        Action rAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("Q");
-                refreshStoredSelection();
-
-                int result;
-                if (!CONTROL_PRESSED) {
-                    return;
-                }
-                forceRefreshAll();
-            }
-        };
-
-        JPanel panel = (JPanel)instance.getContentPane();
-
-        panel.getActionMap().put("deleteAction", deleteAction);
-        panel.getActionMap().put("ctrlPressedAction", ctrlPressedAction);
-        panel.getActionMap().put("ctrlReleasedAction", ctrlReleasedAction);
-        panel.getActionMap().put("shiftPressedAction", shiftPressedAction);
-        //panel.getActionMap().put("shiftReleasedAction", shiftReleasedAction);
-        panel.getActionMap().put("rAction", rAction);
-
-    }
 
     /**
      * @source <a href="https://stackoverflow.com/questions/309023/how-to-bring-a-window-to-the-front">...</a>
@@ -332,7 +231,10 @@ public class CollectionEditor extends JFrame implements KeyEventListener {
                 if (index + 1 >= Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
                     SongbookApplication.dialImaginarySongTwoKeyPressed(CollectionManager.getShadowSong());
                 } else {
-                    SongbookApplication.dialImaginarySongTwoKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index + 1));
+                    if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
+                        Environment.showMessage("Action aborted", "This feature is a part of the Export plugin. Enable it in settings first!");
+                        return;
+                    }        SongbookApplication.dialImaginarySongTwoKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index + 1));
                 }
             } else {
                 SongbookApplication.dialImaginarySongTwoKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
@@ -345,7 +247,14 @@ public class CollectionEditor extends JFrame implements KeyEventListener {
         });
         JButton previewSongPDFButton = new JButton("Preview PDF");
         previewSongPDFButton.addActionListener(e -> {
+
+            if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
+                Environment.showMessage("Action aborted", "This feature is a part of the Export plugin. Enable it in settings first!");
+                return;
+            }
+
             refreshStoredSelection();
+
             if (selectedSong == null) {
                 Environment.showMessage("Message", "Select a song first.");
                 return;

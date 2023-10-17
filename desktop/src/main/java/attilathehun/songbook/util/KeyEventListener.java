@@ -19,6 +19,11 @@ public interface KeyEventListener {
     public void onControlPlusRPressed();
     public void onDeletePressed();
 
+    public void onControlPlusSPressed();
+   // public void onCPressed();
+    //public void onVPressed();
+    public void onKeyPressed();
+
     public void onImaginarySongOneKeyPressed(Song s);
 
     public void onImaginarySongTwoKeyPressed(Song s);

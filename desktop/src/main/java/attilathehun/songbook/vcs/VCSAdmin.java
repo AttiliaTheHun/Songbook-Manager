@@ -130,7 +130,7 @@ public class VCSAdmin {
         LocalDateTime now = LocalDateTime.now();
         final String date = dtf.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(CacheManager.getInstance().getCachedSongbookVersionTimestamp()), ZoneId.systemDefault()));
         final String username = System.getProperty("user.name");
-        PrintWriter printWriter = new PrintWriter(new FileWriter((Environment.getInstance().settings.environment.EDIT_LOG_FILE_PATH), true));
+        PrintWriter printWriter = new PrintWriter(new FileWriter((Environment.getInstance().settings.vcs.CHANGE_LOG_FILE_PATH), true));
         printWriter.write(date + " " + username + "\n");
         printWriter.close();
     }

@@ -236,12 +236,14 @@ public class SongbookController implements KeyEventListener {
             editor.setVisible(true);
         });
 
-        exportButton.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
+        exportButton.setOnAction(event -> {
             if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
                 Environment.showMessage("Exporting disabled", "It seems like exporting has been disabled in the settings. You can modify the settings and restart or read more in the documentation.");
+                return;
             }
 
         });
+
 
         if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
             singlepageSelection.setVisible(false);
@@ -249,7 +251,7 @@ public class SongbookController implements KeyEventListener {
             printableSelection.setVisible(false);
         }
 
-        singlepageSelection.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
+        singlepageSelection.setOnAction(event -> {
             try {
                 new PDFGenerator().generateSinglePage();
             } catch (Exception e) {
@@ -258,7 +260,7 @@ public class SongbookController implements KeyEventListener {
 
         });
 
-        defaultSelection.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
+        defaultSelection.setOnAction(event -> {
             try {
                 new PDFGenerator().generateDefault();
             } catch (Exception e) {
@@ -266,7 +268,7 @@ public class SongbookController implements KeyEventListener {
             }
         });
 
-        printableSelection.setOnAction((EventHandler<javafx.event.ActionEvent>) event -> {
+        printableSelection.setOnAction(event -> {
             try {
                 new PDFGenerator().generatePrintable();
             } catch (Exception e) {
@@ -296,6 +298,12 @@ public class SongbookController implements KeyEventListener {
         });
 
         previewButton.setOnAction(event -> {
+
+            if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
+                Environment.showMessage("Action aborted", "This feature is a part of the Export plugin. Enable it in settings first!");
+                return;
+            }
+
             try {
                 Desktop.getDesktop().open(new File(new PDFGenerator().generatePreview(SONG_ONE, SONG_TWO).replace(".html", ".pdf")));
             } catch (Exception ex) {

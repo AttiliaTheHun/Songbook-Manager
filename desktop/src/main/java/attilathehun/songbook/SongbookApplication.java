@@ -110,6 +110,11 @@ public class SongbookApplication extends Application {
                     if (!stage.isFocused() && !CollectionEditor.focused()) {
                         return;
                     }
+                    //TODO fill this up (perhaps in separate function)
+                    Integer[] notWritableKeys = new Integer[]{NativeKeyEvent.VC_CONTROL, NativeKeyEvent.VC_SHIFT, NativeKeyEvent.VC_ALT, NativeKeyEvent.VC_SHIFT, NativeKeyEvent.VC_LEFT,};
+                    if (!Arrays.stream(notWritableKeys).anyMatch(x -> x == nativeEvent.getKeyCode())) {
+                        dialKeyPressed();
+                    }
                     switch (nativeEvent.getKeyCode()) {
                         case NativeKeyEvent.VC_CONTROL -> {
                             CONTROL_PRESSED = true;
@@ -253,6 +258,12 @@ public class SongbookApplication extends Application {
         }
     }
 
+    public static void dialControlPLusSPressed() {
+        for (KeyEventListener listener : listeners) {
+            listener.onControlPlusSPressed();
+        }
+    }
+
     public static void dialImaginarySongOneKeyPressed(Song s) {
         for (KeyEventListener listener : listeners) {
             listener.onImaginarySongOneKeyPressed(s);
@@ -262,6 +273,12 @@ public class SongbookApplication extends Application {
     public static void dialImaginarySongTwoKeyPressed(Song s) {
         for (KeyEventListener listener : listeners) {
             listener.onImaginarySongTwoKeyPressed(s);
+        }
+    }
+
+    public static void dialKeyPressed() {
+        for (KeyEventListener listener : listeners) {
+            listener.onKeyPressed();
         }
     }
 
