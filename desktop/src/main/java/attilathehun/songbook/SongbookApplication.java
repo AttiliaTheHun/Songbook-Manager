@@ -15,6 +15,11 @@ import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -42,6 +47,7 @@ public class SongbookApplication extends Application {
 
     private static boolean CONTROL_PRESSED = false;
     private static boolean SHIFT_PRESSED = false;
+    private static final BooleanProperty IS_FOCUSED = new SimpleBooleanProperty();
 
     private static final List<KeyEventListener> listeners = new ArrayList<KeyEventListener>();
 
@@ -76,6 +82,8 @@ public class SongbookApplication extends Application {
             }
         });
 
+        IS_FOCUSED.bind(stage.focusedProperty());
+
         FXMLLoader fxmlLoader = new FXMLLoader(SongbookApplication.class.getResource("songbook-view.fxml"));
         AnchorPane root = fxmlLoader.load();
         stage.setMaximized(true);
@@ -98,31 +106,22 @@ public class SongbookApplication extends Application {
                 public void nativeKeyReleased(NativeKeyEvent nativeEvent) {
                     if (nativeEvent.getKeyCode() == NativeKeyEvent.VC_CONTROL) {
                         CONTROL_PRESSED = false;
-                        //dialControlReleased();
                     } else if (nativeEvent.getKeyCode() == NativeKeyEvent.VC_SHIFT) {
                         SHIFT_PRESSED = false;
-                        //dialShiftReleased();
                     }
                 }
 
                 @Override
                 public void nativeKeyPressed(NativeKeyEvent nativeEvent) {
-                    if (!stage.isFocused() && !CollectionEditor.focused()) {
+                    if (!stage.isFocused() && !CollectionEditor.focused() && !CodeEditor.hasFocusedInstance()) {
                         return;
-                    }
-                    //TODO fill this up (perhaps in separate function)
-                    Integer[] notWritableKeys = new Integer[]{NativeKeyEvent.VC_CONTROL, NativeKeyEvent.VC_SHIFT, NativeKeyEvent.VC_ALT, NativeKeyEvent.VC_SHIFT, NativeKeyEvent.VC_LEFT,};
-                    if (!Arrays.stream(notWritableKeys).anyMatch(x -> x == nativeEvent.getKeyCode())) {
-                        dialKeyPressed();
                     }
                     switch (nativeEvent.getKeyCode()) {
                         case NativeKeyEvent.VC_CONTROL -> {
                             CONTROL_PRESSED = true;
-                            //dialControlPress();
                         }
                         case NativeKeyEvent.VC_SHIFT -> {
                             SHIFT_PRESSED = true;
-                            //dialShiftPressed();
                         }
                         case NativeKeyEvent.VC_LEFT, NativeKeyEvent.VC_PAGE_DOWN -> {
                             if (!listeners.get(0).onImaginaryIsTextFieldFocusedKeyPressed()) {
@@ -145,6 +144,7 @@ public class SongbookApplication extends Application {
                         case NativeKeyEvent.VC_S -> { //save
                             if (CONTROL_PRESSED) {
                                 new EnvironmentManager().save();
+                                dialControlPLusSPressed();
                             }
                         }
                         case NativeKeyEvent.VC_L -> { //load
@@ -276,18 +276,16 @@ public class SongbookApplication extends Application {
         }
     }
 
-    public static void dialKeyPressed() {
-        for (KeyEventListener listener : listeners) {
-            listener.onKeyPressed();
-        }
-    }
-
     public static boolean isControlPressed() {
         return CONTROL_PRESSED;
     }
 
     public static boolean isShiftPressed() {
         return SHIFT_PRESSED;
+    }
+
+    public static boolean isFocused() {
+        return IS_FOCUSED.get();
     }
 
 }

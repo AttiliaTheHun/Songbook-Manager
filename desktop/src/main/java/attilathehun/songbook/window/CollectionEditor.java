@@ -8,7 +8,6 @@ import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.plugin.Export;
-import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.util.KeyEventListener;
 import attilathehun.songbook.util.PDFGenerator;
 import javafx.application.Platform;
@@ -87,18 +86,10 @@ public class CollectionEditor extends JFrame implements KeyEventListener {
     }
 
 
-    /**
-     * @source <a href="https://stackoverflow.com/questions/309023/how-to-bring-a-window-to-the-front">...</a>
-     * @author Lawrence Dol
-     */
     public @Override void toFront() {
-        int sta = super.getExtendedState() & ~JFrame.ICONIFIED & JFrame.NORMAL;
-
-        super.setExtendedState(sta);
         super.setAlwaysOnTop(true);
         super.toFront();
         super.requestFocusInWindow();
-        super.setAlwaysOnTop(false);
         logger.debug("CollectionEditor pushed to front");
     }
 
@@ -208,10 +199,7 @@ public class CollectionEditor extends JFrame implements KeyEventListener {
                 Environment.showMessage("Message", "Select a song first.");
                 return;
             }
-            CodeEditor editor = new CodeEditor(selectedManager);
-            editor.setTitle(String.format("HTML editor - %s (id: %d)", selectedSong.name(), selectedSong.id()));
-            editor.setSong(selectedSong);
-            editor.setVisible(true);
+            CodeEditor.open(selectedManager, selectedSong);
         });
 
         JButton viewSongInBrowserButton = new JButton("View Song");
@@ -436,6 +424,11 @@ public class CollectionEditor extends JFrame implements KeyEventListener {
             forceRefreshList();
             selectedSong = null;
         }
+    }
+
+    @Override
+    public void onControlPlusSPressed() {
+
     }
 
     @Override

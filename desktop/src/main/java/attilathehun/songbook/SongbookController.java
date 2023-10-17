@@ -14,7 +14,6 @@ import attilathehun.songbook.util.KeyEventListener;
 import attilathehun.songbook.util.PDFGenerator;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuButton;
@@ -37,6 +36,7 @@ public class SongbookController implements KeyEventListener {
 
     private static final Logger logger = LogManager.getLogger(SongbookController.class);
 
+    @Deprecated
     private static boolean CONTROL_PRESSED = false;
     private static Song SONG_ONE;
     private static int SONG_ONE_INDEX;
@@ -219,10 +219,7 @@ public class SongbookController implements KeyEventListener {
                 Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH);
                 return;
             }
-            CodeEditor editor = new CodeEditor();
-            editor.setTitle(String.format("HTML editor - %s (id: %d)", SONG_ONE.name(), SONG_ONE.id()));
-            editor.setSong(SONG_ONE);
-            editor.setVisible(true);
+            CodeEditor.open(SONG_ONE);
         });
 
         editSongTwoHTML.setOnAction(event -> {
@@ -230,10 +227,7 @@ public class SongbookController implements KeyEventListener {
                 Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH);
                 return;
             }
-            CodeEditor editor = new CodeEditor();
-            editor.setTitle(String.format("HTML editor - %s (id: %d)", SONG_TWO.name(), SONG_TWO.id()));
-            editor.setSong(SONG_TWO);
-            editor.setVisible(true);
+            CodeEditor.open(SONG_TWO);
         });
 
         exportButton.setOnAction(event -> {
@@ -326,7 +320,9 @@ public class SongbookController implements KeyEventListener {
 
     @Override
     public void onLeftArrowPressed() {
-
+        if (!SongbookApplication.isFocused()) {
+            return;
+        }
         if ((SONG_ONE.name().equals("frontpage") || SONG_ONE.name().equals("songlist0") || SONG_ONE.equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(0))) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1) {
             return;
         } else {
@@ -336,7 +332,9 @@ public class SongbookController implements KeyEventListener {
 
     @Override
     public void onRightArrowPressed() {
-
+        if (!SongbookApplication.isFocused()) {
+            return;
+        }
         if (SONG_TWO.name().equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(Environment.getInstance().getCollectionManager().getFormalCollection().size() - 1).name()) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1 || SONG_TWO.id() == CollectionManager.SHADOW_SONG_ID) {
             return;
         } else {
@@ -346,6 +344,9 @@ public class SongbookController implements KeyEventListener {
 
     @Override
     public void onControlPlusRPressed() {
+        if (!SongbookApplication.isFocused()) {
+            return;
+        }
         if (Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(SONG_ONE) == -1) {
             if (SONG_ONE_INDEX == Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
                 switchPage(false);
@@ -367,6 +368,11 @@ public class SongbookController implements KeyEventListener {
 
     @Override
     public void onDeletePressed() {
+    }
+
+    @Override
+    public void onControlPlusSPressed() {
+
     }
 
     @Override

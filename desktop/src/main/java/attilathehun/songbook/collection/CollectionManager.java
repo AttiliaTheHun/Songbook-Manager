@@ -230,5 +230,11 @@ public abstract class CollectionManager {
         return new Song(SHADOW_SONG_NAME, SHADOW_SONG_ID);
     };
 
+    /**
+     * Add a listener for collection events. Depending on the implementation, this action may throw the UnsupportedOperationException.
+     * @param listener
+     */
+    public abstract void addListener(CollectionListener listener);
+
 
 }

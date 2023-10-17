@@ -1,6 +1,8 @@
 package attilathehun.songbook.window;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
@@ -9,8 +11,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import attilathehun.songbook.SongbookApplication;
+import attilathehun.songbook.collection.CollectionListener;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
@@ -21,9 +25,11 @@ import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.*;
 import org.fife.ui.rsyntaxtextarea.*;
 
-public class CodeEditor extends JFrame implements KeyEventListener {
+public class CodeEditor extends JFrame implements KeyEventListener, DocumentListener, CollectionListener {
 
     private static final Logger logger = LogManager.getLogger(CodeEditor.class);
+
+    private static final HashMap<Song, CodeEditor> instanceMap = new HashMap<>();
 
     private static int instances = 0;
 
@@ -36,11 +42,6 @@ public class CodeEditor extends JFrame implements KeyEventListener {
 
     private boolean IS_FOCUSED = false;
 
-    @Deprecated
-    private static boolean SHIFT_PRESSED = false;
-    @Deprecated
-    private static boolean CONTROL_PRESSED = false;
-
     private final RSyntaxTextArea textArea;
 
     private final CollectionManager manager;
@@ -49,13 +50,6 @@ public class CodeEditor extends JFrame implements KeyEventListener {
         return instances;
     }
 
-    private static void removeInstance() {
-        instances--;
-        if (instances == 0 && isApplicationClosed) {
-            Environment.getInstance().exit();
-        }
-
-    }
 
     public static boolean hasFocusedInstance() {
         return focusedInstances != 0;
@@ -73,7 +67,11 @@ public class CodeEditor extends JFrame implements KeyEventListener {
         CodeEditor.isApplicationClosed = true;
     }
 
-    public CodeEditor(CollectionManager manager) {
+    private CodeEditor() {
+        throw new RuntimeException("Constructor not allowed");
+    }
+
+    private CodeEditor(CollectionManager manager, Song s) {
         if (manager == null) {
             this.manager = Environment.getInstance().getCollectionManager();
         } else {
@@ -85,12 +83,11 @@ public class CodeEditor extends JFrame implements KeyEventListener {
         textArea = new RSyntaxTextArea(100, 120);
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HTML);
         textArea.setCodeFoldingEnabled(true);
+        textArea.getDocument().addDocumentListener(this);
         RTextScrollPane sp = new RTextScrollPane(textArea);
         cp.add(sp);
 
         setContentPane(cp);
-        setTitle("Code Editor");
-        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         pack();
         setLocationRelativeTo(null);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -98,21 +95,61 @@ public class CodeEditor extends JFrame implements KeyEventListener {
         registerWindowListener();
         registerWindowFocusListener();
         SongbookApplication.addListener(this);
+        manager.addListener(this);
+        setSong(s);
 
-        //registerInputs();
-        //registerActions();
 
-        toFront();
         instances++;
+        setVisible(true);
+        toFront();
+        textArea.requestFocus();
     }
+
+    /**
+     * Opens a CodeEditor window for the specific song. If the song is already open in a CodeEditor, pushes the target
+     * instance to front instead.
+     * @param manager the collection manager to use
+     * @param s target Song object
+     */
+    public static void open(CollectionManager manager, Song s) {
+        if (manager == null && s == null) {
+            throw  new IllegalArgumentException();
+        }
+        if (instanceMap.get(s) == null) {
+            CodeEditor instance = new CodeEditor(manager, s);
+            instanceMap.put(s,instance);
+            instance.toFront();
+            return;
+        }
+        instanceMap.get(s).toFront();
+    }
+
+    /**
+     * Opens a CodeEditor window for the specific song. If the song is already open in a CodeEditor, pushes the target
+     * instance to front instead. Assumes the song belongs to the StandardCollectionManager.
+     * @param s target Song object
+     */
+    public static void open(Song s) {
+        open(Environment.getInstance().getCollectionManager(), s);
+    }
+
+    private static void close(CodeEditor instance) {
+        instances--;
+        instanceMap.remove(instance.song);
+        if (instances == 0 && isApplicationClosed) {
+            Environment.getInstance().exit();
+        }
+        instance.setVisible(false);
+    }
+
 
     private void registerWindowListener() {
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        CodeEditor reference = this;
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent ev) {
                 if (SongbookApplication.isShiftPressed() || !getTitle().trim().startsWith("*")) {
-                    removeInstance();
-                    setVisible(false);
+                    close(reference);
                     return;
                 }
 
@@ -120,11 +157,9 @@ public class CodeEditor extends JFrame implements KeyEventListener {
 
                 if (resultCode == JOptionPane.YES_OPTION) {
                     saveChanges();
-                    removeInstance();
-                    setVisible(false);
+                    close(reference);
                 } else if (resultCode == JOptionPane.NO_OPTION) {
-                    removeInstance();
-                    setVisible(false);
+                    close(reference);
                 } else if (resultCode == JOptionPane.CLOSED_OPTION) {
 
                 }
@@ -150,113 +185,6 @@ public class CodeEditor extends JFrame implements KeyEventListener {
     }
 
 
-
-    public CodeEditor() {
-        this(Environment.getInstance().getCollectionManager());
-    }
-
-    @Deprecated
-    private void registerInputs() {
-
-        JPanel panel = (JPanel)getContentPane();
-
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0), "ctrlPressedAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, true), "ctrlReleasedAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0), "shiftPressedAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true), "shiftReleasedAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_S, 0), "sAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0), "vAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_C, 0), "cAction");
-        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.KEY_TYPED, 0), "keyTypedAction");
-
-    }
-
-    @Deprecated
-    private void registerActions() {
-
-        Action ctrlPressedAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("A");
-                CONTROL_PRESSED = true;
-            }
-        };
-        Action ctrlReleasedAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("B");
-                CONTROL_PRESSED = false;
-            }
-        };
-        Action shiftPressedAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("C");
-                SHIFT_PRESSED = true;
-            }
-        };
-        Action shiftReleasedAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("D");
-                SHIFT_PRESSED = false;
-            }
-        };
-        Action sAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("E");
-                if (SHIFT_PRESSED) {
-                    saveChanges();
-                    if (getTitle().startsWith("*")) {
-                        CodeEditor.super.setTitle(getTitle().substring(1));
-                    }
-                }
-
-            }
-        };
-        Action vAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("F");
-                if (SHIFT_PRESSED) {
-
-                }
-            }
-        };
-        Action cAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("G");
-                if (SHIFT_PRESSED) {
-
-                }
-            }
-        };
-        Action keyTypedAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("H");
-                if (!getTitle().startsWith("*")) {
-                    CodeEditor.super.setTitle("*" + getTitle());
-                }
-            }
-        };
-
-
-        JPanel panel = (JPanel)getContentPane();
-
-        panel.getActionMap().put("ctrlPressedAction", ctrlPressedAction);
-        panel.getActionMap().put("ctrlReleasedAction", ctrlReleasedAction);
-        panel.getActionMap().put("shiftPressedAction", shiftPressedAction);
-        panel.getActionMap().put("shiftReleasedAction", shiftReleasedAction);
-        panel.getActionMap().put("sAction", sAction);
-        panel.getActionMap().put("vAction", vAction);
-        panel.getActionMap().put("cAction", cAction);
-        panel.getActionMap().put("keyTypedAction", keyTypedAction);
-    }
-
-
     /**
      * @source <a href="https://stackoverflow.com/questions/309023/how-to-bring-a-window-to-the-front">stackoverflow</a>
      * @author Lawrence Dol
@@ -271,7 +199,10 @@ public class CodeEditor extends JFrame implements KeyEventListener {
         super.setAlwaysOnTop(false);
     }
 
-    public void setSong(Song s) {
+    private void setSong(Song s) {
+        if (s == null) {
+            throw new IllegalArgumentException();
+        }
         this.filePath = manager.getSongFilePath(s);
         this.song = s;
 
@@ -280,6 +211,7 @@ public class CodeEditor extends JFrame implements KeyEventListener {
                 ArrayList<String> lines = new ArrayList<String>(Files.readAllLines(Paths.get(filePath)));
                 textArea.setRows(lines.size());
                 textArea.setText(String.join("\n", lines));
+                setTitle(String.format("HTML editor - %s (id: %d)", s.name(), s.id()));
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
                 Environment.showErrorMessage("Error", "Can not open song data file");
@@ -308,7 +240,15 @@ public class CodeEditor extends JFrame implements KeyEventListener {
     @Override
     public void setTitle(String s) {
         String title = s;
-        if (manager.equals(EasterCollectionManager.getInstance())) {
+
+        if (s.startsWith("*")) {
+            if (getTitle().startsWith("*")) {
+                return;
+            }
+            super.setTitle(title);
+            return;
+        }
+        if (manager.equals(EasterCollectionManager.getInstance()) && !getTitle().startsWith("[E]")) {
             title = "[E] " + s;
         }
         super.setTitle(title);
@@ -335,6 +275,16 @@ public class CodeEditor extends JFrame implements KeyEventListener {
     }
 
     @Override
+    public void onControlPlusSPressed() {
+        if (IS_FOCUSED) {
+            saveChanges();
+            if (getTitle().startsWith("*")) {
+                CodeEditor.super.setTitle(getTitle().substring(1));
+            }
+        }
+    }
+
+    @Override
     public void onImaginarySongOneKeyPressed(Song s) {
 
     }
@@ -348,4 +298,55 @@ public class CodeEditor extends JFrame implements KeyEventListener {
     public boolean onImaginaryIsTextFieldFocusedKeyPressed() {
         return false;
     }
+
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        if (!getTitle().startsWith("*")) {
+            setTitle("*" + getTitle());
+        }
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        if (!getTitle().startsWith("*")) {
+            setTitle("*" + getTitle());
+        }
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+        if (!getTitle().startsWith("*")) {
+            setTitle("*" + getTitle());
+        }
+    }
+
+    @Override
+    public void onSongRemoved(Song s, CollectionManager m) {
+        if (s.equals(song) && manager.equals(m)) {
+            UIManager.put("OptionPane.okButtonText", "Recreate");
+            UIManager.put("OptionPane.cancelButtonText", "Close");
+
+            int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "The song you are editing was deleted. If you want, you can recreate it. Otherwise, this editor will close.", String.format("Song deleted: %s (%d)", s.name(), s.id()), JOptionPane.OK_CANCEL_OPTION);
+
+            if (option == JOptionPane.OK_OPTION) {
+                m.addSong(s);
+                saveChanges();
+                return;
+            }
+            close(this);
+            UIManager.put("OptionPane.okButtonText", "Ok");
+            UIManager.put("OptionPane.cancelButtonText", "Cancel");
+        }
+    }
+
+    @Override
+    public void onSongUpdated(Song s, CollectionManager m) {
+
+    }
+
+    @Override
+    public void onSongAdded(Song s, CollectionManager m) {
+
+    }
+
 }

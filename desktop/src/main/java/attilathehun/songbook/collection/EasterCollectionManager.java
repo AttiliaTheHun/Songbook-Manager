@@ -27,11 +27,13 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 
 
 public class EasterCollectionManager extends CollectionManager {
 
     private static final Logger logger = LogManager.getLogger(EasterCollectionManager.class);
+    private static final List<CollectionListener> listeners = new ArrayList<>();
 
     public static final String EASTER_SONG_DATA_FILE_PATH = Paths.get(Environment.getInstance().settings.environment.DATA_FILE_PATH + "/songs/egg/").toString();
     private static final EasterCollectionManager instance;
@@ -161,10 +163,7 @@ public class EasterCollectionManager extends CollectionManager {
         }
         collection.add(s);
         save();
-        CodeEditor editor = new CodeEditor();
-        editor.setTitle(String.format("HTML editor - %s (id: %d)", s.name(), s.id()));
-        editor.setSong(s);
-        editor.setVisible(true);
+        CodeEditor.open(this, s);
         Environment.getInstance().refresh();
         if (Environment.getInstance().getCollectionManager().equals(getInstance())) {
             Environment.navigateWebViewToSong(collection.get(collection.size() - 1));
@@ -181,6 +180,7 @@ public class EasterCollectionManager extends CollectionManager {
         if (songFile.delete()) {
             Environment.showMessage("Success", String.format("Easter Egg Song '%s' id: %d deleted. Ave Caesar!", s.name(), s.id()));
         }
+        onSongRemoved(s);
         if (Environment.getInstance().getCollectionManager().equals(getInstance())) {
             Environment.getInstance().refresh();
             SongbookApplication.dialControlPLusRPressed();
@@ -396,6 +396,21 @@ public class EasterCollectionManager extends CollectionManager {
     public Song getPlaceholderSong() {
         return new Song("Secret Song", -1);
 
+    }
+
+    @Override
+    public void addListener(CollectionListener listener) {
+        if (listener == null) {
+        throw new IllegalArgumentException();
+
+        }
+        listeners.add(listener);
+    }
+
+    private void onSongRemoved(Song s) {
+        for (CollectionListener listener : listeners) {
+            listener.onSongRemoved(s, this);
+        }
     }
 
 
