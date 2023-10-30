@@ -2,7 +2,7 @@
 <html>
 <head>
 <?php
-	include './resources/head.php';
+	include './resources/templates/head.html';
 ?>
 <link rel="stylesheet" href="./resources/css/style_homepage.css">
 <link href='https://fonts.googleapis.com/css?family=Dekko' rel='stylesheet'>
@@ -17,7 +17,7 @@
 <hr>
 <div class="content">
 <br>
-<a href="pageview">
+<a href="pageview.php">
 <span class="browse-songbook-button">
 Prohlížet zpěvník
 </span>
@@ -39,7 +39,7 @@ Prohlížet zpěvník
 
 
 <li><a href="https://icons8.com"  target="_blank" >icons8</a></li>
-<li><a href="http://www.freepik.com"  target="_blank" >macrovector / Freepik</a></li>
+<li><a href="https://www.needpix.com/photo/download/522268/book-blank-hardcover-spread-pages-white-diary-free-pictures-free-photos"  target="_blank" >needpix</a></li>
 </ul>
 </div>
 

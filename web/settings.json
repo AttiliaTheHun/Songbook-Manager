@@ -2,7 +2,7 @@
     "backup": {
         "auto_backup": true,
 	    "max_backup_count": 10,
-	    "backup_save_requests": true
+	    "backup_requests": true
     },
 	"plugin": {
 	    "Frontpage": {
@@ -12,9 +12,14 @@
 	        "enabled": true
 	    },
 	    "Export": {
-	        
+	        "enabled": true
 	    }
-	    
-	    
-	}
+	},
+	"homepage": {
+	    "enabled": true
+	},
+	"preview": {
+	    "enabled": true
+	},
+	"locale": "cs_CZ"
 }

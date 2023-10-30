@@ -7,7 +7,9 @@ if (!isset($_SESSION['REPLACE_MARKS'])) {
         'head_replace_mark' => '<replace "head">',
         'navbar_replace_mark' => '<replace "navbar">',
         'song1_replace_mark' => '<replace "song1">',
-        'song2_replace_mark' => '<replace "song2">'
+        'song2_replace_mark' => '<replace "song2">',
+        'previous_song_replace_mark' => '<replace "previous-song">',
+        'next_song_replace_mark' => '<replace "next-song">'
     ];
 
 }
