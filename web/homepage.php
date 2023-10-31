@@ -1,3 +1,13 @@
+<?php
+include('./lib/lib_settings.php');
+
+if ($settings['homepage']['enabled'] == false) {
+    http_response_code(204);
+    include './resources/pages/204.html';
+    exit(0);
+}
+?>
+
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -7,7 +17,7 @@
 <link rel="stylesheet" href="./resources/css/style_homepage.css">
 <link href='https://fonts.googleapis.com/css?family=Dekko' rel='stylesheet'>
 <title>Zpěvník Hrabošů</title>
-<meta name="viewport" width
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body>
 <div class="navbar">

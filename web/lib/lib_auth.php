@@ -13,20 +13,20 @@ class Token {
 	private $MANAGE_TOKENS_PERMISSION = false;
 	
 	public function __construct() {
-	    if (func_num_args() == 7) {
+	    if (func_num_args() == 9) {
 	        
 	        $this->token = func_get_arg(0);
 	        $this->name = func_get_arg(1);
-	        $this->created_at = "";
-	        $this->frozen = false;
-	        $this->READ_PERMISSION = func_get_arg(2);
-	        $this->WRITE_PERMISSION = func_get_arg(3);
-	        $this->BACKUP_PERMISSION = func_get_arg(4);
-	        $this->RESTORE_PERMISSION = func_get_arg(5);
-	        $this->MANAGE_TOKENS_PERMISSION = func_get_arg(6);
+	        $this->created_at = func_get_arg(2);;
+	        $this->frozen = func_get_arg(3);
+	        $this->READ_PERMISSION = func_get_arg(4);
+	        $this->WRITE_PERMISSION = func_get_arg(5);
+	        $this->BACKUP_PERMISSION = func_get_arg(6);
+	        $this->RESTORE_PERMISSION = func_get_arg(7);
+	        $this->MANAGE_TOKENS_PERMISSION = func_get_arg(8);
 		    return;
 		} elseif (func_num_args() == 1) {
-		    $this->set(json_decode($json, true));
+		    $this->set(func_get_arg(0));
 		}
 	}
 	
@@ -73,13 +73,20 @@ class Token {
 	public function set($data) {
         foreach ($data AS $key => $value) $this->{$key} = $value;
     }
+    
+    public static function generate(string $secret, string $name, mixed $permissions, boolean $phrase) {
+        if (len($secret) == 0) {
+            $secret = base64_encode(random_bytes(10));
+        }
+        if ($phrase === true) {
+            $secret = base64_encode($secret);
+        }
+        return new Token($secret, $name, date("d-m-Y"), $permissions[0], $permissions[1], $permissions[2], $permissions[3], $permissions[4]);
+    }
  	
 }
 
-//!DECLARE IN EMBEDDING FILE!$tokens_file_path = '../data/tokens.json';
-
-
-$token;
+$tokens_file_path = dirname(__FILE__) . '/../data/tokens.json';
 
 /**
 * Scans the local token list for the presented token. Returns its complete representation when found and null otherwise.
@@ -87,9 +94,9 @@ $token;
 * @return a Token object or null
 */
 function get_token_object($token) {
-    for ($x = 0; $x < count($tokens); $x++) {
-        if ($tokens[$x]['token'] == $token) {
-            return new Token($tokens[$x]);
+    for ($x = 0; $x < count($GLOBALS['tokens']); $x++) {
+        if ($GLOBALS['tokens'][$x]['token'] == $token) {
+            return new Token(json_decode(json_encode($GLOBALS['tokens'][$x]), true));
         }
     }
     return null;
@@ -99,19 +106,23 @@ function get_request_token() {
     $headers = apache_request_headers();
 
     foreach ($headers as $header => $value) {
-        if ($header != 'Authorization' && substr($value, 0, 7) !== 'Bearer ') {
-            return trim(substr($header, 7));
+        if ($header == 'Authorization' && substr($value, 0, 7) === 'Bearer ') {
+            return trim(substr($value, 7));
         }
     }
     return null;
 }
 
 function auth_init() {
-    $tokens_file_contents = file_get_contents($tokens_file_path);
-    $tokens = json_decode($tokens_file_contents, true);
-    $token = get_token_object(get_request_token());
+    $GLOBALS['tokens_file_contents'] = file_get_contents($GLOBALS['tokens_file_path']);
+    $GLOBALS['tokens'] = json_decode($GLOBALS['tokens_file_contents'], true);
+    $GLOBALS['token'] = get_token_object(get_request_token());
 }
 
+function register_token(mixed $token) {
+    array_push($GLOBALS['tokens'], $token);
+    file_put_contents($GLOBALS['tokens_file_path'], $GLOBALS['tokens']);
+}
 
 
 ?>

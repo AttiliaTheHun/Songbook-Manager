@@ -1,5 +1,11 @@
 <?php
+include('./lib/lib_settings.php');
 
+if ($settings['preview']['enabled'] == false) {
+    http_response_code(204);
+    include './resources/pages/204.html';
+    exit(0);
+}
 
 include('./lib/init_session.php');
 $template_html = file_get_contents('./resources/templates/pageview.html');

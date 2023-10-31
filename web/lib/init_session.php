@@ -1,6 +1,7 @@
 <?php
-include 'init_standard_collection.php';
+include 'lib_collection.php';
 session_start();
+init_collection();
 
 if (!isset($_SESSION['REPLACE_MARKS'])) {
     $_SESSION['REPLACE_MARKS'] = [
@@ -13,8 +14,8 @@ if (!isset($_SESSION['REPLACE_MARKS'])) {
     ];
 
 }
-
+/* move to lib_collection
 if (!isset($_SESSION['COLLECTION'])) {
     $_SESSION['COLLECTION'] = $collection;
-}
+}*/
 ?>
