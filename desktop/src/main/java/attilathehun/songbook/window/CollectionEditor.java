@@ -1,10 +1,7 @@
 package attilathehun.songbook.window;
 
 import attilathehun.songbook.SongbookApplication;
-import attilathehun.songbook.collection.CollectionManager;
-import attilathehun.songbook.collection.EasterCollectionManager;
-import attilathehun.songbook.collection.Song;
-import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.plugin.Export;
@@ -20,7 +17,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 
-public class CollectionEditor extends JFrame implements KeyEventListener {
+public class CollectionEditor extends JFrame implements KeyEventListener, CollectionListener {
 
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
 
@@ -446,6 +443,21 @@ public class CollectionEditor extends JFrame implements KeyEventListener {
         return false;
     }
 
+    @Override
+    public void onSongRemoved(Song s, CollectionManager m) {
+        forceRefreshAll();
+    }
+
+    @Override
+    public void onSongUpdated(Song s, CollectionManager m) {
+        forceRefreshAll();
+    }
+
+    @Override
+    public void onSongAdded(Song s, CollectionManager m) {
+        forceRefreshAll();
+    }
+
     /**
      * This class represents a tab in the TabLayout.
      */
@@ -463,7 +475,7 @@ public class CollectionEditor extends JFrame implements KeyEventListener {
             throw new RuntimeException("Constructor not allowed!");
         }
 
-        public CollectionPanel(CollectionManager manager) {
+        private CollectionPanel(CollectionManager manager) {
             super(new BorderLayout());
             setDoubleBuffered(false);
             this.manager = manager;
@@ -488,15 +500,15 @@ public class CollectionEditor extends JFrame implements KeyEventListener {
             add(new JScrollPane(list), BorderLayout.CENTER);
         }
 
-        public JList getList() {
+        private JList getList() {
             return list;
         }
 
-        public CollectionManager getCollectionManager() {
+        private CollectionManager getCollectionManager() {
             return manager;
         }
 
-        public Song getSelectedSong() {
+        private Song getSelectedSong() {
             return selectedSong;
         }
     }
@@ -513,7 +525,7 @@ public class CollectionEditor extends JFrame implements KeyEventListener {
         private JLabel songURLLabel;
         private JCheckBox isSongActiveBox;
 
-        public CollectionPanelListRenderer() {
+        private CollectionPanelListRenderer() {
             super(new GridBagLayout());
         }
 

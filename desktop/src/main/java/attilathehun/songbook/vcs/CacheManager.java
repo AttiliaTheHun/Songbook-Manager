@@ -1,5 +1,7 @@
 package attilathehun.songbook.vcs;
 
+import attilathehun.songbook.collection.EasterCollectionManager;
+import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.vcs.index.Index;
 import com.google.gson.Gson;
@@ -23,6 +25,8 @@ public class CacheManager {
     private static final String CACHED_INDEX_FILE_PATH = Paths.get(Environment.getInstance().settings.vcs.VCS_CACHE_FILE_PATH, "index.json").toString();
 
     private static final CacheManager instance = new CacheManager();
+
+    private CacheManager() {}
 
     public static CacheManager getInstance() {
         return instance;
@@ -86,7 +90,11 @@ public class CacheManager {
 
     public long getCachedSongbookVersionTimestamp() {
         try {
-            return Long.parseLong(Files.readAllLines(Paths.get(Environment.getInstance().settings.vcs.VERSION_TIMESTAMP_FILE_PATH)).get(0));
+            File file = getCachedSongbookVersionTimestampFile();
+            if (!file.exists()) {
+                cacheSongbookVersionTimestamp();
+            }
+            return Long.parseLong(Files.readAllLines(file.toPath()).get(0));
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }
@@ -97,11 +105,12 @@ public class CacheManager {
         return new File(Environment.getInstance().settings.vcs.VERSION_TIMESTAMP_FILE_PATH);
     }
 
-    protected void cacheSongbookVersionTimestamp(long versionTimestamp) {
+    private void cacheSongbookVersionTimestamp(long versionTimestamp) {
         if (versionTimestamp < 0) {
             throw new IllegalArgumentException();
         }
         try {
+            new File(Environment.getInstance().settings.vcs.VCS_CACHE_FILE_PATH).mkdir();
             PrintWriter printWriter = new PrintWriter(new FileWriter((Environment.getInstance().settings.vcs.VERSION_TIMESTAMP_FILE_PATH), false));
             printWriter.write(String.valueOf(versionTimestamp));
             printWriter.close();
@@ -118,7 +127,7 @@ public class CacheManager {
         long timestamp = -1;
         long tempStamp;
 
-        for (File file : Stream.of(new File(Environment.getInstance().settings.environment.SONG_DATA_FILE_PATH).listFiles())
+        for (File file : Stream.of(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()).listFiles())
                 .filter(file -> !file.isDirectory())
                 .toList()) {
             tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();
@@ -127,7 +136,7 @@ public class CacheManager {
             }
         }
 
-        for (File file : Stream.of(new File(Environment.getInstance().settings.environment.EGG_DATA_FILE_PATH).listFiles())
+        for (File file : Stream.of(new File(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()).listFiles())
                 .filter(file -> !file.isDirectory())
                 .toList()) {
             tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();

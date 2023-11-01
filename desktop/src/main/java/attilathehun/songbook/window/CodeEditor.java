@@ -28,22 +28,15 @@ import org.fife.ui.rsyntaxtextarea.*;
 public class CodeEditor extends JFrame implements KeyEventListener, DocumentListener, CollectionListener {
 
     private static final Logger logger = LogManager.getLogger(CodeEditor.class);
-
+//TODO we need something better than the song to keep track of instances, Song lead to possible duplicates
     private static final HashMap<Song, CodeEditor> instanceMap = new HashMap<>();
-
     private static int instances = 0;
-
     private static boolean isApplicationClosed = false;
     private static int focusedInstances = 0;
-
     private String filePath;
-
     private Song song;
-
     private boolean IS_FOCUSED = false;
-
     private final RSyntaxTextArea textArea;
-
     private final CollectionManager manager;
 
     public static int instanceCount() {
@@ -56,11 +49,11 @@ public class CodeEditor extends JFrame implements KeyEventListener, DocumentList
     }
 
     private void addFocusedInstance() {
-        focusedInstances += 1;
+        focusedInstances++;
     }
 
     private void removeFocusedInstance() {
-        focusedInstances -= 1;
+        focusedInstances--;
     }
 
     public static void setApplicationClosed() {
@@ -112,12 +105,12 @@ public class CodeEditor extends JFrame implements KeyEventListener, DocumentList
      * @param s target Song object
      */
     public static void open(CollectionManager manager, Song s) {
-        if (manager == null && s == null) {
+        if (manager == null || s == null) {
             throw  new IllegalArgumentException();
         }
         if (instanceMap.get(s) == null) {
             CodeEditor instance = new CodeEditor(manager, s);
-            instanceMap.put(s,instance);
+            instanceMap.put(s, instance);
             instance.toFront();
             return;
         }
@@ -140,6 +133,7 @@ public class CodeEditor extends JFrame implements KeyEventListener, DocumentList
             Environment.getInstance().exit();
         }
         instance.setVisible(false);
+        logger.debug(String.format("Closing instance for song %s:%d", instance.song.name(), instance.song.id()));
     }
 
 
@@ -326,7 +320,7 @@ public class CodeEditor extends JFrame implements KeyEventListener, DocumentList
             UIManager.put("OptionPane.okButtonText", "Recreate");
             UIManager.put("OptionPane.cancelButtonText", "Close");
 
-            int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "The song you are editing was deleted. If you want, you can recreate it. Otherwise, this editor will close.", String.format("Song deleted: %s (%d)", s.name(), s.id()), JOptionPane.OK_CANCEL_OPTION);
+            int option = JOptionPane.showConfirmDialog(this, "The song you are editing was deleted. If you want, you can recreate it. Otherwise, this editor will close.", String.format("Song deleted: %s (%d)", s.name(), s.id()), JOptionPane.OK_CANCEL_OPTION);
 
             if (option == JOptionPane.OK_OPTION) {
                 m.addSong(s);
@@ -341,7 +335,7 @@ public class CodeEditor extends JFrame implements KeyEventListener, DocumentList
 
     @Override
     public void onSongUpdated(Song s, CollectionManager m) {
-
+        //TODO perhaps ask if he wants to preserve changes or load the strange changes made
     }
 
     @Override

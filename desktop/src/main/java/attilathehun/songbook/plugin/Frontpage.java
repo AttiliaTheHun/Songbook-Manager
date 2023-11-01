@@ -1,6 +1,8 @@
 package attilathehun.songbook.plugin;
 
 
+import java.io.Serializable;
+
 public class Frontpage extends Plugin {
 
     private static final Frontpage instance = new Frontpage();
@@ -25,11 +27,21 @@ public class Frontpage extends Plugin {
 
     @Override
     public PluginSettings getSettings() {
-        return new Plugin.PluginSettings();
+        return new PluginSettings();
     }
 
     public static Plugin getInstance() {
         return instance;
     }
+
+    public static class PluginSettings extends Plugin.PluginSettings {
+
+        protected PluginSettings() {
+            put("enabled", Boolean.TRUE);
+        }
+
+
+    }
+
 }
 

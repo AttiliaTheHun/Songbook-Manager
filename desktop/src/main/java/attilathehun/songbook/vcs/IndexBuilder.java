@@ -73,13 +73,13 @@ public class IndexBuilder {
      * @return local songbook index
      */
     public Index createLocalIndex() throws IOException, NoSuchAlgorithmException {
-        BuildWorker.spamCPUAndMemoryWithThreads(listFiles(Environment.getInstance().settings.environment.SONG_DATA_FILE_PATH));
+        BuildWorker.spamCPUAndMemoryWithThreads(listFiles(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()));
         Map standardSongs = BuildWorker.map;
-        BuildWorker.spamCPUAndMemoryWithThreads(listFiles(Environment.getInstance().settings.environment.EGG_DATA_FILE_PATH));
+        BuildWorker.spamCPUAndMemoryWithThreads(listFiles(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()));
         Map easterSongs = BuildWorker.map;
         SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
-        String standardCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.environment.COLLECTION_FILE_PATH));
-        String easterCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.environment.EASTER_COLLECTION_FILE_PATH));
+        String standardCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
+        String easterCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
         Index index = new Index(null);
         CompoundProperty data = new CompoundProperty();
         data.put("standard", new SimpleProperty<>(standardSongs.keySet()));

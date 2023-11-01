@@ -5,7 +5,7 @@ include '../../lib/lib_save_load.php';
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     auth_init();
     if ($token != null && $token->has_read_permission()) {
-        $filename = 'index.json';
+        //$filename = 'index.json';
         //TODO
         /*$file = '../../data/index.json';
         header('HTTP/1.1 200 Ok');

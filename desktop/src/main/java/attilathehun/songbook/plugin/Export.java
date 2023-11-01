@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.Serializable;
 
+@Deprecated
 public class Export extends Plugin {
     private static final Logger logger = LogManager.getLogger(Export.class);
 
@@ -30,7 +31,7 @@ public class Export extends Plugin {
 
     @Override
     public int execute() {
-        switch (((PluginSettings) Environment.getInstance().settings.plugins.get(name)).conversionMethod) {
+        switch ((PluginSettings.ConversionMethod)((PluginSettings) Environment.getInstance().settings.plugins.get(name)).get("conversionMethod")) {
             //TODO: ask for the remote conversion url the way you ask for token
             case REMOTE:
                 break;
@@ -54,25 +55,18 @@ public class Export extends Plugin {
     }
 
     public static class PluginSettings extends Plugin.PluginSettings {
-        //public final boolean enabled;
-        public final ConversionMethod conversionMethod;
-        public final int localConversionThreadCount;
-        public final String conversionURL;
-        public final String defaultExportName;
-        public final String defaultSinglepageName;
-        public final String defaultPrintableName;
-
         protected PluginSettings() {
-            super();
-           // enabled = true;
-            conversionMethod = ConversionMethod.THIRD_PARTY_API;
-            localConversionThreadCount = 20;
-            conversionURL = "";
-            defaultExportName = DEFAULT_EXPORT_NAME;
-            defaultSinglepageName = SINGLEPAGE_EXPORT_NAME;
-            defaultPrintableName = PRINTABLE_EXPORT_NAME;
+            put("enabled", Boolean.TRUE);
+            put("conversionMethod", ConversionMethod.THIRD_PARTY_API);
+            put("localConversionThreadCount", 20);
+            put("conversionURL", "");
+            put("defaultExportName", DEFAULT_EXPORT_NAME);
+            put("defaultSinglepageName", SINGLEPAGE_EXPORT_NAME);
+            put("defaultPrintableName", PRINTABLE_EXPORT_NAME);
         }
 
+
+        @Deprecated
         public enum ConversionMethod implements Serializable {
             REMOTE {
                 @Override

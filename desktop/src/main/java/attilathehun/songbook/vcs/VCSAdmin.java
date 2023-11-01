@@ -1,7 +1,6 @@
 package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.environment.Environment;
-import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,8 +23,16 @@ public class VCSAdmin {
 
     private static final Logger logger = LogManager.getLogger(VCSAdmin.class);
 
-    private static final VCSAdmin instance = new VCSAdmin();
-    private final VCSAgent defaultAgent = new VCSAgent();
+    private static final VCSAdmin instance;
+
+    static {
+        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
+            instance = new VCSAdmin();
+        } else {
+            instance = null;
+        }
+    }
+    private VCSAgent defaultAgent = null;
 
     public static VCSAdmin getInstance() {
         return instance;
@@ -33,6 +40,9 @@ public class VCSAdmin {
 
 
     public VCSAgent getAgent() {
+        if (defaultAgent == null) {
+            defaultAgent = new VCSAgent();
+        }
         return defaultAgent;
     }
 
@@ -61,19 +71,24 @@ public class VCSAdmin {
     }
 
     public void pull(VCSAgent agent) {
-
+//TODO
     }
 
     private void saveLocalChanges(VCSAgent a) throws IOException, NoSuchAlgorithmException {
         if (!Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
-            Environment.showMessage("Remote saving and loading disabled","Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation");
+            Environment.showMessage("Remote saving and loading disabled","Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation.");
             return;
         }
         VCSAgent agent;
         if (a == null) {
             agent = new VCSAgent();
-            if (!agent.verifyLocalChanges()) {
-                Environment.showMessage("Already up to date", "The remote version of the songbook matches the local version.");
+            try {
+                if (!agent.verifyLocalChanges()) {
+                    Environment.showMessage("Already up to date", "The remote version of the songbook matches the local version or is behind it.");
+                    return;
+                }
+            } catch (Exception e) {
+                Environment.showErrorMessage("Failure", e.getMessage());
                 return;
             }
         } else {

@@ -1,4 +1,6 @@
-<Files "tokens.json;index.json">  
+IndexIgnore *
+
+<Files "*">  
   Order Allow,Deny
   Deny from all
 </Files>

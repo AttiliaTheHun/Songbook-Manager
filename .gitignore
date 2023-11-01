@@ -3,6 +3,7 @@ desktop/scripts/node_modules/
 desktop/scripts/package.json
 desktop/scripts/package-lock.json
 desktop/temp/
+desktop/vcs/
 desktop/target/
 desktop/log.txt
 desktop/easter.exe

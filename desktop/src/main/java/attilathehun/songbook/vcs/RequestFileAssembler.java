@@ -1,5 +1,7 @@
 package attilathehun.songbook.vcs;
 
+import attilathehun.songbook.collection.EasterCollectionManager;
+import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.util.ZipBuilder;
 import attilathehun.songbook.vcs.index.SaveIndex;
@@ -31,20 +33,20 @@ public class RequestFileAssembler {
                 .setOutputPath(outputFilePath);
 
         for (Object s : (Collection) index.getAdditions().get("standard").getContent()) {
-            builder.addFile(new File(Paths.get(Environment.getInstance().settings.environment.SONG_DATA_FILE_PATH, (String) s).toUri()), "/data/songs/html");
+            builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/html");
         }
         for (Object s : (Collection) index.getAdditions().get("easter").getContent()) {
-            builder.addFile(new File(Paths.get(Environment.getInstance().settings.environment.EGG_DATA_FILE_PATH, (String) s).toUri()), "/data/songs/egg");
+            builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/egg");
         }
 
         for (Object s : (Collection) index.getChanges().get("standard").getContent()) {
-            builder.addFile(new File(Paths.get(Environment.getInstance().settings.environment.SONG_DATA_FILE_PATH, (String) s).toUri()), "/data/songs/html");
+            builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/html");
         }
         for (Object s : (Collection) index.getChanges().get("easter").getContent()) {
-            builder.addFile(new File(Paths.get(Environment.getInstance().settings.environment.EGG_DATA_FILE_PATH, (String) s).toUri()), "/data/songs/egg");
+            builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/egg");
         }
-        builder.addFile(new File(Environment.getInstance().settings.environment.COLLECTION_FILE_PATH), "/data");
-        builder.addFile(new File(Environment.getInstance().settings.environment.EASTER_COLLECTION_FILE_PATH), "/data");
+        builder.addFile(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()), "/data");
+        builder.addFile(new File(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()), "/data");
         builder.addFile(new File(Environment.getInstance().settings.vcs.CHANGE_LOG_FILE_PATH), "/");
         builder.addFile(CacheManager.getInstance().getCachedIndexFile(), "/");
         builder.finish();

@@ -14,7 +14,12 @@ public class VCSAgent {
     private static final Logger logger = LogManager.getLogger(VCSAgent.class);
 
     protected VCSAgent() {
-
+        try {
+            CacheManager.getInstance().cacheSongbookVersionTimestamp();
+        } catch (IOException e) {
+            Environment.showErrorMessage("Error", "Could not acquire a version timestamp!");
+            logger.error(e.getMessage(), e);
+        }
     }
 
     /**
@@ -24,7 +29,14 @@ public class VCSAgent {
         try {
 
             Client client = new Client();
-            long remoteVersionTimestamp = Long.parseLong(client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_VERSION_TIMESTAMP_URL));
+            String resp = client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_VERSION_TIMESTAMP_URL);
+
+            if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
+                logger.info("Running diagnostics - Invalid server response value");
+                return;
+            }
+
+            long remoteVersionTimestamp = Long.parseLong(resp);
             if (remoteVersionTimestamp > CacheManager.getInstance().getCachedSongbookVersionTimestamp()) {
                 VCSAdmin.getInstance().pull(this);
             } else if(remoteVersionTimestamp < CacheManager.getInstance().getCachedSongbookVersionTimestamp()) {
@@ -44,10 +56,17 @@ public class VCSAgent {
      * Checks whether there are changes to the remote songbook that have not been downloaded. Performs versionTimestamp comparison.
      * @return true if there are changes to download; false otherwise
      */
-    public boolean verifyRemoteChanges() {
+    public boolean verifyRemoteChanges() throws Exception {
         try {
             Client client = new Client();
-            long remoteVersionTimestamp = Long.parseLong(client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_VERSION_TIMESTAMP_URL));
+            String resp = client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_VERSION_TIMESTAMP_URL);
+
+            if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
+                logger.info("Running diagnostics - Invalid server response value");
+                throw new RuntimeException("Could not compare local and remote changes due to server error.");
+            }
+
+            long remoteVersionTimestamp = Long.parseLong(resp);
             if (remoteVersionTimestamp > CacheManager.getInstance().getCachedSongbookVersionTimestamp()) {
                 return true;
             }
@@ -61,15 +80,26 @@ public class VCSAgent {
      * Checks whether there are changes to the songbook that have not been uploaded on the server. Performs versionTimestamp comparison.
      * @return true if there are changes to upload; false otherwise
      */
-    public boolean verifyLocalChanges() {
+    public boolean verifyLocalChanges() throws Exception {
         try {
             Client client = new Client();
-            long remoteVersionTimestamp = Long.parseLong(client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_VERSION_TIMESTAMP_URL));
+            String resp = client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_VERSION_TIMESTAMP_URL);
+
+            if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
+                logger.info("Running diagnostics - Invalid server response value");
+                throw new RuntimeException("Could not compare local and remote changes due to server error.");
+            }
+
+            long remoteVersionTimestamp = Long.parseLong(resp);
             if (remoteVersionTimestamp < CacheManager.getInstance().getCachedSongbookVersionTimestamp()) {
                 return true;
             }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
+        } catch (NumberFormatException nfe) {
+            logger.info("Running diagnostics - Invalid server response value");
+            logger.error(nfe.getMessage(), nfe);
+            throw new RuntimeException("Could not compare local and remote changes due to server error.");
         }
         return false;
     }
@@ -84,6 +114,9 @@ public class VCSAgent {
         Client client = new Client();
         Type targetClassType = new TypeToken<Index>() {
         }.getType();
+        if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
+            return null;
+        }
 
         return new Gson().fromJson(client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_INDEX_URL, token), targetClassType);
     }

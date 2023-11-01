@@ -1,9 +1,6 @@
 package attilathehun.songbook;
 
-import attilathehun.songbook.collection.CollectionManager;
-import attilathehun.songbook.collection.EasterCollectionManager;
-import attilathehun.songbook.collection.Song;
-import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.plugin.Export;
@@ -32,7 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 
-public class SongbookController implements KeyEventListener {
+public class SongbookController implements KeyEventListener, CollectionListener {
 
     private static final Logger logger = LogManager.getLogger(SongbookController.class);
 
@@ -479,4 +476,22 @@ public class SongbookController implements KeyEventListener {
         return SONG_TWO;
     }
 
+    @Override
+    public void onSongRemoved(Song s, CollectionManager m) {
+        if (s.id() == SONG_ONE.id() || s.id() == SONG_TWO.id()) {
+            refreshWebView();
+        }
+    }
+
+    @Override
+    public void onSongUpdated(Song s, CollectionManager m) {
+        if (s.id() == SONG_ONE.id() || s.id() == SONG_TWO.id()) {
+            refreshWebView();
+        }
+    }
+
+    @Override
+    public void onSongAdded(Song s, CollectionManager m) {
+
+    }
 }

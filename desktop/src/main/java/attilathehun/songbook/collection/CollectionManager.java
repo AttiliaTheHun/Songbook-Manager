@@ -1,7 +1,10 @@
 package attilathehun.songbook.collection;
 
+import javax.naming.OperationNotSupportedException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 /**
  * Base class every collection manager should implement. Moreover, every collection manager should follow the singleton pattern for compatibility,
@@ -24,6 +27,12 @@ public abstract class CollectionManager {
      * Initializes the collection. Should be call in advance to any collection-related logic.
      */
     public abstract void init();
+
+    /**
+     * Returns the name of the underlying collection the manager works with.
+     * @return name of the collection
+     */
+    public abstract String getCollectionName();
 
     /**
      * Creates a Collection Manager with copy of the collection. This Collection Manager should be used when changes to the collection are undesirable
@@ -235,6 +244,30 @@ public abstract class CollectionManager {
      * @param listener
      */
     public abstract void addListener(CollectionListener listener);
+
+    /**
+     * Returns CollectionSettings for the collection manager
+     * @return the collection manager collection settings
+     */
+    public abstract CollectionSettings getSettings();
+
+    public static class CollectionSettings implements Serializable {
+        private final String COLLECTION_FILE_PATH;
+        private final String SONG_DATA_FILE_PATH;
+
+        public CollectionSettings(String collectionPath, String songsPath) {
+            COLLECTION_FILE_PATH = collectionPath;
+            SONG_DATA_FILE_PATH = songsPath;
+        }
+
+        public String getCollectionFilePath() {
+            return COLLECTION_FILE_PATH;
+        }
+
+        public String getSongDataFilePath() {
+            return SONG_DATA_FILE_PATH;
+        }
+    }
 
 
 }

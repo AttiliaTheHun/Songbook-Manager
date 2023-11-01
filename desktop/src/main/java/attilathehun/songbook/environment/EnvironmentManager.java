@@ -30,7 +30,7 @@ public class EnvironmentManager {
             return;
         }
         if (!new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH).exists()) {
-            Environment.showErrorMessage("Error", "Could not file a local data zip file.");
+            Environment.showErrorMessage("Error", "Could not find a local data zip file.");
             return;
         }
         if (!extractLocalDataFile()) {
@@ -79,9 +79,9 @@ public class EnvironmentManager {
 
     public void createNewSongbook() {
         try {
-            File songDataFolder = new File(Environment.getInstance().settings.environment.SONG_DATA_FILE_PATH);
+            File songDataFolder = new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath());
             songDataFolder.mkdirs();
-            File collectionJSONFile = new File(Environment.getInstance().settings.environment.COLLECTION_FILE_PATH);
+            File collectionJSONFile = new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath());
             collectionJSONFile.createNewFile();
             PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
             printWriter.write("[]");
@@ -203,7 +203,6 @@ public class EnvironmentManager {
                 song.setAuthor(songAuthorField.getText());
                 song.setActive(songActiveSwitch.isSelected());
                 song = manager.addSong(song);
-                CollectionEditor.forceRefreshInstance();
                 return song;
             }
         } else {
@@ -212,7 +211,6 @@ public class EnvironmentManager {
                 song.setUrl(songURLField.getText());
                 song.setActive(songActiveSwitch.isSelected());
                 song = manager.updateSongRecord(song);
-                CollectionEditor.forceRefreshInstance();
                 return song;
             }
         }

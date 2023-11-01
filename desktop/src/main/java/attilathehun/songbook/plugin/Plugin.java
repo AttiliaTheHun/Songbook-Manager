@@ -1,6 +1,7 @@
 package attilathehun.songbook.plugin;
 
-import java.io.Serializable;
+
+import java.util.HashMap;
 
 public abstract class Plugin {
 
@@ -10,11 +11,7 @@ public abstract class Plugin {
 
     public abstract PluginSettings getSettings();
 
-    public static class PluginSettings implements Serializable {
-        public final boolean enabled;
+    public static class PluginSettings extends HashMap<String, Object> {
 
-        protected PluginSettings() {
-            enabled = true;
-        }
     }
 }

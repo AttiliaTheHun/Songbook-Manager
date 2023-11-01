@@ -1,5 +1,6 @@
 package attilathehun.songbook.environment;
 
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.vcs.VCSAdmin;
 import com.google.gson.Gson;
@@ -17,12 +18,14 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 
 public class Settings implements Serializable {
 
     private static final Logger logger = LogManager.getLogger(Settings.class);
 
     public final Environment.EnvironmentSettings environment;
+    public final HashMap<String, CollectionManager.CollectionSettings> collections;
     public final UserSettings user;
     public final SongbookSettings songbook;
     public final PluginManager.Settings plugins;
@@ -31,6 +34,7 @@ public class Settings implements Serializable {
 
     private Settings() {
         environment = new Environment.EnvironmentSettings();
+        collections = new HashMap<>();
         user = new UserSettings();
         songbook = new SongbookSettings();
         plugins = PluginManager.getInstance().getSettings();

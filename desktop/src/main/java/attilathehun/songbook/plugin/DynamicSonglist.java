@@ -5,10 +5,13 @@ import attilathehun.songbook.util.HTMLGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.Serializable;
+
 public class DynamicSonglist extends Plugin {
 
     private static final Logger logger = LogManager.getLogger(DynamicSonglist.class);
 
+    //TODO move MAX_SONG_PER_COLUMN to settings?
     public static final int MAX_SONG_PER_COLUMN = 38;
     public static final int MAX_SONG_PER_PAGE = 2 * MAX_SONG_PER_COLUMN;
 
@@ -32,7 +35,7 @@ public class DynamicSonglist extends Plugin {
     }
 
     public PluginSettings getSettings() {
-        return new Plugin.PluginSettings();
+        return new PluginSettings();
     }
 
     public static Plugin getInstance() {
@@ -64,4 +67,14 @@ public class DynamicSonglist extends Plugin {
         logger.debug("Dynamic songlist generated");
         return songlistParts;
     }
+
+    public static class PluginSettings extends Plugin.PluginSettings {
+
+        protected PluginSettings() {
+            put("enabled", Boolean.TRUE);
+        }
+
+
+    }
+
 }

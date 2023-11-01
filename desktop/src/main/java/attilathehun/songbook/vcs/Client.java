@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -42,7 +41,7 @@ public class Client {
         } else {
             Environment.showMessage("Could not upload the data", "HTTP response code: " + conn.getResponseCode());
         }
-
+        setStatus(new Status(conn.getResponseCode(), new String(conn.getErrorStream().readAllBytes())));
     }
 
     public String getResponseFile(String targetUrl, String indexFileUrl, String authToken) throws IOException {
@@ -70,7 +69,7 @@ public class Client {
         } else {
             Environment.showMessage("Could not upload the data", "HTTP response code: " + conn.getResponseCode());
         }
-
+        setStatus(new Status(conn.getResponseCode(), (conn.getErrorStream() != null) ? new String(conn.getErrorStream().readAllBytes()) : ""));
         return null;
     }
 
@@ -85,6 +84,7 @@ public class Client {
                 result.append(line);
             }
         }
+        setStatus(new Status(conn.getResponseCode(), (conn.getErrorStream() != null) ? new String(conn.getErrorStream().readAllBytes()) : ""));
         return result.toString();
     }
 
@@ -100,6 +100,7 @@ public class Client {
                 result.append(line);
             }
         }
+        setStatus(new Status(conn.getResponseCode(), new String(conn.getErrorStream().readAllBytes())));
         return result.toString();
     }
 
@@ -107,14 +108,22 @@ public class Client {
         return status;
     }
 
-    public static class Status {
-        public static final int SUCCESS = 0;
-        public static final int FAILURE = 1;
-        public static final int OTHER = 2;
-        private int state;
-        private Exception error = null;
+    private void setStatus(Status s) {
+        this.status = s;
+    }
 
-        public Status(int state, Exception e) {
+    public static class Status {
+        public static final int SUCCESS = 200;
+        public static final int NO_CONTENT = 204;
+        public static final int ACCESS_DENIED = 401;
+        public static final int FORBIDDEN = 403;
+        public static final int NOT_FOUND = 404;
+        public static final int I_AM_A_TEAPOT = 418;
+        public static final int NA = -248;
+        private final int state;
+        private String error = null;
+
+        public Status(int state, String e) {
             this.state = state;
             this.error = e;
         }
@@ -123,7 +132,7 @@ public class Client {
             return state;
         }
 
-        public Exception getError() {
+        public String getError() {
             return error;
         }
     }

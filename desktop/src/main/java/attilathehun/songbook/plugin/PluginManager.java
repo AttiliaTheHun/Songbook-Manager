@@ -78,7 +78,7 @@ public class PluginManager {
             if (get(pluginName) == null) {
                 return false;
             }
-            return get(pluginName).enabled;
+            return get(pluginName).get("enabled") == Boolean.TRUE;
         }
 
     }

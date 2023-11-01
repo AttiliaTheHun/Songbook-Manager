@@ -7,9 +7,7 @@ public class Song implements Serializable {
     private String name;
     private boolean active = true;
     private String url = "";
-
     private transient int formerId = -1;
-
     private transient String author = "";
 
     public Song(String name, int id) {

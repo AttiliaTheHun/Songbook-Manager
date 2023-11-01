@@ -1,5 +1,6 @@
 package attilathehun.songbook.environment;
 
+import attilathehun.songbook.collection.StandardCollectionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -53,7 +54,7 @@ public class EnvironmentVerificator {
     }
 
     public boolean verifyData() {
-        if (!(new File(Environment.getInstance().settings.environment.SONG_DATA_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.SONG_DATA_FILE_PATH).isDirectory())) {
+        if (!(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()).exists() && new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()).isDirectory())) {
             if (automated) {
                 FATAL_FAIL = true;
                 verificationFail("No song data folder found!");
@@ -64,7 +65,7 @@ public class EnvironmentVerificator {
     }
 
     public boolean verifyCollection() {
-        if (!new File(Environment.getInstance().settings.environment.COLLECTION_FILE_PATH).exists()) {
+        if (!new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()).exists()) {
             if (automated) {
                 FATAL_FAIL = true;
                 verificationFail("No song collection found!");

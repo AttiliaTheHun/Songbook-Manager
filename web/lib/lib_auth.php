@@ -114,14 +114,19 @@ function get_request_token() {
 }
 
 function auth_init() {
-    $GLOBALS['tokens_file_contents'] = file_get_contents($GLOBALS['tokens_file_path']);
-    $GLOBALS['tokens'] = json_decode($GLOBALS['tokens_file_contents'], true);
+    $tokens_file_contents = file_get_contents($GLOBALS['tokens_file_path']);
+    $GLOBALS['tokens'] = json_decode($tokens_file_contents, true);
     $GLOBALS['token'] = get_token_object(get_request_token());
 }
 
 function register_token(mixed $token) {
     array_push($GLOBALS['tokens'], $token);
     file_put_contents($GLOBALS['tokens_file_path'], $GLOBALS['tokens']);
+    save_tokens();
+}
+
+function save_tokens() {
+    file_put_contents($GLOBALS['tokens_file_path'], json_encode($GLOBALS['tokens']));
 }
 
 

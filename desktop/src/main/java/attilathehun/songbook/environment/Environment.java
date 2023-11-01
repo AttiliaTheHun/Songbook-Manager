@@ -3,7 +3,6 @@ package attilathehun.songbook.environment;
 import attilathehun.songbook.SongbookApplication;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
-import attilathehun.songbook.vcs.Client;
 import attilathehun.songbook.collection.CollectionManager;
 
 import javax.swing.*;
@@ -121,6 +120,8 @@ public final class Environment {
      * @return false when any error occurs
      */
     //TODO
+    //Do we really need this?
+    @Deprecated
     public Result[] perform(String[] args) {
         Result[] output = new Result[args.length];
         boolean performSave = false, performLoad = false, targetRemote = false;
@@ -152,6 +153,7 @@ public final class Environment {
         return output;
     }
 
+    @Deprecated
     public enum Result {
         SUCCESS,
         FAILURE,
@@ -173,6 +175,16 @@ public final class Environment {
         this.collectionManager = collectionManager;
     }
 
+    public void registerCollectionManager(CollectionManager collectionManager) {
+        this.settings.collections.putIfAbsent(collectionManager.getCollectionName(), collectionManager.getSettings());
+        Settings.save(this.settings);
+    }
+
+    public void unregisterCollectionManager(CollectionManager collectionManager) {
+        this.settings.collections.remove(collectionManager.getCollectionName());
+        Settings.save(this.settings);
+    }
+
     public void loadTokenToMemory(String token, VCSAdmin.Certificate certificate) {
         tokenInMemory = token;
     }
@@ -191,6 +203,11 @@ public final class Environment {
         return dialog;
     }
 
+    /**
+     * Scrolls the songbook so that the requested song is visible in the webview as if the user navigated on it himself, which means that
+     * the left/right position of the song will be preserved.
+     * @param s the song to be displayed
+     */
     public static void navigateWebViewToSong(Song s) {
         int index = getInstance().getCollectionManager().getFormalCollectionSongIndex(s);
         if (index % 2 == 0) {
@@ -217,10 +234,6 @@ public final class Environment {
         public static final String EASTER_EXE_FILE_PATH = "easter.exe";
         public static final long SESSION_TIMESTAMP = System.currentTimeMillis();
         public final transient boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
-        public final String COLLECTION_FILE_PATH;
-        public final String EASTER_COLLECTION_FILE_PATH;
-        public final String SONG_DATA_FILE_PATH;
-        public final String EGG_DATA_FILE_PATH;
         public final String RESOURCE_FILE_PATH;
         public final String CSS_RESOURCES_FILE_PATH;
         public final String TEMPLATE_RESOURCES_FILE_PATH;
@@ -236,10 +249,6 @@ public final class Environment {
 
         public EnvironmentSettings() {
             DATA_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/data/").toString();
-            COLLECTION_FILE_PATH = Paths.get(DATA_FILE_PATH + "/collection.json").toString();
-            EASTER_COLLECTION_FILE_PATH = Paths.get(DATA_FILE_PATH + "/easter_collection.json").toString();
-            SONG_DATA_FILE_PATH = Paths.get(DATA_FILE_PATH + "/songs/html/").toString();
-            EGG_DATA_FILE_PATH = Paths.get(DATA_FILE_PATH + "/songs/egg/").toString();
             RESOURCE_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/resources/").toString();
             CSS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/css/").toString();
             TEMPLATE_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/templates/").toString();

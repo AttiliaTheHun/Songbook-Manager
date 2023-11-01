@@ -1,7 +1,7 @@
 <?php
 /**
  * @source https://stackoverflow.com/questions/4914750/how-to-zip-a-whole-folder-using-php (modified)
- * */
+ **/
 class FlxZipArchive extends ZipArchive {
  public function addDir($location, $name, boolean $include_source_dir) {
      if ($include_source_dir === true) {

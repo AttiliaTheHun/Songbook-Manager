@@ -1,12 +1,51 @@
+//TODO fill in the code for easter songs
+//TODO implements the backup system
+
 <?php
 include dirname(__FILE__) . '/lib_zip_util.php';
 include dirname(__FILE__) . '/lib_backup_restore.php';
 include dirname(__FILE__) . '/lib_settings.php';
 include dirname(__FILE__) . '/lib_index.php';
 
-$temp_path = dirname(__FILE__) . '/temp/';
+$temp_path = dirname(__FILE__) . '/../temp/';
 $request_collection_file = dirname(__FILE__) . '/../temp/collection.json';
 $request_easter_collection_file = dirname(__FILE__) . '/../temp/easter_collection.json';
+
+function dir_is_empty($dir) {
+  $handle = opendir($dir);
+  while (false !== ($entry = readdir($handle))) {
+    if ($entry != "." && $entry != "..") {
+      closedir($handle);
+      return false;
+    }
+  }
+  closedir($handle);
+  return true;
+}
+
+function recurse_copy($src, $dst) {
+
+  $dir = opendir($src);
+  $result = ($dir === false ? false : true);
+
+  if ($result !== false) {
+    $result = mkdir($dst);
+
+    if ($result === true) {
+      while(false !== ( $file = readdir($dir)) ) { 
+        if (( $file != '.' ) && ( $file != '..' ) && $result) { 
+          if ( is_dir($src . '/' . $file) ) { 
+            $result = recurse_copy($src . '/' . $file, $dst . '/' . $file); 
+          }     else { 
+            $result = copy($src . '/' . $file, $dst . '/' . $file); 
+          } 
+        } 
+      } 
+    }
+    closedir($dir);
+  }
+  return $result;
+}
 
 function init_save_index() {
     $save_index_path = dirname(__FILE__) . '/../temp/index.json';
@@ -17,30 +56,26 @@ function verify_save_request() {
     if (!file_exists($GLOBALS['request_collection_file']) || filesize($GLOBALS['request_collection_file']) == 0) {
         return false;
     }
+    
+    if (file_exists($GLOBALS['temp_path'].'songs/egg/') && !is_dir_empty($GLOBALS['temp_path'].'songs/egg/') && !(file_exists($GLOBALS['request_easter_collection_file']) && filesize($GLOBALS['request_easter_collection_file']) != 0)) {
+        return false;
+    }
+    return true;
 }
 
-//TODO if easter files are sent, check for easter_collection.json request file before including these
 function save() {
     clear_folder($GLOBALS['temp_path']);
     $request_zip_path = dirname(__FILE__) . '/../temp/request.zip';
     extract_zip_archive($request_zip_path);
-    //TODO take in account max_backup_count and if reached, delete oldest backup
-    if ($GLOBALS['settings']['backup']['auto_backup'] === true) {
-        if ($GLOBALS['settings']['backup']['backup_requests'] === true) {
-            $number = 0;
-            while (file_exists(dirname(__FILE__) . "/../data/backups/save_request$number.zip")) {
-                $number++;
-            }
-            copy($request_zip_path, file_exists(dirname(__FILE__) . "/../data/backups/save_request$number.zip"));
-            unlink($request_zip_path);
-        } else {
-         //TODO   
-        }
+    unlink($request_zip_path);
+    if (!verify_save_request()) {
+        echo '{"error": "One of the collection files is corrupt; you may delete and regenerate the collection and try again."}';
+        return 2;
     }
     init_save_index();
     init_index();
     if ($GLOBALS['save_index']['version_timestamp'] === $GLOBALS['index']->get_metadata()['version_timestamp']) {
-        echo "Remote songbook already up to date. Version timestamp match.";
+        echo '{"message": "Remote songbook already up to date."}';
         return 1;
     } elseif ($GLOBALS['index']->get_metadata()['version_timestamp'] === -1) {
         return save_complete();
@@ -51,12 +86,48 @@ function save() {
 }
 //TODO
 function save_partial() {
-    echo "Remote update successful.";
+    echo '{"message": "Remote update successful."}';
     return 0;
 }
-//TODO
+
 function save_complete() {
-    echo "Remote update successful.";
+    if (!recurse_copy($GLOBALS['temp_path'], $GLOBALS['songbook_data_folder'])) {
+        echo '{"error": "Something went wrong."}';
+        return 3;
+    }
+    if (!index_new_songs($GLOBALS['save_index']['additions']['standard'])) {
+        echo '{"error": "Something went wrong."}';
+        return 4;
+    }
+    if (!index_collections()) {
+        echo '{"error": "Something went wrong."}';
+        return 5;
+    }
+    if (!save_index()) {
+        echo '{"error": "Something went wrong."}';
+        return 6;
+    }
+    echo '{"message": "Remote update successful."}';
     return 0;
+}
+
+function add_songs(array $songs) {
+    foreach ($songs as $song) {
+        rename($temp_path."songs/html/$song", $song_data_path.$song);
+    }
+}
+
+function delete_songs(array $songs) {
+    foreach ($songs as $song) {
+        unlink($song_data_path.$song);
+    }
+}
+
+function update_collections() {
+    $songbook_data_path = dirname(__FILE__).'/../data/songbook/';
+    rename($temp_path."collection.json", $songbook_data_path."collection.json");
+    if (file_exists($temp_path."easter_collection.json")) {
+        rename($temp_path."easter_collection.json", $songbook_data_path."easter_collection.json");
+    }
 }
 ?>
