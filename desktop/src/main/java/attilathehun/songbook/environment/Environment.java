@@ -10,6 +10,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import attilathehun.songbook.vcs.VCSAdmin;
 import org.apache.logging.log4j.Logger;
@@ -26,24 +28,15 @@ public final class Environment {
     public final Settings settings = Settings.getSettings();
 
     private static final Environment instance = new Environment();
+    private Map<String, CollectionManager> collectionManagers = new HashMap<>();
 
-    private CollectionManager collectionManager;
+    private CollectionManager selectedCollectionManager;
 
     private String tokenInMemory = null;
-
-    private long songbookVersionTimestamp = -1;
 
     private Environment() {
         refresh();
         logger.info("Environment instantiated");
-    }
-
-    public long getSongbookVersionTimestamp() {
-        return songbookVersionTimestamp;
-    }
-
-    public void setSongbookVersionTimestamp(long songbookVersionTimestamp) {
-        this.songbookVersionTimestamp = songbookVersionTimestamp;
     }
 
     public static Environment getInstance() {
@@ -165,24 +158,30 @@ public final class Environment {
      * @return default Collection Manager (Standard Collection Manager if null)
      */
     public CollectionManager getCollectionManager() {
-        if (collectionManager == null) {
+        if (selectedCollectionManager == null) {
             return StandardCollectionManager.getInstance();
         }
-        return collectionManager;
+        return selectedCollectionManager;
     }
 
     public void setCollectionManager(CollectionManager collectionManager) {
-        this.collectionManager = collectionManager;
+        this.selectedCollectionManager = collectionManager;
     }
 
     public void registerCollectionManager(CollectionManager collectionManager) {
         this.settings.collections.putIfAbsent(collectionManager.getCollectionName(), collectionManager.getSettings());
         Settings.save(this.settings);
+        collectionManagers.put(collectionManager.getCollectionName(), collectionManager);
     }
 
     public void unregisterCollectionManager(CollectionManager collectionManager) {
         this.settings.collections.remove(collectionManager.getCollectionName());
         Settings.save(this.settings);
+        collectionManagers.remove(collectionManager.getCollectionName());
+    }
+
+    public Map<String, CollectionManager> getRegisteredManagers() {
+        return collectionManagers;
     }
 
     public void loadTokenToMemory(String token, VCSAdmin.Certificate certificate) {

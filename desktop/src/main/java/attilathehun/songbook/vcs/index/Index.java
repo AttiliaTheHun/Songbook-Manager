@@ -1,19 +1,21 @@
 package attilathehun.songbook.vcs.index;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.io.Serializable;
 
 /**
- * This class represents an index of the songbook version control system. Upon versioning, the remote and the local indices are compared
+ * This class' instance represents an index of the songbook version control system. Upon versioning, the remote and the local indices are compared
  * and from their differences are then generated partial request indices.
  */
 public class Index implements Serializable {
 
-    public CompoundProperty data;
-    public CompoundProperty hashes;
-    public CompoundProperty metadata;
-    public CompoundProperty collections;
-    public CompoundProperty defaultSettings;
-    public long versionTimestamp;
+    private Property data;
+    private Property hashes;
+    private Property metadata;
+    private Property collections;
+    @SerializedName("version_timestamp")
+    private long versionTimestamp;
 
     /**
      * An absolutely pointless constructor, use the default one instead.
@@ -25,52 +27,45 @@ public class Index implements Serializable {
         }
     }
 
-    public void setData(CompoundProperty data) {
+    public void setData(Property data) {
         this.data = data;
     }
 
-    public void setCollections(CompoundProperty collections) {
+    public void setCollections(Property collections) {
         this.collections = collections;
     }
 
-    public void setDefaultSettings(CompoundProperty defaultSettings) {
-        this.defaultSettings = defaultSettings;
-    }
 
-    public void setHashes(CompoundProperty hashes) {
+    public void setHashes(Property hashes) {
         this.hashes = hashes;
     }
 
-    public void setMetadata(CompoundProperty metadata) {
+    public void setMetadata(Property metadata) {
         this.metadata = metadata;
     }
 
-    public CompoundProperty getCollections() {
+    public Property getCollections() {
         return collections;
     }
 
-    public CompoundProperty getData() {
+    public Property getData() {
         return data;
     }
 
-    public CompoundProperty getDefaultSettings() {
-        return defaultSettings;
-    }
-
-    public CompoundProperty getHashes() {
+    public Property getHashes() {
         return hashes;
     }
 
-    public CompoundProperty getMetadata() {
+    public Property getMetadata() {
         return metadata;
-    }
-
-    public void setVersionTimestamp(long versionTimestamp) {
-        this.versionTimestamp = versionTimestamp;
     }
 
     public long getVersionTimestamp() {
         return versionTimestamp;
+    }
+
+    public void setVersionTimestamp(long versionTimestamp) {
+        this.versionTimestamp = versionTimestamp;
     }
 }
 

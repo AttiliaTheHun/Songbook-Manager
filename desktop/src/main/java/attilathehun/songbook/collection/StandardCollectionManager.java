@@ -555,7 +555,6 @@ public class StandardCollectionManager extends CollectionManager {
                 if (!Files.isDirectory(path) && path.toString().trim().endsWith(".html")) {
                     int songId = -1;
                     String pathString = path.toString();
-                    //System.out.println(pathString);
                     if (pathString.contains(File.separator)) {
                         songId = Integer.parseInt(pathString.substring(pathString.lastIndexOf(File.separator) + 1, pathString.indexOf(".html")));
                     } else {

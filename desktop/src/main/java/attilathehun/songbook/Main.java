@@ -2,6 +2,8 @@ package attilathehun.songbook;
 
 import attilathehun.songbook.plugin.PluginManager;
 
+import java.io.IOException;
+
 public class Main {
 
     public static void main(String[] args) {

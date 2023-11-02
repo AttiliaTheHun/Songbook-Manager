@@ -81,6 +81,10 @@ public class PluginManager {
             return get(pluginName).get("enabled") == Boolean.TRUE;
         }
 
+        public void save() {
+
+        }
+
     }
 
 }

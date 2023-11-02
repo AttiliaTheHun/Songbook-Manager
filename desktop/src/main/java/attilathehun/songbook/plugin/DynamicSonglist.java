@@ -5,8 +5,6 @@ import attilathehun.songbook.util.HTMLGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.Serializable;
-
 public class DynamicSonglist extends Plugin {
 
     private static final Logger logger = LogManager.getLogger(DynamicSonglist.class);
@@ -34,8 +32,11 @@ public class DynamicSonglist extends Plugin {
         return generateSonglist();
     }
 
-    public PluginSettings getSettings() {
-        return new PluginSettings();
+    @Override
+    public Plugin.PluginSettings getSettings() {
+        Plugin.PluginSettings settings = new Plugin.PluginSettings();
+        settings.put("enabled", Boolean.TRUE);
+        return settings;
     }
 
     public static Plugin getInstance() {
@@ -66,15 +67,6 @@ public class DynamicSonglist extends Plugin {
         }
         logger.debug("Dynamic songlist generated");
         return songlistParts;
-    }
-
-    public static class PluginSettings extends Plugin.PluginSettings {
-
-        protected PluginSettings() {
-            put("enabled", Boolean.TRUE);
-        }
-
-
     }
 
 }

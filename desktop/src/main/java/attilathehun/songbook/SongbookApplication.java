@@ -7,6 +7,7 @@ import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.environment.EnvironmentVerificator;
 import attilathehun.songbook.environment.Installer;
 import attilathehun.songbook.plugin.PluginManager;
+import attilathehun.songbook.util.ZipBuilder;
 import attilathehun.songbook.window.CodeEditor;
 import attilathehun.songbook.util.KeyEventListener;
 import attilathehun.songbook.window.CollectionEditor;
@@ -50,6 +51,8 @@ public class SongbookApplication extends Application {
     private static final BooleanProperty IS_FOCUSED = new SimpleBooleanProperty();
 
     private static final List<KeyEventListener> listeners = new ArrayList<KeyEventListener>();
+
+
 
     public static void main(String[] args) {
 

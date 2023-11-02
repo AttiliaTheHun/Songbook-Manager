@@ -1,5 +1,6 @@
 package attilathehun.songbook.vcs.index;
 
+import com.google.gson.annotations.SerializedName;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -9,50 +10,50 @@ import org.apache.logging.log4j.Logger;
 public class SaveIndex extends PartialIndex {
     private static final Logger logger = LogManager.getLogger(SaveIndex.class);
 
-    private CompoundProperty additions;
-    private CompoundProperty deletions;
-    private CompoundProperty changes;
-    private CompoundProperty collections;
-
+    private Property additions;
+    private Property deletions;
+    private Property changes;
+    private Property collections;
+    @SerializedName("version_timestamp")
     private long versionTimestamp;
 
     public SaveIndex(long versionTimestamp) {
         this.versionTimestamp = versionTimestamp;
-        this.additions = new CompoundProperty();
-        this.deletions = new CompoundProperty();
-        this.collections = new CompoundProperty();
-        this.changes = new CompoundProperty();
+        this.additions = new Property();
+        this.deletions = new Property();
+        this.collections = new Property();
+        this.changes = new Property();
     }
 
-    public void setAdditions(CompoundProperty additions) {
+    public void setAdditions(Property additions) {
         this.additions = additions;
     }
 
-    public void setDeletions(CompoundProperty deletions) {
+    public void setDeletions(Property deletions) {
         this.deletions = deletions;
     }
 
-    public void setChanges(CompoundProperty changes) {
+    public void setChanges(Property changes) {
         this.changes = changes;
     }
 
-    public void setCollections(CompoundProperty collections) {
+    public void setCollections(Property collections) {
         this.collections = collections;
     }
 
-    public CompoundProperty getAdditions() {
+    public Property getAdditions() {
         return additions;
     }
 
-    public CompoundProperty getDeletions() {
+    public Property getDeletions() {
         return deletions;
     }
 
-    public CompoundProperty getChanges() {
+    public Property getChanges() {
         return changes;
     }
 
-    public CompoundProperty getCollections() {
+    public Property getCollections() {
         return collections;
     }
 

@@ -9,8 +9,11 @@ import attilathehun.songbook.window.CollectionEditor;
 import attilathehun.songbook.util.HTMLGenerator;
 import attilathehun.songbook.util.KeyEventListener;
 import attilathehun.songbook.util.PDFGenerator;
+import javafx.event.EventType;
+import javafx.event.EventHandler;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuButton;
@@ -228,11 +231,19 @@ public class SongbookController implements KeyEventListener, CollectionListener 
         });
 
         exportButton.setOnAction(event -> {
+            System.out.println("exportButton.onAction");
             if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
                 Environment.showMessage("Exporting disabled", "It seems like exporting has been disabled in the settings. You can modify the settings and restart or read more in the documentation.");
                 return;
             }
 
+        });
+
+        exportButton.addEventHandler(new ActionEvent().getEventType(), new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                System.out.println("exportButton.x.handle");
+            }
         });
 
 

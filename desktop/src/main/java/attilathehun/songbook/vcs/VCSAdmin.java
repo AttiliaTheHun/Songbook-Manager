@@ -1,6 +1,9 @@
 package attilathehun.songbook.vcs;
 
+import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.environment.EnvironmentManager;
+import attilathehun.songbook.vcs.index.Index;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -15,6 +18,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 /**
  * The Version Control System Administrator. This class is the main class of the Version Control System and provides a simple API to interact with.
@@ -83,9 +87,21 @@ public class VCSAdmin {
         if (a == null) {
             agent = new VCSAgent();
             try {
-                if (!agent.verifyLocalChanges()) {
-                    Environment.showMessage("Already up to date", "The remote version of the songbook matches the local version or is behind it.");
+                if (agent.compareChanges() == VCSAgent.STATUS_UP_TO_DATE) {
+                    Environment.showMessage("Already up to date", "The remote version of the songbook matches the local version.");
                     return;
+                } else if (agent.compareChanges() == VCSAgent.STATUS_BEHIND) {
+                    UIManager.put("OptionPane.yesButtonText", "Overwrite");
+                    UIManager.put("OptionPane.noButtonText", "Cancel");
+
+                    int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Overwrite remote changes?", "The remote version has more recent changes than the local version. Continuing may overwrite those changes if that have been made to the same files as have been locally edited. Do you want to proceed?", JOptionPane.YES_NO_OPTION);
+
+                    if (resultCode != JOptionPane.YES_OPTION) {
+                        return;
+                    }
+
+                    UIManager.put("OptionPane.yesButtonText", "Yes");
+                    UIManager.put("OptionPane.noButtonText", "No");
                 }
             } catch (Exception e) {
                 Environment.showErrorMessage("Failure", e.getMessage());
@@ -104,9 +120,17 @@ public class VCSAdmin {
                 return;
             }
         }
+        CacheManager.getInstance().cacheSongbookVersionTimestamp();
+        updateSongbookChangeLog();
         IndexBuilder indexBuilder = new IndexBuilder();
-        CacheManager.getInstance().cacheIndex(indexBuilder.createLocalIndex());
-        RequestFileAssembler RFAssembler = new RequestFileAssembler().assembleSaveFile(new IndexBuilder().createSaveIndex(CacheManager.getInstance().getCachedIndex(), agent.getRemoteIndex(token)));
+        Index remote = agent.getRemoteIndex(token);
+        Index local = indexBuilder.createLocalIndex();
+        CacheManager.getInstance().cacheIndex(local);
+        if (local == null || remote == null) {
+            Environment.showErrorMessage("Error", "Something went wrong");
+            return;
+        }
+        RequestFileAssembler RFAssembler = new RequestFileAssembler().assembleSaveFile(new IndexBuilder().createSaveIndex(local, remote), IndexBuilder.compareCollections(local, remote));
         //Client client = new Client().postFile(Environment.getInstance().settings.vcs.REMOTE_DATA_ZIP_FILE_UPLOAD_URL, RFAssembler.getOutputFilePath(), token);
 
        /* if (client.getStatus().getCode() == Client.Status.SUCCESS) {
@@ -116,6 +140,7 @@ public class VCSAdmin {
         }*/
     }
 
+    @Deprecated
     public void loadRemoteChanges() {
         if (!Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
             Environment.showMessage("Remote saving and loading disabled","Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation");
@@ -125,7 +150,7 @@ public class VCSAdmin {
     }
 
     private String requestOneTimeToken() {
-        JLabel label = new JLabel("Fill in the access token to access the remote server. Depending on the operation, the token must have READ or WRITE permission.");
+        JLabel label = new JLabel("Fill in the access token to access the remote server. Depending on the operation, the token must have READ or WRITE permission. The token will be used this time only!");
         JTextField token = new JPasswordField();
         token.setToolTipText("The authentication token.");
         Object[] message = {
@@ -142,7 +167,7 @@ public class VCSAdmin {
 
     private void updateSongbookChangeLog() throws IOException {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.ofInstant(Instant.ofEpochMilli(CacheManager.getInstance().getCachedSongbookVersionTimestamp()), ZoneId.systemDefault());
         final String date = dtf.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(CacheManager.getInstance().getCachedSongbookVersionTimestamp()), ZoneId.systemDefault()));
         final String username = System.getProperty("user.name");
         PrintWriter printWriter = new PrintWriter(new FileWriter((Environment.getInstance().settings.vcs.CHANGE_LOG_FILE_PATH), true));

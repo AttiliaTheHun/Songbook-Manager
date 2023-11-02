@@ -3,11 +3,11 @@ include dirname(__FILE__).'/lib_hash.php';
 include dirname(__FILE__).'/lib_collection.php';
 
 class Index {
-    private $data = (object)[];
-    private $hashes = (object)[];
+    private $data = [];
+    private $hashes = [];
     private $metadata = [];
-    private $collections = (object)[];
-    private $default_client_settings = (object)[];
+    private $collections = [];
+    private $default_client_settings = [];
     
     public function __construct() {
         if (func_num_args() == 1) {
@@ -16,23 +16,23 @@ class Index {
 	}
 	
 	public function get_data() {
-	    return $this->$data;
+	    return $this->data;
 	}
 	
 	public function get_hashes() {
-	    return $this->$hashes;
+	    return $this->hashes;
 	}
 	
 	public function get_metadata() {
-	    return $this->$metadata;
+	    return $this->metadata;
 	}
 	
 	public function get_collections() {
-	    return $this->$collections;
+	    return $this->collections;
 	}
 	
 	public function get_default_client_settings() {
-	    $this->$default_client_settings;
+	    $this->default_client_settings;
 	}
     
     public function set($data) {
@@ -46,7 +46,7 @@ $easter_song_data_path = dirname(__FILE__).('/../data/songbook/songs/egg/');
 
 function init_index() {
     $index_file_contents = file_get_contents($GLOBALS['index_file_path']);
-    $GLOBALS['index'] = new Index($index_file_contents);
+    $GLOBALS['index'] = new Index(json_decode($index_file_contents, true));
 }
 
 function save_index() {

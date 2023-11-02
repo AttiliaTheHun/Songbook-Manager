@@ -9,29 +9,29 @@ import org.apache.logging.log4j.Logger;
 public class LoadIndex extends PartialIndex {
 
     private static final Logger logger = LogManager.getLogger(LoadIndex.class);
-    private CompoundProperty missing;
-    private CompoundProperty outdated;
+    private Property missing;
+    private Property outdated;
 
     public LoadIndex() {
-       this.missing = new CompoundProperty();
-       this.outdated = new CompoundProperty();
+       this.missing = new Property();
+       this.outdated = new Property();
     }
 
 
-    public void setMissing(CompoundProperty missing) {
+    public void setMissing(Property missing) {
         this.missing = missing;
     }
 
-    public void setOutdated(CompoundProperty outdated) {
+    public void setOutdated(Property outdated) {
         this.outdated = outdated;
     }
 
 
-    public CompoundProperty getMissing() {
+    public Property getMissing() {
         return missing;
     }
 
-    public CompoundProperty getOutdated() {
+    public Property getOutdated() {
         return outdated;
     }
 }

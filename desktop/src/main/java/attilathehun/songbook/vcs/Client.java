@@ -41,7 +41,7 @@ public class Client {
         } else {
             Environment.showMessage("Could not upload the data", "HTTP response code: " + conn.getResponseCode());
         }
-        setStatus(new Status(conn.getResponseCode(), new String(conn.getErrorStream().readAllBytes())));
+        setStatus(new Status(conn.getResponseCode(), (conn.getErrorStream() != null) ? new String(conn.getErrorStream().readAllBytes()) : ""));
     }
 
     public String getResponseFile(String targetUrl, String indexFileUrl, String authToken) throws IOException {
@@ -100,7 +100,7 @@ public class Client {
                 result.append(line);
             }
         }
-        setStatus(new Status(conn.getResponseCode(), new String(conn.getErrorStream().readAllBytes())));
+        setStatus(new Status(conn.getResponseCode(), (conn.getErrorStream() != null) ? new String(conn.getErrorStream().readAllBytes()) : ""));
         return result.toString();
     }
 

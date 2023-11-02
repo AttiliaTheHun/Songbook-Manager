@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -20,7 +21,6 @@ import java.util.stream.Stream;
  * A convenience class for generation of Index objects for the Version Control System.
  */
 public class IndexBuilder {
-
     private static final Logger logger = LogManager.getLogger(IndexBuilder.class);
 
     /**
@@ -29,22 +29,26 @@ public class IndexBuilder {
      * @param remote remote songbook index
      * @return save index of the differences
      */
-    public SaveIndex createSaveIndex(Index local, Index remote) {
-        Collection<String> standardAdditions = getExtraItems((Collection) remote.getData().getContent().get("standard").getContent(), (Collection) local.getData().getContent().get("standard").getContent());
-        Collection<String> easterAdditions = getExtraItems((Collection) remote.getData().getContent().get("easter").getContent(), (Collection) local.getData().getContent().get("easter").getContent());
-        Collection<String> standardDeletions = getMissingItems((Collection) remote.getData().getContent().get("standard").getContent(), (Collection) local.getData().getContent().get("standard").getContent());
-        Collection<String> easterDeletions = getMissingItems((Collection) remote.getData().getContent().get("easter").getContent(), (Collection) local.getData().getContent().get("easter").getContent());
-        Collection<String> standardChanges = getChanges();
-        Collection<String> easterChanges = getChanges();
+    //TODO rewrite using loops and environment registered managers api
+    public SaveIndex createSaveIndex(Index local, Index remote)  throws IOException, NoSuchAlgorithmException  {
+        Collection<String> standardAdditions = getExtraItems((Collection) remote.getData().get("standard"), (Collection) local.getData().get("standard"));
+        Collection<String> easterAdditions = getExtraItems((Collection) remote.getData().get("easter"), (Collection) local.getData().get("easter"));
+        Collection<String> standardDeletions = getMissingItems((Collection) remote.getData().get("standard"), (Collection) local.getData().get("standard"));
+        Collection<String> easterDeletions = getMissingItems((Collection) remote.getData().get("easter"), (Collection) local.getData().get("easter"));
+        Collection<String> standardChanges = new ArrayList<String>();
+        Collection<String> easterChanges = new ArrayList<String>();
+        SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
+        String standardCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
+        String easterCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
         SaveIndex index = new SaveIndex(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
-        index.getAdditions().put("standard", new SimpleProperty(standardAdditions));
-        index.getAdditions().put("easter", new SimpleProperty(easterAdditions));
-        index.getDeletions().put("standard", new SimpleProperty(standardDeletions));
-        index.getDeletions().put("easter", new SimpleProperty(easterDeletions));
-        index.getChanges().put("standard", new SimpleProperty(standardChanges));
-        index.getChanges().put("easter", new SimpleProperty(easterChanges));
-        index.getCollections().put("standard", new SimpleProperty(StandardCollectionManager.getInstance().getCollection()));
-        index.getCollections().put("easter", new SimpleProperty(EasterCollectionManager.getInstance().getCollection()));
+        index.getAdditions().put("standard", standardAdditions);
+        index.getAdditions().put("easter", easterAdditions);
+        index.getDeletions().put("standard", standardDeletions);
+        index.getDeletions().put("easter", easterDeletions);
+        index.getChanges().put("standard", standardChanges);
+        index.getChanges().put("easter", easterChanges);
+        index.getCollections().put("standard", standardCollectionHash);
+        index.getCollections().put("easter", easterCollectionHash);
         return index;
     }
 
@@ -55,16 +59,17 @@ public class IndexBuilder {
      * @param remote remote songbook index
      * @return load index of the differences
      */
+    @Deprecated
     public LoadIndex createLoadIndex(Index local, Index remote) {
-        Collection<String> standardMissing = getExtraItems((Collection) remote.getData().getContent().get("standard").getContent(), (Collection) local.getData().getContent().get("standard").getContent());
-        Collection<String> easterMissing = getExtraItems((Collection) remote.getData().getContent().get("easter").getContent(), (Collection) local.getData().getContent().get("easter").getContent());
+        Collection<String> standardMissing = getExtraItems((Collection) remote.getData().get("standard"), (Collection) local.getData().get("standard"));
+        Collection<String> easterMissing = getExtraItems((Collection) remote.getData().get("easter"), (Collection) local.getData().get("easter"));
         Collection<String> standardOutdated = getChanges();
         Collection<String> easterOutdated = getChanges();
         LoadIndex index = new LoadIndex();
-        index.getMissing().put("standard", new SimpleProperty(standardMissing));
-        index.getMissing().put("easter", new SimpleProperty(easterMissing));
-        index.getOutdated().put("standard", new SimpleProperty(standardOutdated));
-        index.getOutdated().put("easter", new SimpleProperty(easterOutdated));
+        index.getMissing().put("standard", standardMissing);
+        index.getMissing().put("easter", easterMissing);
+        index.getOutdated().put("standard", standardOutdated);
+        index.getOutdated().put("easter", easterOutdated);
         return index;
     }
 
@@ -81,21 +86,21 @@ public class IndexBuilder {
         String standardCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
         String easterCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
         Index index = new Index(null);
-        CompoundProperty data = new CompoundProperty();
-        data.put("standard", new SimpleProperty<>(standardSongs.keySet()));
-        data.put("easter", new SimpleProperty<>(easterSongs.keySet()));
+        Property data = new Property();
+        data.put("standard", standardSongs.keySet());
+        data.put("easter", easterSongs.keySet());
         index.setData(data);
-        CompoundProperty hashes = new CompoundProperty();
-        hashes.put("standard", new SimpleProperty<>(standardSongs.values()));
-        hashes.put("easter", new SimpleProperty<>(easterSongs.values()));
+        Property hashes = new Property();
+        hashes.put("standard", standardSongs.values());
+        hashes.put("easter", easterSongs.values());
         index.setHashes(hashes);
-        index.setMetadata(null);
-        CompoundProperty collections = new CompoundProperty();
-        data.put("standard", new SimpleProperty<>(standardCollectionHash));
-        data.put("easter", new SimpleProperty<>(easterCollectionHash));
+        Property metadata = new Property();
+        index.setMetadata(metadata);
+        Property collections = new Property();
+        collections.put("standard", standardCollectionHash);
+        collections.put("easter", easterCollectionHash);
         index.setCollections(collections);
-        index.setDefaultSettings(null);
-        index.setVersionTimestamp(Environment.getInstance().getSongbookVersionTimestamp());
+        index.setVersionTimestamp(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
         return index;
     }
 
@@ -155,8 +160,20 @@ public class IndexBuilder {
     }
 
     private Collection<String> getChanges() {
+
         //TODO
-        return null;
+        return new ArrayList<String>();
+    }
+
+    public static List<String> compareCollections(Index localIndex, Index remoteIndex) {
+        List<String> modifiedCollections = new ArrayList<>();
+        if (!localIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()).equals(remoteIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()))) {
+            modifiedCollections.add(StandardCollectionManager.getInstance().getCollectionName());
+        }
+        if (!localIndex.getCollections().get(EasterCollectionManager.getInstance().getCollectionName()).equals(remoteIndex.getCollections().get(EasterCollectionManager.getInstance().getCollectionName()))) {
+            modifiedCollections.add(EasterCollectionManager.getInstance().getCollectionName());
+        }
+        return modifiedCollections;
     }
 
     /**
@@ -166,14 +183,15 @@ public class IndexBuilder {
         private static final Logger logger = LogManager.getLogger(BuildWorker.class);
         static ConcurrentLinkedDeque<File> deque;
         static Map<String, String> map;
-        static volatile int activeThreads;
+        static AtomicInteger activeThreads;
 
         /**
          * Generates hash for the file that is in the bottom of the deck and registers the hash in the map.
          */
         @Override
         public void run() {
-            activeThreads++;
+                activeThreads.incrementAndGet();
+
             try {
                 SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
                 File file;
@@ -184,7 +202,7 @@ public class IndexBuilder {
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             }
-            activeThreads--;
+            activeThreads.decrementAndGet();
         }
 
         /**
@@ -192,7 +210,7 @@ public class IndexBuilder {
          * @param dequeData task input data
          */
         private static void init(Collection<File> dequeData) {
-            activeThreads = 0;
+            activeThreads = new AtomicInteger(0);
             deque = new ConcurrentLinkedDeque<File>(dequeData);
             map = Collections.synchronizedSortedMap(new TreeMap<String, String>());
         }
@@ -204,7 +222,7 @@ public class IndexBuilder {
             if (deque.size() > 0) {
                 throw  new IllegalStateException();
             }
-            if (activeThreads != 0) {
+            if (activeThreads.intValue() != 0) {
                 throw  new IllegalStateException();
             }
         }
@@ -221,7 +239,7 @@ public class IndexBuilder {
                 threads[i] = new Thread(new BuildWorker());
                 threads[i].start();
             }
-            while (activeThreads > 0) {
+            while (activeThreads.intValue() > 0) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {

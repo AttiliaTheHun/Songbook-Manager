@@ -30,13 +30,14 @@ public class EnvironmentManager {
             return;
         }
         if (!new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH).exists()) {
-            Environment.showErrorMessage("Error", "Could not find a local data zip file.");
+            Environment.showErrorMessage("Error", "Could not find a local data zip file. Make sure it is in the same directory as the program.");
             return;
         }
         if (!extractLocalDataFile()) {
+            Environment.showErrorMessage("Error", "Extracting the data zip failed.");
             return;
         }
-        Environment.showMessage("Success", "Data loaded successfully");
+        Environment.showMessage("Success", "Data loaded successfully.");
     }
 
     private boolean extractLocalDataFile() {
@@ -56,9 +57,10 @@ public class EnvironmentManager {
             return;
         }
         if (!archiveDataToLocalFile()) {
+            Environment.showErrorMessage("Error", "Error creating the data zip file.");
             return;
         }
-
+        Environment.showMessage("Success", "Data loaded successfully.");
     }
 
     private boolean archiveDataToLocalFile() {

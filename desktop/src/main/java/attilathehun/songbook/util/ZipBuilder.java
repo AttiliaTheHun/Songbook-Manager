@@ -21,14 +21,13 @@ public class ZipBuilder {
 
     private ZipOutputStream zos;
 
-
     public ZipBuilder() {
 
     }
 
     /**
      * Standard constructor.
-     * @param targetPath the folder to be zipped
+     * @param targetPath the folder/file to be zipped
      * @param outputPath path of the output archive
      * @throws FileNotFoundException
      * @throws IOException
@@ -38,14 +37,12 @@ public class ZipBuilder {
         File sourceFile = new File(targetPath);
         zos = new ZipOutputStream(new FileOutputStream(outputPath));
         if (sourceFile.isDirectory()) {
-
             if (!INCLUDE_SOURCE_FOLDER) {
                 SOURCE_FOLDER_NAME = sourceFile.getName();
                 addFolderContent(sourceFile, sourceFile.getName());
             } else {
                 addFolder(sourceFile, sourceFile.getName());
             }
-
         } else {
             addFile(sourceFile);
         }
@@ -181,6 +178,9 @@ public class ZipBuilder {
         if (zos == null) {
             throw  new IllegalStateException();
         }
+        if (folder == null || parentFolder == null) {
+            throw new IllegalArgumentException();
+        }
         for (File file : folder.listFiles()) {
             if (file.isDirectory()) {
                 addFolder(file, file.getName());
@@ -207,7 +207,7 @@ public class ZipBuilder {
 
 
     /**
-     * Finalize the build and close the streams.
+     * Finalize the build by closing the streams.
      * @return this
      * @throws IOException
      */
@@ -222,6 +222,7 @@ public class ZipBuilder {
         return this;
     }
 
+    @Deprecated
     public static ZipBuilder fromPath(String path) {
         return null;
     }
