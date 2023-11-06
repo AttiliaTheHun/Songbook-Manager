@@ -11,7 +11,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * A utility class for creation and extraction of ZIP archive files.
  */
-public class ZipBuilder {
+public class ZipBuilder implements AutoCloseable {
     private static final Logger logger = LogManager.getLogger(ZipBuilder.class);
 
     private String zipFilePath = "";
@@ -120,6 +120,10 @@ public class ZipBuilder {
             addFolder(file, SOURCE_FOLDER_NAME);
             return this;
         }
+
+        if (parentFolder == null || parentFolder.length() == 0) {
+            return addFile(file);
+        }
         zos.putNextEntry(new ZipEntry(parentFolder + "/" + file.getName()));
         BufferedInputStream bis = new BufferedInputStream(new FileInputStream(
                 file));
@@ -166,15 +170,19 @@ public class ZipBuilder {
         return this;
     }
 
+    public ZipBuilder addFolder(File folder) throws FileNotFoundException, IOException {
+        return addFolder(folder, "");
+    }
+
     /**
-     * Adds the content of a directory to the ZIP file.
+     * Adds the content of a directory to the ZIP file under a specific parent directory already present in the zip file.
      *
      * @param folder       the directory to be added from
      * @param parentFolder the path of parent directory
      * @throws FileNotFoundException
      * @throws IOException
      */
-    public void addFolderContent(File folder, String parentFolder) throws FileNotFoundException, IOException {
+    public ZipBuilder addFolderContent(File folder, String parentFolder) throws FileNotFoundException, IOException {
         if (zos == null) {
             throw  new IllegalStateException();
         }
@@ -186,7 +194,7 @@ public class ZipBuilder {
                 addFolder(file, file.getName());
                 continue;
             }
-            if (parentFolder.equals(SOURCE_FOLDER_NAME)) {
+            if (parentFolder.equals(SOURCE_FOLDER_NAME) || parentFolder.length() == 0) {
                 zos.putNextEntry(new ZipEntry(file.getName()));
             } else {
                 zos.putNextEntry(new ZipEntry(parentFolder + "/" + file.getName()));
@@ -203,6 +211,11 @@ public class ZipBuilder {
             }
             zos.closeEntry();
         }
+        return this;
+    }
+
+    public ZipBuilder addFolderContent(File folder) throws FileNotFoundException, IOException {
+        return addFolderContent(folder, "");
     }
 
 
@@ -211,7 +224,8 @@ public class ZipBuilder {
      * @return this
      * @throws IOException
      */
-    public ZipBuilder finish() throws IOException {
+    @Override
+    public void close() throws IOException {
         if (zipFilePath == null || zipFilePath.equals("")) {
             throw new IllegalStateException();
         }
@@ -219,7 +233,6 @@ public class ZipBuilder {
             zos.flush();
             zos.close();
         }
-        return this;
     }
 
     @Deprecated
@@ -274,6 +287,5 @@ public class ZipBuilder {
         }
         bos.close();
     }
-
 
 }

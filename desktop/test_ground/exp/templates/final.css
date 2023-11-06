@@ -6,19 +6,13 @@ html, body {
 	left: 0;
 	top: 0;
 	line-height: 0.8em;
-	position: static;
-	overflow: hidden;
+	/*position: static;
+	overflow: hidden;*/
 }
 
 table {
     width: 100%;
-	height: 100%;
     table-layout: fixed;
-}
-
-td {
-	margin-top: 0;
-	vertical-align: top
 }
 
 /*
@@ -39,7 +33,7 @@ ul {
 }
 
 pre {
-	display: block;
+	/*display: block;*/
 	white-space: pre-wrap;       /* css-3 */
 	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
 	white-space: -pre-wrap;      /* Opera 4-6 */
@@ -105,6 +99,7 @@ a:hover {
 	margin-top: 0;
 	box-sizing: border-box;
 	float: left;
+	min-width: 50%;
 }
 	
     
@@ -114,23 +109,7 @@ a:hover {
 	margin: auto;
 }
 
-.songbook-view {
-	top: 0;
-	margin: 0;
-	position: relative;
-	width: 100%;
-	height: 100%;
-}
-
-.songbook-view::after {
-	content: "";
-	clear: both;
-	display: table;
-}
-
-
 /*/UNTESTED*/
-
 .song {
 	margin: 0;
 	top: 0;
@@ -148,9 +127,10 @@ a:hover {
 	padding: 0;
 }
 
-.song-title {
+.song_title {
 	padding: 0;
 	margin-bottom: 0;
+	font-family: "Roboto Mono", "Courier New", monospace;
 }
 
 .song-author {
@@ -268,6 +248,17 @@ a:hover {
 	z-index: 0;
 	border: none;
 	font-size: 11.5px;
+}
+
+.songbook-view {
+	width: 100%;
+	height: 100%;
+}
+
+.songbook-view::after {
+	content: "";
+	clear: both;
+	display: table;
 }
 
 .little-smaller-br {

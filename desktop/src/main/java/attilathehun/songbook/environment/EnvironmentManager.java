@@ -29,15 +29,19 @@ public class EnvironmentManager {
             VCSAdmin.getInstance().pull();
             return;
         }
+        logger.info("Importing a local data zip file...");
         if (!new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH).exists()) {
             Environment.showErrorMessage("Error", "Could not find a local data zip file. Make sure it is in the same directory as the program.");
+            logger.info("Import aborted: file not found!");
             return;
         }
         if (!extractLocalDataFile()) {
             Environment.showErrorMessage("Error", "Extracting the data zip failed.");
+            logger.info("Import failed!");
             return;
         }
         Environment.showMessage("Success", "Data loaded successfully.");
+        logger.info("Import successful!");
     }
 
     private boolean extractLocalDataFile() {
@@ -56,20 +60,20 @@ public class EnvironmentManager {
             VCSAdmin.getInstance().push();
             return;
         }
+        logger.info("Exporting data to local zip file...");
         if (!archiveDataToLocalFile()) {
             Environment.showErrorMessage("Error", "Error creating the data zip file.");
+            logger.info("Export failed!");
             return;
         }
-        Environment.showMessage("Success", "Data loaded successfully.");
+        Environment.showMessage("Success", "Data saved successfully.");
+        logger.info("Export successful!");
     }
 
     private boolean archiveDataToLocalFile() {
-        try {
-            ZipBuilder builder = new ZipBuilder();
-            builder.setIncludeSourceFolder(false);
+        try (ZipBuilder builder = new ZipBuilder()){
             builder.setOutputPath(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
-            builder.addFolder(new File(Environment.getInstance().settings.environment.DATA_FILE_PATH), "/");
-            builder.finish();
+            builder.addFolderContent(new File(Environment.getInstance().settings.environment.DATA_FILE_PATH), "");
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Error", "Could not archive the data");
@@ -116,6 +120,7 @@ public class EnvironmentManager {
         Environment.getInstance().getCollectionManager().init();
         SongbookApplication.dialControlPLusRPressed();
         Environment.showMessage("Success", "Songbook loaded successfully.");
+        logger.debug("Songbook loaded");
     }
 
 

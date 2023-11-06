@@ -18,7 +18,6 @@ public class DynamicSonglist extends Plugin {
     private final String name = DynamicSonglist.class.getSimpleName();
 
     private DynamicSonglist() {
-        super();
         PluginManager.registerPlugin(this);
     }
 

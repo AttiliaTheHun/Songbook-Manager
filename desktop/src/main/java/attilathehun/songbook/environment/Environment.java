@@ -36,7 +36,7 @@ public final class Environment {
 
     private Environment() {
         refresh();
-        logger.info("Environment instantiated");
+        logger.debug("Environment instantiated");
     }
 
     public static Environment getInstance() {
@@ -88,13 +88,14 @@ public final class Environment {
     public void refresh() {
         try {
             for (File f : new File(settings.environment.TEMP_FILE_PATH).listFiles()) {
-                if (f.getName().equals("session_timestamp.txt") || (FLAG_IGNORE_SEGMENTS && f.getName().startsWith("segment"))) {
+                if (FLAG_IGNORE_SEGMENTS && f.getName().startsWith("segment")) {
                     continue;
                 }
                 if (!f.delete()) {
                     showErrorMessage("Refreshing error", "Can not clean the temp folder!", true);
                 }
             }
+            logger.debug("Environment refresh()");
         } catch (NullPointerException npe) {
             logger.error(npe.getMessage(), npe);
         }
@@ -231,7 +232,6 @@ public final class Environment {
 
         public static final String SETTINGS_FILE_PATH = "settings.json";
         public static final String EASTER_EXE_FILE_PATH = "easter.exe";
-        public static final long SESSION_TIMESTAMP = System.currentTimeMillis();
         public final transient boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
         public final String RESOURCE_FILE_PATH;
         public final String CSS_RESOURCES_FILE_PATH;

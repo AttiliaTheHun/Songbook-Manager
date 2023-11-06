@@ -29,8 +29,10 @@ public class HTMLGenerator {
     private static final String TEMP_FRONTPAGE_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/frontpage.html").toString();
     private static final String TEMP_PAGEVIEW_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/current_page.html").toString();
     private static final String BASE_STYLE_FILE_PATH = Paths.get(Environment.getInstance().settings.environment.CSS_RESOURCES_FILE_PATH + "/style.css").toString();
+    private static final String NAVBAR_REPLACE_MARK = "<replace \"navbar\">";
     private static final String HEAD_REPLACE_MARK = "<replace \"head\">";
     private static final String BASE_STYLE_PATH_REPLACE_MARK = "<replace \"basecss\">"; //style.css
+    private static final String LANGUAGE_REPLACE_MARK = "<replace \"language\">";
     private static final String SONG_ONE_REPLACE_MARK = "<replace \"song1\">";
     private static final String SONG_TWO_REPLACE_MARK = "<replace \"song2\">";
     private static final String BASE_STYLE_HTML_LINK = "<link rel=\"stylesheet\" href=\"" + "style.css" + "\"></link>";
@@ -106,8 +108,8 @@ public class HTMLGenerator {
         int columnEndIndex = Math.min(startIndex + DynamicSonglist.MAX_SONG_PER_COLUMN, endIndex);
         for (int j = 1; j < columns + 1; j++) {
 
-            payload.append("<div class=\"divvy\">\n");
-            payload.append("<ul>\n");
+            payload.append("<div>\n");
+            payload.append("<td class=\"songlist-column-wrapper\"><ul>\n");
 
             for (int i = columnStartIndex; i < columnEndIndex; i++) {
                 payload.append("<li>");
@@ -122,7 +124,7 @@ public class HTMLGenerator {
                 payload.append("</li>\n");
             }
 
-            payload.append("</ul>\n");
+            payload.append("</td></ul>\n");
             payload.append("</div>\n");
 
             columnStartIndex = columnEndIndex;
@@ -210,9 +212,11 @@ public class HTMLGenerator {
         String songTwoHTML = String.join("\n", Files.readAllLines(Paths.get(songTwoPath)));
         String html = String.join("\n", Files.readAllLines(templatePath));
 
+        html = html.replace(NAVBAR_REPLACE_MARK, ""); //navbar is for the web version, we have UI controls
         html = html.replace(HEAD_REPLACE_MARK, getHead());
         html = html.replace(SONG_ONE_REPLACE_MARK, songOneHTML);
         html = html.replace(SONG_TWO_REPLACE_MARK, songTwoHTML);
+        html = html.replace(LANGUAGE_REPLACE_MARK, Environment.getInstance().settings.songbook.language.getDisplayName());
         return html;
     }
 

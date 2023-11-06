@@ -31,7 +31,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-
+//TODO: when songs get disabled, there is a problem with the latest page/song being out of bonds, fixing it?
 public class SongbookController implements KeyEventListener, CollectionListener {
 
     private static final Logger logger = LogManager.getLogger(SongbookController.class);

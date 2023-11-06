@@ -7,7 +7,9 @@ import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.environment.EnvironmentVerificator;
 import attilathehun.songbook.environment.Installer;
 import attilathehun.songbook.plugin.PluginManager;
+import attilathehun.songbook.util.ExportTest;
 import attilathehun.songbook.util.ZipBuilder;
+import attilathehun.songbook.util.ZipTest;
 import attilathehun.songbook.window.CodeEditor;
 import attilathehun.songbook.util.KeyEventListener;
 import attilathehun.songbook.window.CollectionEditor;
@@ -57,6 +59,7 @@ public class SongbookApplication extends Application {
     public static void main(String[] args) {
 
         System.setProperty("log4j.configurationFile", "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\src\\main\\resources\\log4j2.yaml");
+
         PluginManager.loadPlugins();
 
         Installer.runDiagnostics();
@@ -68,6 +71,8 @@ public class SongbookApplication extends Application {
             Environment.showWarningMessage("Warning", "Could not resolve the command line arguments. See log file");
         }
         logger.debug("Application started successfully");
+
+        ExportTest.main();
     }
 
     @Override
@@ -99,6 +104,7 @@ public class SongbookApplication extends Application {
         stage.show();
     }
 
+    //TODO: separate dials so only the focused window is notified
     private static void registerNativeHook(Stage stage) {
         try {
             GlobalScreen.registerNativeHook();

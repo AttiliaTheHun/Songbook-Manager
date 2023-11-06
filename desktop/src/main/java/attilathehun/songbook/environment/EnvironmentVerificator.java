@@ -119,28 +119,11 @@ public class EnvironmentVerificator {
     }
 
     public void verifyTemp() {
-        try {
 
-            if (!(new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).isDirectory())) {
-                new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).mkdirs();
-            } else {
-                if (new File(Environment.getInstance().settings.environment.TEMP_TIMESTAMP_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.TEMP_TIMESTAMP_FILE_PATH).length() != 0) {
-                    if (Long.parseLong(String.join("", Files.readAllLines(Paths.get(Environment.getInstance().settings.environment.TEMP_TIMESTAMP_FILE_PATH)))) != Environment.EnvironmentSettings.SESSION_TIMESTAMP) {
-                        Environment.getInstance().refresh();
-                    }
-                } else {
-                    Environment.getInstance().refresh();
-                }
-
-                PrintWriter printWriter = new PrintWriter(new FileWriter((Environment.getInstance().settings.environment.TEMP_TIMESTAMP_FILE_PATH), false));
-                printWriter.write(String.valueOf(Environment.EnvironmentSettings.SESSION_TIMESTAMP));
-                printWriter.close();
-
-            }
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            FATAL_FAIL = true;
-            verificationFail("Could not initialize temp folder!");
+        if (!(new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).isDirectory())) {
+            new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).mkdirs();
+        } else {
+                Environment.getInstance().refresh();
         }
     }
 

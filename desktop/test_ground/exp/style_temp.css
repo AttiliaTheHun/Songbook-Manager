@@ -1,0 +1,13 @@
+
+.box {
+	box-sizing: border-box;
+  float: left;
+  width: 50%;
+  border: 1px solid red;
+}
+
+.clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
+}

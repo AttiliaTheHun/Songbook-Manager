@@ -23,10 +23,10 @@ import java.util.ArrayList;
 
 /**
  * This class serves as a middleware between the rest of the code and the underlying scripts used for the conversion of
- * HTML into a PDF file.
+ * HTML into a PDF file. Use this class and I will call my contacts in Russia. Seriously, don't!
  */
-@Deprecated
-public class PDFGenerator {
+@Deprecated(forRemoval = true)
+public class PDFGeneratorV1 {
 
     private static final int EXPORT_OPTION_DEFAULT = 0;
     private static final int EXPORT_OPTION_PRINTABLE = 1;
@@ -34,17 +34,20 @@ public class PDFGenerator {
 
     private static final int PREVIEW_SEGMENT_NUMBER = 96222;
 
+    private static final String SCRIPT_OPTION_LANDSCAPE = "--landscape";
 
-    private static final Logger logger = LogManager.getLogger(PDFGenerator.class);
+    private static final String SCRIPT_OPTION_SINGLE_SEGMENT = "--single-segment";
 
-    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + Environment.getInstance().settings.plugins.get("export").get("defaultExportName")).toString();
-    private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + Environment.getInstance().settings.plugins.get("export").get("defaultSinglepageName")).toString();
-    private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + Environment.getInstance().settings.plugins.get("export").get("defaultPrintableName")).toString();
+    private static final Logger logger = LogManager.getLogger(PDFGeneratorV1.class);
+
+    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + "/DefaultExport.pdf").toString();
+    private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + "/SinglepageExport.pdf").toString();
+    private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + "/PrintableExport.pdf").toString();
+    private static final String EASTER_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + "/DeluxeExport.pdf").toString();
     private static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment").toString();
 
     private final CollectionManager manager;
 
-    @Deprecated
     private boolean FLAG_SKIP_EVERYTHING = false;
 
 
@@ -52,7 +55,12 @@ public class PDFGenerator {
      * The actual constructor. Upon instantiation creates an output folder.
      * @param manager the Collection Manager to use (null if default)
      */
-    public PDFGenerator(CollectionManager manager) throws IllegalStateException {
+    public PDFGeneratorV1(CollectionManager manager) throws IllegalStateException {
+        if (!new EnvironmentVerificator().verifyScripts()) {
+            FLAG_SKIP_EVERYTHING = true;
+            logger.info("Crippled PDFGenerator instantiated: no scripts folder found!");
+            depart();
+        }
         if (manager == null) {
             this.manager = Environment.getInstance().getCollectionManager().copy();
         } else {
@@ -66,7 +74,7 @@ public class PDFGenerator {
         }
     }
 
-    public PDFGenerator() {
+    public PDFGeneratorV1() {
         this(Environment.getInstance().getCollectionManager());
     }
 
@@ -172,7 +180,7 @@ public class PDFGenerator {
                             Thread.sleep(100);
                         }
                         switch (collection.size() % 4) {
-                           case 1 -> {
+                            case 1 -> {
                                 String segmentFilePath = htmlGenerator.generateSegmentFile(collection.get(collection.size() - 1), CollectionManager.getShadowSong(), segmentCount, manager);
                                 segmentCount++;
                                 progress += segmentProgressWeight;
@@ -353,11 +361,11 @@ public class PDFGenerator {
             }
         });
 
+
+
+
     }
 
-
-
-    @Deprecated
     private void depart() {
         if (FLAG_SKIP_EVERYTHING) {
             throw new IllegalStateException("[FLAG_SKIP_EVERYTHING] To preform a PDF conversion you need to provide a valid scripts folder.");

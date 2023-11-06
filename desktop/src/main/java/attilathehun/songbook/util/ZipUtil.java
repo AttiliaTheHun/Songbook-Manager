@@ -14,7 +14,7 @@ import java.io.*;
  * @author halex
  * @author AttilaTheHun
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public class ZipUtil {
 
     private static final Logger logger = LogManager.getLogger(ZipUtil.class);

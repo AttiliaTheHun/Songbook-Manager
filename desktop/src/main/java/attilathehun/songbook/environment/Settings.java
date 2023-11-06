@@ -19,6 +19,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Locale;
 
 public class Settings implements Serializable {
 
@@ -127,8 +128,11 @@ public class Settings implements Serializable {
         private static final Logger logger = LogManager.getLogger(SongbookSettings.class);
         public final boolean BIND_SONG_TITLES;
 
+        public final Locale language;
+
         public SongbookSettings() {
             BIND_SONG_TITLES = true;
+            language = Locale.ENGLISH;
         }
 
         //TODO: make another title-author display options
