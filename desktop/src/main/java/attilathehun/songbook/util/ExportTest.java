@@ -15,6 +15,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+@Deprecated(forRemoval = true)
 public class ExportTest {
     private static String OUTPUT_PATH = Paths.get(System.getProperty("user.dir") + File.separator + "test_ground" + File.separator + "out" + File.separator + "out.pdf").toString();
     private static String INPUT_PATH = Paths.get(System.getProperty("user.dir") + File.separator + "test_ground"  + File.separator + "exp" + File.separator+ "templates" + File.separator  + "xs.html").toString();

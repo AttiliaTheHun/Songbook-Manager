@@ -16,40 +16,37 @@ import org.apache.logging.log4j.Logger;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 
-import java.awt.*;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * This class serves as a middleware between the rest of the code and the underlying scripts used for the conversion of
- * HTML into a PDF file.
- */
+
 @Deprecated
 public class PDFGenerator {
-
-    private static final int EXPORT_OPTION_DEFAULT = 0;
-    private static final int EXPORT_OPTION_PRINTABLE = 1;
-    private static final int EXPORT_OPTION_SINGLEPAGE = 2;
-
-    private static final int PREVIEW_SEGMENT_NUMBER = 96222;
-
-
     private static final Logger logger = LogManager.getLogger(PDFGenerator.class);
-
-    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + Environment.getInstance().settings.plugins.get("export").get("defaultExportName")).toString();
-    private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + Environment.getInstance().settings.plugins.get("export").get("defaultSinglepageName")).toString();
-    private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + Environment.getInstance().settings.plugins.get("export").get("defaultPrintableName")).toString();
-    private static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment").toString();
+    public static final int EXPORT_OPTION_DEFAULT = 0;
+    public static final int EXPORT_OPTION_PRINTABLE = 1;
+    public static final int EXPORT_OPTION_SINGLEPAGE = 2;
+    public static final int EXPORT_OPTION_PREVIEW = 4;
+    public static final int PREVIEW_SEGMENT_NUMBER = -1;
+    public static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + Environment.getInstance().settings.plugins.get("export").get("defaultExportName")).toString();
+    public static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + Environment.getInstance().settings.plugins.get("export").get("defaultSinglepageName")).toString();
+    public static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH + Environment.getInstance().settings.plugins.get("export").get("defaultPrintableName")).toString();
+    public static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment%d.%s").toString();
+    public static final String PREVIEW_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment_preview.%s").toString();
+    public static final String EXTENSION_HTML = "html";
+    public static final String EXTENSION_PDF = "pdf";
 
     private final CollectionManager manager;
 
-    @Deprecated
+    @Deprecated(forRemoval = true)
     private boolean FLAG_SKIP_EVERYTHING = false;
 
 
     /**
-     * The actual constructor. Upon instantiation creates an output folder.
+     * Constructor that allows for use of specific CollectionManager.
      * @param manager the Collection Manager to use (null if default)
      */
     public PDFGenerator(CollectionManager manager) throws IllegalStateException {
@@ -66,15 +63,25 @@ public class PDFGenerator {
         }
     }
 
+    /**
+     * Constructor that uses the default CollectionManager.
+     */
     public PDFGenerator() {
         this(Environment.getInstance().getCollectionManager());
     }
+
+    private void init() {
+
+    }
+
+
+
 
     /**
      * Creates a progress dialog for the given export Task.
      * @param exportTask target export task
      */
-    private Object progressUI(Task exportTask) {
+    private String progressUI(ExportTask exportTask) {
         ProgressDialog dialog = new ProgressDialog(exportTask);
         dialog.initStyle(StageStyle.UNIFIED);
         dialog.initModality(Modality.WINDOW_MODAL);
@@ -95,7 +102,7 @@ public class PDFGenerator {
     public void generateSinglePage() {
         logger.info("Exporting singlepage....");
 
-        progressUI(getExportTask(EXPORT_OPTION_SINGLEPAGE));
+        progressUI(new ExportTask(this, EXPORT_OPTION_SINGLEPAGE));
 
         logger.info("Exporting finished!");
     }
@@ -106,7 +113,7 @@ public class PDFGenerator {
     public void generateDefault() {
         logger.info("Exporting default....");
 
-        progressUI(getExportTask(EXPORT_OPTION_DEFAULT));
+        progressUI(new ExportTask(this, EXPORT_OPTION_DEFAULT));
 
         logger.info("Exporting finished!");
     }
@@ -118,9 +125,27 @@ public class PDFGenerator {
     public void generatePrintable() {
         logger.info("Exporting printable....");
 
-        progressUI(getExportTask(EXPORT_OPTION_PRINTABLE));
+        progressUI(new ExportTask(this, EXPORT_OPTION_PRINTABLE));
 
         logger.info("Exporting finished!");
+    }
+
+    public String generatePreview(Song s) {
+        logger.info("Exporting preview....");
+
+        String output = progressUI(new ExportTask(this, s));
+
+        logger.info("Exporting finished!");
+        return output;
+    }
+
+    public String generatePreview(Song s, Song ss) {
+        logger.info("Exporting preview....");
+
+        String output = progressUI(new ExportTask(this, s, ss));
+
+        logger.info("Exporting finished!");
+        return output;
     }
 
     /**
@@ -128,6 +153,7 @@ public class PDFGenerator {
      * @param exportOption EXPORT_OPTION_PRINTABLE, EXPORT_OPTION_SINGLEPAGE or EXPORT_OPTION_DEFAULT
      * @return the Task object
      */
+    @Deprecated(forRemoval = true)
     private Task getExportTask(int exportOption) {
         return new Task<Void>() {
             @Override
@@ -263,105 +289,8 @@ public class PDFGenerator {
         ut.mergeDocuments(settings);
     }
 
-    /**
-     * Generates a single portrait-oriented PDF segment file of a song that can be opened for a preview.
-     * @param s target song
-     * @return path to the preview file
-     */
-    public String generatePreview(Song s) {
-        if (s == null || s.id() < 0) {
-            throw new IllegalArgumentException();
-        }
-
-        return (String) progressUI(new Task() {
-            @Override
-            protected Object call() throws Exception {
-                updateTitle("Generating preview...");
-                updateMessage("Applying song template.....0%");
-                updateProgress(0d, 1d);
-                String segmentFilePath = new HTMLGenerator().generatePrintableSongFile(s, PREVIEW_SEGMENT_NUMBER, manager);
-                updateValue(segmentFilePath);
-                try {
-
-                    updateMessage("Converting HTML to PDF.....50%");
-                    updateProgress(0.50d, 1d);
-                    Environment.FLAG_IGNORE_SEGMENTS = true;
-                    ProcessBuilder processBuilder = new ProcessBuilder();
-                    String options = SCRIPT_OPTION_SINGLE_SEGMENT;
-                    processBuilder.command("cmd.exe", "/c", String.format("cd %s & node html_to_pdf.js %s %s %d", Environment.getInstance().settings.environment.SCRIPTS_FILE_PATH, Environment.getInstance().settings.environment.TEMP_FILE_PATH, options, PREVIEW_SEGMENT_NUMBER));
-                    processBuilder.directory(new File(System.getProperty("user.dir")));
-                    processBuilder.inheritIO();
-                    Process process = processBuilder.start();
-                    process.waitFor();
-                    Environment.FLAG_IGNORE_SEGMENTS = false;
-                    updateMessage("Finished.....100%");
-                    updateProgress(1d, 1d);
-                    Thread.sleep(300);
-
-                } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                    Environment.showErrorMessage("Error", "Error when creating the preview");
-                }
-                return segmentFilePath;
-            }
-        });
-
-    }
-
-    /**
-     * Generates a single landscape-oriented PDF segment file of a page of the songbook that can be opened for a preview.
-     * @param songOne first song on the page (on the left)
-     * @param songTwo second song on the page (on the right)
-     * @return path to the preview file
-     */
-    public String generatePreview(Song songOne, Song songTwo) {
-        if (songOne == null || songTwo == null) {
-            throw new IllegalArgumentException();
-        }
-
-        return (String) progressUI(new Task() {
-            @Override
-            protected Object call() throws Exception {
-                updateTitle("Generating preview...");
-                updateMessage("Copying current_page HTML.....0%");
-                updateProgress(0d, 1d);
-                String segmentFilePath = new HTMLGenerator().generateSegmentFile(songOne, songTwo, PREVIEW_SEGMENT_NUMBER, manager);
-                updateValue(segmentFilePath);
-                try {
-
-
-                    updateMessage("Converting HTML to PDF.....50%");
-                    updateProgress(0.50d, 1d);
-                    Environment.FLAG_IGNORE_SEGMENTS = true;
-                    ProcessBuilder processBuilder = new ProcessBuilder();
-                    String options = String.format("%s %s", SCRIPT_OPTION_LANDSCAPE, SCRIPT_OPTION_SINGLE_SEGMENT);
-                    processBuilder.command("cmd.exe", "/c", String.format("cd %s & node html_to_pdf.js %s %s  %d", Environment.getInstance().settings.environment.SCRIPTS_FILE_PATH, Environment.getInstance().settings.environment.TEMP_FILE_PATH, options, PREVIEW_SEGMENT_NUMBER));
-                    processBuilder.directory(new File(System.getProperty("user.dir")));
-                    processBuilder.inheritIO();
-                    Process process = processBuilder.start();
-                    process.waitFor();
-                    Environment.FLAG_IGNORE_SEGMENTS = false;
-                    updateMessage("Finished.....100%");
-                    updateProgress(1d, 1d);
-                    Thread.sleep(300);
-
-                } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                    Environment.showErrorMessage("Error", "Error when creating the preview");
-                }
-                return segmentFilePath;
-            }
-        });
-
-    }
-
-
-
-    @Deprecated
-    private void depart() {
-        if (FLAG_SKIP_EVERYTHING) {
-            throw new IllegalStateException("[FLAG_SKIP_EVERYTHING] To preform a PDF conversion you need to provide a valid scripts folder.");
-        }
+    public CollectionManager getManager() {
+        return manager;
     }
 
 }

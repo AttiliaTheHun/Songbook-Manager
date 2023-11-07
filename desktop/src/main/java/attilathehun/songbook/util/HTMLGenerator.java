@@ -43,7 +43,6 @@ public class HTMLGenerator {
     private static final String SONG_LIST_REPLACE_MARK = "<replace \"unorderedlist\">";
     private static final String FRONTPAGE_PICTURE_PATH_REPLACE_MARK = "<replace \"frontpagepic\">";
     private static final String FRONTPAGE_PICTURE_PATH = Paths.get(Environment.getInstance().settings.environment.ASSETS_RESOURCES_FILE_PATH + "/frontpage.png").toString();
-    private static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment").toString();
 
     private static final String SHADOW_SONG_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/shadow_song.html").toString();
 
@@ -332,11 +331,16 @@ public class HTMLGenerator {
      * @return songbook page file HTML
      */
     public String generateSegmentFile(Song songOne, Song songTwo, int number, CollectionManager manager) {
-        if (number < 0) {
+        if (number != -1 && number < 0) {
             throw  new IllegalArgumentException();
         }
 
-        String path = DEFAULT_SEGMENT_PATH + number + ".html";
+        String path;
+        if (number == PDFGenerator.PREVIEW_SEGMENT_NUMBER) {
+            path = String.format(PDFGenerator.PREVIEW_SEGMENT_PATH, PDFGenerator.EXTENSION_HTML);
+        } else {
+            path = String.format(PDFGenerator.DEFAULT_SEGMENT_PATH, number, PDFGenerator.EXTENSION_HTML);
+        }
         try {
             PrintWriter printWriter = new PrintWriter(new FileWriter((path), false));
             printWriter.write(generatePage(songOne, songTwo, manager));
@@ -349,8 +353,8 @@ public class HTMLGenerator {
     }
 
     /**
-     * Returns an HTML string of a page of the songbook. Though similar to #generatePageFile(), it is suited for exporting as you can choose name of the output file.
-     * Uses the default Collection Manager.
+     * Returns an HTML string of a page of the songbook. Though similar to #generatePageFile(), it is suited for exporting as you can choose
+     * name of the output file. Uses the default Collection Manager.
      * @param songOne first song on the page (on the left)
      * @param songTwo second song on the page (on the right)
      * @param number number of the segment (serves as file name)
@@ -417,10 +421,16 @@ public class HTMLGenerator {
      * @return path to the file
      */
     public String generatePrintableSongFile(Song s, int number, CollectionManager manager) {
-        if (number < 0) {
+        if (number != -1 && number < 0) {
             throw  new IllegalArgumentException();
         }
-        String path = DEFAULT_SEGMENT_PATH + number + ".html";
+
+        String path;
+        if (number == PDFGenerator.PREVIEW_SEGMENT_NUMBER) {
+            path = String.format(PDFGenerator.PREVIEW_SEGMENT_PATH, PDFGenerator.EXTENSION_HTML);
+        } else {
+            path = String.format(PDFGenerator.DEFAULT_SEGMENT_PATH, number, PDFGenerator.EXTENSION_HTML);
+        }
         try {
             String html = generatePrintableSong(s, manager);
             if (html == null) {

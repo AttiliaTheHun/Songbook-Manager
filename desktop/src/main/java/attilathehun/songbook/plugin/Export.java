@@ -54,11 +54,12 @@ public class Export extends Plugin {
         return instance;
     }
 
+    @Deprecated(forRemoval = true)
     public static class PluginSettings extends Plugin.PluginSettings {
         protected PluginSettings() {
             put("enabled", Boolean.TRUE);
             put("conversionMethod", ConversionMethod.THIRD_PARTY_API);
-            put("localConversionThreadCount", 20);
+            put("conversionThreadCount", 20);
             put("conversionURL", "");
             put("defaultExportName", DEFAULT_EXPORT_NAME);
             put("defaultSinglepageName", SINGLEPAGE_EXPORT_NAME);
