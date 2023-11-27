@@ -6,6 +6,7 @@ import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.collection.CollectionManager;
 
 import javax.swing.*;
+import javafx.scene.control.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,10 +64,12 @@ public final class Environment {
     }
 
 
+    @Deprecated
     public static void showErrorMessage(String title, String message) {
         showErrorMessage(title, message, false);
     }
 
+    @Deprecated
     public static void showErrorMessage(String title, String message, boolean fatal) {
         showMessageDialog(getAlwaysOnTopJDialog(), message, title,
                 JOptionPane.ERROR_MESSAGE);
@@ -75,11 +78,23 @@ public final class Environment {
         }
     }
 
+    @Deprecated
     public static void showMessage(String title, String message) {
         showMessageDialog(getAlwaysOnTopJDialog(), message, title,
                 JOptionPane.INFORMATION_MESSAGE);
+
     }
 
+    public static void showMessage(String title, String header, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        String s = message;
+        alert.setContentText(s);
+        alert.show();
+    }
+
+    @Deprecated
     public static void showWarningMessage(String title, String message) {
         showMessageDialog(getAlwaysOnTopJDialog(), message, title,
                 JOptionPane.WARNING_MESSAGE);
@@ -102,6 +117,7 @@ public final class Environment {
 
     }
 
+    //TODO: move to util.Misc
     public static boolean fileExists(String path) {
         return new File(path).exists();
     }
@@ -115,7 +131,7 @@ public final class Environment {
      */
     //TODO
     //Do we really need this?
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public Result[] perform(String[] args) {
         Result[] output = new Result[args.length];
         boolean performSave = false, performLoad = false, targetRemote = false;
@@ -147,7 +163,7 @@ public final class Environment {
         return output;
     }
 
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public enum Result {
         SUCCESS,
         FAILURE,
@@ -194,7 +210,7 @@ public final class Environment {
         System.exit(0);
     }
 
-
+    @Deprecated
     public static JDialog getAlwaysOnTopJDialog() {
         JDialog dialog = new JDialog();
         dialog.setAlwaysOnTop(true);
@@ -209,6 +225,12 @@ public final class Environment {
      * @param s the song to be displayed
      */
     public static void navigateWebViewToSong(Song s) {
+        if (s == null) {
+            throw new IllegalArgumentException();
+        }
+        if (s.getManager() != null && !s.getManager().equals(Environment.getInstance().getCollectionManager())) {
+            Environment.getInstance().setCollectionManager(s.getManager());
+        }
         int index = getInstance().getCollectionManager().getFormalCollectionSongIndex(s);
         if (index % 2 == 0) {
             SongbookApplication.dialImaginarySongOneKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));

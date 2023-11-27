@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.*;
 import org.fife.ui.rsyntaxtextarea.*;
 
+@Deprecated(forRemoval = true)
 public class CodeEditor extends JFrame implements KeyEventListener, DocumentListener, CollectionListener {
 
     private static final Logger logger = LogManager.getLogger(CodeEditor.class);

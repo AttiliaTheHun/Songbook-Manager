@@ -81,6 +81,9 @@ public class StandardCollectionManager extends CollectionManager {
             Type targetClassType = new TypeToken<ArrayList<Song>>() {
             }.getType();
             collection = new Gson().fromJson(json, targetClassType);
+            for (Song song : collection) {
+                song.setManager(this);
+            }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Collection Initialisation error", "Can not load the song collection!", true);
@@ -161,6 +164,7 @@ public class StandardCollectionManager extends CollectionManager {
         if (!new HTMLGenerator().generateSongFile(song)) {
             return null;
         }
+        song.setManager(this);
         collection.add(song);
         save();
         onSongAdded(s);

@@ -10,6 +10,8 @@ public class Song implements Serializable {
     private transient int formerId = -1;
     private transient String author = "";
 
+    private transient CollectionManager manager = null;
+
     public Song(String name, int id) {
         this.name = name;
         this.id = id;
@@ -75,5 +77,29 @@ public class Song implements Serializable {
 
     public void setFormerId(int formerId) {
         this.formerId = formerId;
+    }
+
+    public void setManager(CollectionManager manager) {
+        this.manager = manager;
+    }
+
+    public CollectionManager getManager() {
+        return manager;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || !o.getClass().equals(Song.class)) {
+            return false;
+        } else if (!(((Song) o).id == this.id)) {
+            return false;
+        } else if (!(((Song) o).name == this.name)) {
+            return false;
+        } else if (!(((Song) o).author == this.author)) {
+            return false;
+        } else if (!(((Song) o).active == this.active)) {
+            return false;
+        }
+        return true;
     }
 }

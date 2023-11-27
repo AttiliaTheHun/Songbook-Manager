@@ -24,6 +24,7 @@ public class PluginManager {
         DynamicSonglist.getInstance();
         Frontpage.getInstance();
         Export.getInstance();
+        SMSML.getInstance();
     }
 
     public static PluginManager getInstance() {

@@ -13,6 +13,7 @@ import attilathehun.songbook.util.ZipTest;
 import attilathehun.songbook.window.CodeEditor;
 import attilathehun.songbook.util.KeyEventListener;
 import attilathehun.songbook.window.CollectionEditor;
+import attilathehun.songbook.window.CollectionEditor2;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
@@ -67,9 +68,6 @@ public class SongbookApplication extends Application {
         Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
         EnvironmentVerificator.automated();
         launch(args);
-        if (Arrays.asList(Environment.getInstance().perform(args)).contains(Environment.Result.FAILURE)) {
-            Environment.showWarningMessage("Warning", "Could not resolve the command line arguments. See log file");
-        }
         logger.debug("Application started successfully");
 
         ExportTest.main();
@@ -77,6 +75,8 @@ public class SongbookApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+
+        initCollectionEditor();
 
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
@@ -236,6 +236,22 @@ public class SongbookApplication extends Application {
             logger.error(e.getMessage(), e);
         }
         logger.debug("Native Hook registered");
+    }
+
+    private void initCollectionEditor() {
+        try {
+            CollectionEditor2 wind = new CollectionEditor2();
+            FXMLLoader fxmlLoader = new FXMLLoader(SongbookApplication.class.getResource("collection-editor.fxml"));
+            AnchorPane root = fxmlLoader.load();
+            Scene scene = new Scene(root, 800, 600);
+            wind.setScene(scene);
+            wind.initKeyboardShortcuts();
+            wind.show();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public static void addListener(KeyEventListener listener) {

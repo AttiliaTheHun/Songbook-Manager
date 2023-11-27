@@ -17,6 +17,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 
+@Deprecated(forRemoval = true)
 public class CollectionEditor extends JFrame implements KeyEventListener, CollectionListener {
 
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
@@ -25,9 +26,9 @@ public class CollectionEditor extends JFrame implements KeyEventListener, Collec
 
     private static CollectionEditor instance = null;
 
-    @Deprecated
+    @Deprecated(forRemoval = true)
     private static final int ACTION_EDIT = 0;
-    @Deprecated
+    @Deprecated(forRemoval = true)
     private static final int ACTION_ADD = 1;
 
     private JTabbedPane tabPane;
