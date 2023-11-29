@@ -1,6 +1,6 @@
 package attilathehun.songbook.environment;
 
-import attilathehun.songbook.SongbookApplication;
+import attilathehun.songbook.window.SongbookApplication;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.collection.CollectionManager;
@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import attilathehun.songbook.vcs.VCSAdmin;
 import org.apache.logging.log4j.Logger;
@@ -89,9 +90,42 @@ public final class Environment {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(header);
-        String s = message;
-        alert.setContentText(s);
+        alert.setContentText(message);
         alert.show();
+    }
+
+    public static void showErrorMessage(String title, String header, String message, boolean fatal) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(message);
+        alert.show();
+        if (fatal) {
+            Environment.getInstance().exit();
+        }
+    }
+
+    public static void showErrorMessage(String title, String header, String message) {
+        showErrorMessage(title, header, message, false);
+    }
+
+    public static void showWarningMessage(String title, String header, String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(message);
+        alert.show();
+    }
+
+    public static boolean showConfirmMessage(String title, String header, String message) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setHeaderText(header);
+        alert.setTitle(title);
+        alert.setContentText(message);
+
+        Optional<ButtonType> result = alert.showAndWait();
+
+        return ((result.isPresent()) && (result.get() == ButtonType.OK));
     }
 
     @Deprecated
@@ -117,7 +151,7 @@ public final class Environment {
 
     }
 
-    //TODO: move to util.Misc
+    @Deprecated(forRemoval = true)
     public static boolean fileExists(String path) {
         return new File(path).exists();
     }

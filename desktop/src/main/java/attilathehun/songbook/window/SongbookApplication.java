@@ -1,5 +1,6 @@
-package attilathehun.songbook;
+package attilathehun.songbook.window;
 
+import attilathehun.songbook.Main;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
@@ -8,25 +9,18 @@ import attilathehun.songbook.environment.EnvironmentVerificator;
 import attilathehun.songbook.environment.Installer;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.util.ExportTest;
-import attilathehun.songbook.util.ZipBuilder;
-import attilathehun.songbook.util.ZipTest;
-import attilathehun.songbook.window.CodeEditor;
 import attilathehun.songbook.util.KeyEventListener;
-import attilathehun.songbook.window.CollectionEditor;
-import attilathehun.songbook.window.CollectionEditor2;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
@@ -34,7 +28,6 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.github.kwhat.jnativehook.GlobalScreen;
@@ -81,8 +74,8 @@ public class SongbookApplication extends Application {
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent t) {
-                CodeEditor.setApplicationClosed();
-                if (CodeEditor.instanceCount() == 0) {
+                CodeEditorV1.setApplicationClosed();
+                if (CodeEditorV1.instanceCount() == 0) {
                     Platform.exit();
                     Environment.getInstance().exit();
                 }
@@ -92,19 +85,22 @@ public class SongbookApplication extends Application {
 
         IS_FOCUSED.bind(stage.focusedProperty());
 
-        FXMLLoader fxmlLoader = new FXMLLoader(SongbookApplication.class.getResource("songbook-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("songbook-view.fxml"));
         AnchorPane root = fxmlLoader.load();
         stage.setMaximized(true);
         Scene scene = new Scene(root, 1000, 800);
 
-        registerNativeHook(stage);
+        //registerNativeHook(stage);
+
 
         stage.setTitle("Songbook Manager");
         stage.setScene(scene);
+        initKeyboardShortcuts(stage);
         stage.show();
     }
 
     //TODO: separate dials so only the focused window is notified
+    @Deprecated(forRemoval = true)
     private static void registerNativeHook(Stage stage) {
         try {
             GlobalScreen.registerNativeHook();
@@ -122,9 +118,9 @@ public class SongbookApplication extends Application {
 
                 @Override
                 public void nativeKeyPressed(NativeKeyEvent nativeEvent) {
-                    if (!stage.isFocused() && !CollectionEditor.focused() && !CodeEditor.hasFocusedInstance()) {
+                   /* if (!stage.isFocused() && !CollectionEditor.focused() && !CodeEditor.hasFocusedInstance()) {
                         return;
-                    }
+                    }*/
                     switch (nativeEvent.getKeyCode()) {
                         case NativeKeyEvent.VC_CONTROL -> {
                             CONTROL_PRESSED = true;
@@ -238,15 +234,126 @@ public class SongbookApplication extends Application {
         logger.debug("Native Hook registered");
     }
 
+    private void initKeyboardShortcuts(Stage stage) {
+        stage.getScene().setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                switch (keyEvent.getCode()) {
+                    case LEFT, PAGE_DOWN -> {
+                        if (!listeners.get(0).onImaginaryIsTextFieldFocusedKeyPressed()) {
+                            dialLeftArrowPressed();
+                        }
+                    }
+                    case RIGHT, PAGE_UP -> {
+                        if (!listeners.get(0).onImaginaryIsTextFieldFocusedKeyPressed()) {
+                            dialRightArrowPressed();
+                        }
+                    }
+                    case R -> { //refresh
+                        if (keyEvent.isControlDown()) {
+                            Environment.getInstance().getCollectionManager().init();
+                            Environment.getInstance().refresh();
+                            EnvironmentVerificator.automated();
+                            dialControlPLusRPressed();
+                        }
+                    }
+                    case S -> { //save
+                        if (keyEvent.isControlDown()) {
+                            new EnvironmentManager().save();
+                            dialControlPLusSPressed();
+                        }
+                    }
+                    case L -> { //load
+                        if (keyEvent.isControlDown()) {
+                            new EnvironmentManager().load();
+                        }
+                    }
+                    case H -> { //help
+                        if (keyEvent.isControlDown()) {
+                            try {
+                                Desktop.getDesktop().browse(new URL("https://github.com/AttiliaTheHun/Songbook-Manager/wiki/English").toURI());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                    case O -> { //open song link
+                        if (keyEvent.isControlDown()) {
+                            if (SongbookController.getSongOne().getUrl().equals("") && SongbookController.getSongTwo().getUrl().equals("")) {
+                                Environment.showMessage("Message", "None of the displayed songs has an associated URL. You can managed URLs in the Collection Editor Window.");
+                            } else if (!SongbookController.getSongOne().getUrl().equals("") && SongbookController.getSongTwo().getUrl().equals("")) {
+
+                                int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to open the associated URL in a web browser?", String.format("%s - %s", SongbookController.getSongOne().name(), SongbookController.getSongOne().getUrl()), JOptionPane.YES_NO_OPTION);
+
+                                if (resultCode == JOptionPane.YES_OPTION) {
+                                    try {
+                                        Desktop.getDesktop().browse(new URL(SongbookController.getSongOne().getUrl()).toURI());
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
+                                    }
+
+                                }
+                            } else if (SongbookController.getSongOne().getUrl().equals("") && !SongbookController.getSongTwo().getUrl().equals("")) {
+
+                                int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to open the associated URL in a web browser?", SongbookController.getSongTwo().getUrl(), JOptionPane.YES_NO_OPTION);
+
+                                if (resultCode == JOptionPane.YES_OPTION) {
+                                    try {
+                                        Desktop.getDesktop().browse(new URL(SongbookController.getSongTwo().getUrl()).toURI());
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
+                                    }
+
+
+                                }
+                            } else /* both have a URL */ {
+                                UIManager.put("OptionPane.yesButtonText", SongbookController.getSongOne().name());
+                                UIManager.put("OptionPane.noButtonText", SongbookController.getSongTwo().name());
+                                int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Which song's associated URL do you want to open in the browser?", String.format("%s or %s?", SongbookController.getSongOne().name(), SongbookController.getSongTwo().name()), JOptionPane.YES_NO_OPTION);
+                                if (resultCode == JOptionPane.YES_OPTION) {
+                                    try {
+                                        Desktop.getDesktop().browse(new URL(SongbookController.getSongOne().getUrl()).toURI());
+                                    } catch (Exception e) {
+                                    }
+
+                                    Environment.showWarningMessage("Warning", "The associated URL is malformed. PLease check for typos :)");
+                                } else if (resultCode == JOptionPane.NO_OPTION) {
+                                    try {
+                                        Desktop.getDesktop().browse(new URL(SongbookController.getSongTwo().getUrl()).toURI());
+                                    } catch (Exception e) {
+                                        Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
+                                    }
+
+                                }
+                                UIManager.put("OptionPane.yesButtonText", "Yes");
+                                UIManager.put("OptionPane.noButtonText", "No");
+                            }
+
+                        }
+                    }
+                    case DELETE -> {
+                        dialDeletePressed();
+                    }
+                }
+            }
+        });
+    }
+
     private void initCollectionEditor() {
         try {
-            CollectionEditor2 wind = new CollectionEditor2();
-            FXMLLoader fxmlLoader = new FXMLLoader(SongbookApplication.class.getResource("collection-editor.fxml"));
+            CollectionEditor wind = CollectionEditor.getInstance();
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            fxmlLoader.setLocation(Main.class.getResource("collection-editor.fxml"));
+            System.out.println(fxmlLoader.getLocation());
+            System.out.println(System.getProperty("user.dir"));
             AnchorPane root = fxmlLoader.load();
             Scene scene = new Scene(root, 800, 600);
             wind.setScene(scene);
-            wind.initKeyboardShortcuts();
-            wind.show();
+
+            //wind.initKeyboardShortcuts();
+            //wind.show();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             System.out.println(e.getMessage());

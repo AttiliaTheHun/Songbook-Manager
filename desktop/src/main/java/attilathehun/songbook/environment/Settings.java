@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Locale;
 
-public class Settings implements Serializable {
+public final class Settings implements Serializable {
 
     private static final Logger logger = LogManager.getLogger(Settings.class);
 

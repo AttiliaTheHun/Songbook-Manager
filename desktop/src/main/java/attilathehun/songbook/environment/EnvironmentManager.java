@@ -7,7 +7,7 @@ import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.util.ZipBuilder;
 import attilathehun.songbook.vcs.VCSAdmin;
 import attilathehun.songbook.window.CollectionEditor;
-import attilathehun.songbook.SongbookApplication;
+import attilathehun.songbook.window.SongbookApplication;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -319,7 +319,7 @@ public class EnvironmentManager {
                 song.setAuthor(songAuthorField.getText());
                 song.setActive(songActiveSwitch.isSelected());
                 song = manager.addSong(song);
-                CollectionEditor.forceRefreshInstance();
+                //TODO CollectionEditor.forceRefreshInstance();
                 return song;
             }
         } else {
@@ -334,7 +334,7 @@ public class EnvironmentManager {
                 song.setUrl(songURLField.getText());
                 song.setActive(songActiveSwitch.isSelected());
                 song = manager.updateSongRecord(song);
-                CollectionEditor.forceRefreshInstance();
+                //TODO CollectionEditor.forceRefreshInstance();
                 return song;
             }
         }

@@ -1,178 +1,130 @@
 package attilathehun.songbook.window;
 
-import attilathehun.songbook.SongbookApplication;
-import attilathehun.songbook.collection.*;
+import attilathehun.songbook.collection.CollectionManager;
+import attilathehun.songbook.collection.EasterCollectionManager;
+import attilathehun.songbook.collection.Song;
+import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.plugin.Export;
-import attilathehun.songbook.util.KeyEventListener;
+import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.util.PDFGenerator;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyListWrapper;
+import javafx.collections.FXCollections;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.geometry.Orientation;
+import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.*;
 import java.io.File;
+import java.util.ArrayList;
 
-@Deprecated(forRemoval = true)
-public class CollectionEditor extends JFrame implements KeyEventListener, CollectionListener {
-
+public class CollectionEditor extends Stage {
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
 
-    private static boolean IS_FOCUSED = false;
+    private static boolean SHIFT_PRESSED = false;
+    private static boolean CONTROL_PRESSED = false;
 
-    private static CollectionEditor instance = null;
+    @FXML
+    public Button editSongHTMLButton;
+    @FXML
+    public Button editSongRecordButton;
+    @FXML
+    public Button previewPDFButton;
+    @FXML
+    public Button viewSongButton;
+    @FXML
+    public Button deleteSongButton;
+    @FXML
+    public Button addSongButton;
+    @FXML
+    public TabPane tabbedPane;
 
-    @Deprecated(forRemoval = true)
-    private static final int ACTION_EDIT = 0;
-    @Deprecated(forRemoval = true)
-    private static final int ACTION_ADD = 1;
-
-    private JTabbedPane tabPane;
+    private static CollectionEditor instance = new CollectionEditor();
 
     private Song selectedSong = null;
-
     private CollectionManager selectedManager = null;
 
-    private JList list = null;
-
-    private CollectionEditor() {
-        instance = this;
-        setContentPane(new JPanel(new BorderLayout()));
-        setTitle("Collection Editor");
-        setSize(800, 600);
-        setResizable(false);
-        addTableHeader();
-        addTabbedPane();
-        addBottomToolbar();
-        //registerKeyboardShortcuts();
-        registerWindowListener();
-        registerWindowFocusListener();
-        //registerKeybinds();
-        setVisible(true);
-        SongbookApplication.addListener(this);
-        logger.info("CollectionEditor instantiated");
+    @FXML
+    public void initialize() {
+        initTabbedPane();
+        initBottomToolbar();
+        initKeyboardShortcuts();
     }
 
-    /**
-     * Opens the CollectionEditor and pushes it to the front. Initializes the instance if it was not open before.
-     * @return newly created CollectionEditor or null if it did not create any.
-     */
-    public static CollectionEditor openCollectionEditor() {
-        if (instance != null) {
-            instance.setVisible(true);
-            instance.forceRefreshAll();
-            instance.toFront();
-            return null;
+    public CollectionEditor(){
+        this.setTitle("Collection Editor");
+        this.setResizable(false);
+    }
+
+    public static void open() {
+        if (instance == null) {
+            throw  new IllegalStateException();
         }
-        return new CollectionEditor();
+        instance.show();
     }
 
-    /**
-     * Returns the CollectionEditor instance. Before first call to #openCollectionEditor() this method return null;
-     * @return CollectionEditor instance or null if it was not opened yet
-     */
     public static CollectionEditor getInstance() {
         return instance;
     }
 
-    public static boolean focused() {
-        return IS_FOCUSED;
+    public static void shut() {
+        if (instance == null) {
+            throw  new IllegalStateException();
+        }
+        instance.hide();
     }
 
-
-    public @Override void toFront() {
-        super.setAlwaysOnTop(true);
-        super.toFront();
-        super.requestFocusInWindow();
-        logger.debug("CollectionEditor pushed to front");
-    }
-
-    /**
-     * Creates a line of labels for the ListView item properties.
-     */
-    private void addTableHeader() {
-        JPanel panel = new JPanel(new GridBagLayout());
-
-        panel.setOpaque(true);
-        JLabel collectionIdLabel = new JLabel(" n");
-        JLabel songNameLabel = new JLabel("Name");
-        JLabel songIdLabel = new JLabel("ID");
-        JLabel songURLLabel = new JLabel("URL");//new JLabel(((Song) value).getUrl());
-        JLabel isSongActiveBox = new JLabel("Active");
-
-        collectionIdLabel.setPreferredSize(new Dimension(30, 20));
-        songNameLabel.setPreferredSize(new Dimension(250, 20));
-        songIdLabel.setPreferredSize(new Dimension(30, 20));
-        songURLLabel.setPreferredSize(new Dimension(400, 20));
-        isSongActiveBox.setPreferredSize(new Dimension(60, 20));
-
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridx = 0;
-        constraints.gridy = 0;
-        constraints.weightx = 0.05d;
-        constraints.weighty = 1;
-        panel.add(collectionIdLabel, constraints);
-
-        constraints.gridx = 1;
-        constraints.weightx = 0.4d;
-        panel.add(songNameLabel, constraints);
-
-        constraints.gridx = 2;
-        constraints.weightx = 0.05d;
-        panel.add(songIdLabel, constraints);
-
-        constraints.gridx = 3;
-        constraints.weightx = 5d;
-        panel.add(songURLLabel, constraints);
-
-        constraints.gridx = 4;
-        constraints.weightx = 0.0d;
-        panel.add(isSongActiveBox, constraints);
-
-        panel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-
-        getContentPane().add(panel, BorderLayout.PAGE_START);
-    }
-
-    /**
-     * Initializes the tab layout.
-     */
-    private void addTabbedPane() {
-        tabPane = new JTabbedPane();
-        tabPane.setTabPlacement(JTabbedPane.BOTTOM);
-        JComponent standardCollectionPanel = new CollectionPanel(StandardCollectionManager.getInstance());
-        tabPane.addTab("Standard Collection", null, standardCollectionPanel,
-                "Default song collection");
-
+    private void initTabbedPane() {
+        if (tabbedPane == null) {
+            throw new IllegalStateException();
+        }
+        tabbedPane.getTabs().add(new CollectionPanel(StandardCollectionManager.getInstance()));
         if (Environment.getInstance().settings.environment.IS_IT_EASTER_ALREADY && EasterCollectionManager.getInstance().getCollection() != null) {
-            JComponent easterCollectionPanel = new CollectionPanel(EasterCollectionManager.getInstance());
-            tabPane.addTab("Easter Collection", null, easterCollectionPanel,
-                    "Collection of easter eggs");
+            tabbedPane.getTabs().add(new CollectionPanel(EasterCollectionManager.getInstance()));
         }
 
-        tabPane.addChangeListener(e -> {
-            logger.debug("Tab switched: " + tabPane.getSelectedIndex());
-            refreshStoredSelection();
-        });
-
-        getContentPane().add(tabPane, BorderLayout.CENTER);
     }
 
-    /**
-     * Creates the bottom toolbar of buttons.
-     */
-    private void addBottomToolbar() {
-        JPanel bottomToolbar = new JPanel(new GridLayout(1, 6));
-
-        JButton editSongRecordButton = new JButton("Edit Song Record");
-        editSongRecordButton.addActionListener(e -> {
+    //TODO
+    private void initBottomToolbar() {
+        addSongButton.setOnAction(actionEvent -> {
+            refreshStoredSelection();
+            Song song;
+            if (SongbookApplication.isControlPressed()) {
+                song = EnvironmentManager.addEasterSongFromTemplateDialog(selectedSong, selectedManager);
+            } else {
+                song = EnvironmentManager.addSongDialog(selectedManager);
+            }
+            if (song == null) {
+                return;
+            }
+            //TODO refresh list
+        });
+        editSongHTMLButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                Environment.showMessage("Message", "Select a song first.");
+                Environment.showMessage("Songbook Manager Collection Editor", "Select a song first!", null);
+                return;
+            }
+            if (selectedManager == null) {
+                selectedManager = selectedSong.getManager(); //can still be null, theoretically :)
+            }
+            CodeEditorV1.open(selectedManager, selectedSong);
+        });
+        editSongRecordButton.setOnAction(actionEvent -> {
+            refreshStoredSelection();
+            if (selectedSong == null) {
+                Environment.showMessage("Songbook Manager Collection Editor", "Select a song first!", null);
                 return;
             }
 
@@ -182,57 +134,21 @@ public class CollectionEditor extends JFrame implements KeyEventListener, Collec
                 return;
             }
 
-            forceRefreshList();
+            //TODO refresh list
             int index = selectedManager.getDisplayCollectionSongIndex(song);
             if (index != -1) {
-                list.setSelectedValue(index, true);
+                //TODO list.setSelectedValue(index, true);
             }
         });
-
-        JButton editSongHTMLButton = new JButton("Edit Song HTML");
-        editSongHTMLButton.addActionListener(e -> {
-            refreshStoredSelection();
-
-            if (selectedSong == null) {
-                Environment.showMessage("Message", "Select a song first.");
-                return;
-            }
-            CodeEditor.open(selectedManager, selectedSong);
-        });
-
-        JButton viewSongInBrowserButton = new JButton("View Song");
-        viewSongInBrowserButton.addActionListener(e -> {
+        viewSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                Environment.showMessage("Message", "Select a song first.");
+                Environment.showMessage("Songbook Manager Collection Editor", "Select a song first!", null);
                 return;
             }
-            int index = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(selectedSong);
-            if (index == -1) {
-                Environment.showMessage("Message", "Something went wrong.");
-                return;
-            }
-            if (index % 2 == 0) {
-                SongbookApplication.dialImaginarySongOneKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
-                if (index + 1 >= Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
-                    SongbookApplication.dialImaginarySongTwoKeyPressed(CollectionManager.getShadowSong());
-                } else {
-                    if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
-                        Environment.showMessage("Action aborted", "This feature is a part of the Export plugin. Enable it in settings first!");
-                        return;
-                    }        SongbookApplication.dialImaginarySongTwoKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index + 1));
-                }
-            } else {
-                SongbookApplication.dialImaginarySongTwoKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
-                if (index - 1 < 0) {
-                    SongbookApplication.dialImaginarySongOneKeyPressed(CollectionManager.getShadowSong());
-                } else {
-                    SongbookApplication.dialImaginarySongOneKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index - 1));
-                }
-            }
+            Environment.navigateWebViewToSong(selectedSong);
         });
-        JButton previewSongPDFButton = new JButton("Preview PDF");
-        previewSongPDFButton.addActionListener(e -> {
+        previewPDFButton.setOnAction(actionEvent -> {
 
             if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
                 Environment.showMessage("Action aborted", "This feature is a part of the Export plugin. Enable it in settings first!");
@@ -242,359 +158,203 @@ public class CollectionEditor extends JFrame implements KeyEventListener, Collec
             refreshStoredSelection();
 
             if (selectedSong == null) {
-                Environment.showMessage("Message", "Select a song first.");
+                Environment.showMessage("Songbook Manager Collection Editor", "Select a song first!", null);
                 return;
             }
 
-                Platform.runLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Desktop.getDesktop().open(new File(new PDFGenerator(selectedManager).generatePreview(selectedSong).replace(".html", ".pdf")));
-                        } catch (Exception ex) {
-                            logger.error(ex.getMessage(), ex);
-                            Environment.showErrorMessage("Error", ex.getMessage());
-                        }
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        //TODO port this to the new PDFGenerator when complete
+                        Desktop.getDesktop().open(new File(new PDFGenerator(selectedManager).generatePreview(selectedSong).replace(".html", ".pdf")));
+                    } catch (Exception ex) {
+                        logger.error(ex.getMessage(), ex);
+                        Environment.showErrorMessage("Error", ex.getMessage(), null);
                     }
-                });
+                }
+            });
 
         });
-        JButton deleteSongButton = new JButton("Delete Song");
-        deleteSongButton.addActionListener(e -> {
+        deleteSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                Environment.showMessage("Message", "Select a song first.");
+                Environment.showMessage("Songbook Manager Collection Editor", "Select a song first!", null);
                 return;
             }
-            int result;
-            logger.debug("shiftPressed" + SongbookApplication.isShiftPressed());
-            if (SongbookApplication.isShiftPressed()) {
-                result = JOptionPane.OK_OPTION;
+
+            boolean confirmed = false;
+            if (SHIFT_PRESSED) {
+                confirmed = true;
             } else {
-                result = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
+                String message = "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?";
+                confirmed = Environment.showConfirmMessage("Songbook Manager Collection Editor", String.format("Delete song '%s' id:%s?", selectedSong.name(), selectedSong.id()), message);
             }
-            if (result == JOptionPane.OK_OPTION) {
+            if (confirmed) {
                 selectedManager.removeSong(selectedSong);
-                forceRefreshList();
+                //TODO refresh list
                 selectedSong = null;
             }
+
         });
-        JButton addNewSongButton = new JButton("Add New Song");
-        addNewSongButton.addActionListener(e -> {
-            refreshStoredSelection();
-            Song song;
-            logger.debug("shiftPressed" + SongbookApplication.isControlPressed());
-            if (SongbookApplication.isControlPressed()) {
-                song = EnvironmentManager.addEasterSongFromTemplateDialog(selectedSong, selectedManager);
-            } else {
-                song = EnvironmentManager.addSongDialog(selectedManager);
+    }
+
+    //TODO
+    public void initKeyboardShortcuts() {
+
+        focusedProperty().addListener((ov, onHidden, onShown) -> {
+            if (onHidden) {
+                SHIFT_PRESSED = false;
+                CONTROL_PRESSED = false;
             }
-            if (song == null) {
-                return;
-            }
-            forceRefreshList();
-            list.setSelectedValue(song, true);
         });
 
-        bottomToolbar.add(editSongRecordButton);
-        bottomToolbar.add(editSongHTMLButton);
-        bottomToolbar.add(viewSongInBrowserButton);
-        bottomToolbar.add(previewSongPDFButton);
-        bottomToolbar.add(deleteSongButton);
-        bottomToolbar.add(addNewSongButton);
+        this.getScene().setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                switch (keyEvent.getCode()) {
+                    case DELETE -> {
+                        refreshStoredSelection();
+                        boolean confirmed = false;
+                        if (keyEvent.isShiftDown()) {
+                            confirmed = true;
+                        } else {
+                            String message = "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?";
+                            confirmed = Environment.showConfirmMessage("Delete song", String.format("Delete song '%s' id:%s?", selectedSong.name(), selectedSong.id()), message);
+                        }
+                        if (confirmed) {
+                            selectedManager.removeSong(selectedSong);
+                            //TODO refresh list
+                            selectedSong = null;
+                        }
+                    }
+                    case R -> {
+                        if (keyEvent.isControlDown()) {
+                            refreshStoredSelection();
+                            //TODO refresh list
+                        }
+                    }
+                    case CONTROL -> {
+                        if (keyEvent.getEventType().equals(KeyEvent.KEY_PRESSED)) {
+                            CONTROL_PRESSED = true;
+                        } else if(keyEvent.getEventType().equals(KeyEvent.KEY_RELEASED)) {
+                            CONTROL_PRESSED = false;
+                        }
+                    }
+                    case SHIFT-> {
+                        if (keyEvent.getEventType().equals(KeyEvent.KEY_PRESSED)) {
+                            SHIFT_PRESSED = true;
+                        } else if(keyEvent.getEventType().equals(KeyEvent.KEY_RELEASED)) {
+                            SHIFT_PRESSED = false;
+                        }
+                    }
+                }
 
-        bottomToolbar.setBorder(new EmptyBorder(0, -1, 0, -1));
 
-        getContentPane().add(bottomToolbar, BorderLayout.PAGE_END);
+            }
+        });
     }
 
     private void refreshStoredSelection() {
-        CollectionPanel tabPanel = ((CollectionPanel) tabPane.getComponentAt(tabPane.getSelectedIndex()));
-        selectedSong = tabPanel.getSelectedSong();
-        selectedManager = tabPanel.getCollectionManager();
-        list = tabPanel.getList();
-        logger.debug("Selected tab CollectionManager: " + selectedManager.getClass().getName());
+        selectedSong = ((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).getList().getSelectionModel().getSelectedItem();
+        selectedManager = ((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).getManager();
     }
 
-    private void registerWindowListener() {
-        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent ev) {
-                dispose();
-                instance = null;
-            }
-        });
-    }
-
-    private void registerWindowFocusListener() {
-        addWindowFocusListener(new WindowAdapter() {
-
-            //To check window gained focus
-            public void windowGainedFocus(WindowEvent e) {
-                IS_FOCUSED = true;
-                logger.debug("CollectionEditor focused");
-            }
-
-            //To check window lost focus
-            public void windowLostFocus(WindowEvent e) {
-                IS_FOCUSED = false;
-                logger.debug("CollectionEditor focus lost");
-            }
-        });
-    }
-
-    /**
-     * Refreshes the currently open/visible ListView.
-     */
-    private void forceRefreshList() {
-        DefaultListModel listModel = new DefaultListModel();
-        refreshStoredSelection();
-        for (Song song : selectedManager.getSortedCollection()) {
-            listModel.addElement(song);
-        }
-        list.setModel(listModel);
-        logger.debug("Forcefully current list");
-    }
-
-    /**
-     * Refreshes ListViews in all tabs.
-     */
-    private void forceRefreshAll() {
-        for (int i = 0; i < tabPane.getTabCount(); i++) {
-            DefaultListModel listModel = new DefaultListModel();
-            CollectionPanel panel = (CollectionPanel) tabPane.getComponentAt(i);
-            CollectionManager targetManager = panel.getCollectionManager();
-            for (Song song : targetManager.getSortedCollection()) {
-                listModel.addElement(song);
-            }
-            panel.getList().setModel(listModel);
-        }
-        logger.debug("Forcefully refreshed all lists");
-    }
-
-    /**
-     * Refreshes the UI of the CollectionEditor.
-     */
-    public static void forceRefreshInstance() {
-        if (instance == null) {
-            return;
-        }
-        instance.forceRefreshAll();
-        logger.debug("CollectionEditor force refreshed");
-    }
-
-    @Override
-    public void onLeftArrowPressed() {
-
-    }
-
-    @Override
-    public void onRightArrowPressed() {
-
-    }
-
-    @Override
-    public void onControlPlusRPressed() {
-        logger.debug("CollectionEditor ctrl+R pressed");
-        refreshStoredSelection();
-
-        forceRefreshAll();
-    }
-
-    @Override
-    public void onDeletePressed() {
-        logger.debug("CollectionEditor delete pressed");
-        if (!isFocused()) {
-            return;
-        }
-        refreshStoredSelection();
-        if (selectedSong == null) {
-            return;
-        }
-        int result;
-        if (SongbookApplication.isShiftPressed()) {
-            result = JOptionPane.OK_OPTION;
-        } else {
-            result = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?", "Delete song '" + selectedSong.name() + "' id: " + selectedSong.id(), JOptionPane.OK_CANCEL_OPTION);
-        }
-        if (result == JOptionPane.OK_OPTION) {
-            selectedManager.removeSong(selectedSong);
-            forceRefreshList();
-            selectedSong = null;
-        }
-    }
-
-    @Override
-    public void onControlPlusSPressed() {
-
-    }
-
-    @Override
-    public void onImaginarySongOneKeyPressed(Song s) {
-
-    }
-
-    @Override
-    public void onImaginarySongTwoKeyPressed(Song s) {
-
-    }
-
-    @Override
-    public boolean onImaginaryIsTextFieldFocusedKeyPressed() {
-        return false;
-    }
-
-    @Override
-    public void onSongRemoved(Song s, CollectionManager m) {
-        forceRefreshAll();
-    }
-
-    @Override
-    public void onSongUpdated(Song s, CollectionManager m) {
-        forceRefreshAll();
-    }
-
-    @Override
-    public void onSongAdded(Song s, CollectionManager m) {
-        forceRefreshAll();
-    }
-
-    /**
-     * This class represents a tab in the TabLayout.
-     */
-    private static class CollectionPanel extends JPanel {
-
+    public class CollectionPanel extends Tab {
         private static final Logger logger = LogManager.getLogger(CollectionPanel.class);
 
         private CollectionManager manager;
-        private JList list;
-
-        private Song selectedSong;
-
+        private ListView<Song> list;
 
         private CollectionPanel() {
             throw new RuntimeException("Constructor not allowed!");
         }
 
         private CollectionPanel(CollectionManager manager) {
-            super(new BorderLayout());
-            setDoubleBuffered(false);
-            this.manager = manager;
-            DefaultListModel listModel = new DefaultListModel();
-            for (Song song : manager.getSortedCollection()) {
-                listModel.addElement(song);
+            if (manager == null) {
+                throw new IllegalArgumentException();
             }
-            list = new JList(listModel);
-            list.setLayoutOrientation(JList.VERTICAL);
-            list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            CollectionPanelListRenderer listCellRenderer = new CollectionPanelListRenderer();
-            list.setCellRenderer(listCellRenderer);
-
-            list.addListSelectionListener(e -> {
-                if (list.getSelectedIndex() == -1) {
-                    return;
-                }
-                selectedSong = manager.getSortedCollection().get(list.getSelectedIndex());
-            });
-
-
-            add(new JScrollPane(list), BorderLayout.CENTER);
+            this.manager = manager;
+            this.setText(Misc.toTitleCase(manager.getCollectionName()));
+            this.list = new ListView<Song>();
+            list.setOrientation(Orientation.VERTICAL);
+            list.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+            ReadOnlyListWrapper<Song> listViewData = new ReadOnlyListWrapper<>(FXCollections.observableArrayList((ArrayList<Song>) manager.getSortedCollection()));
+            list.setCellFactory(list -> new SongCell());
+            list.getItems().addAll(listViewData);
+            list.refresh();
+            this.setContent(list);
         }
 
-        private JList getList() {
-            return list;
-        }
-
-        private CollectionManager getCollectionManager() {
+        public CollectionManager getManager() {
             return manager;
         }
 
-        private Song getSelectedSong() {
-            return selectedSong;
-        }
-    }
-
-    /**
-     * A custom list cell renderer responsible for the looks of the tab lists.
-     */
-    private static class CollectionPanelListRenderer extends JPanel implements ListCellRenderer {
-        private static final Logger logger = LogManager.getLogger(CollectionPanelListRenderer.class);
-
-        private JLabel collectionIdLabel;
-        private JLabel songNameLabel;
-        private JLabel songIdLabel;
-        private JLabel songURLLabel;
-        private JCheckBox isSongActiveBox;
-
-        private CollectionPanelListRenderer() {
-            super(new GridBagLayout());
+        public ListView<Song> getList() {
+            return list;
         }
 
-        /**
-         *
-         * @param list The JList we're painting.
-         * @param value The value returned by list.getModel().getElementAt(index). A Song object.
-         * @param index The cells index.
-         * @param isSelected True if the specified cell was selected.
-         * @param cellHasFocus True if the specified cell has the focus.
-         * @return A corresponding item in the ListView.
-         */
-        @Override
-        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+        public void refresh() {
+            list.getItems().clear();
+            ReadOnlyListWrapper<Song> listViewData = new ReadOnlyListWrapper<>(FXCollections.observableArrayList((ArrayList<Song>) manager.getSortedCollection()));
+            list.getItems().addAll(listViewData);
+            list.refresh();
+        }
 
-            setOpaque(true);
-            collectionIdLabel = new JLabel(" " + index);
-            songNameLabel = new JLabel(((Song) value).name());
-            songIdLabel = new JLabel(String.valueOf(((Song) value).id()));
-            songURLLabel = new JLabel(((Song) value).getUrl());
-            isSongActiveBox = new JCheckBox("", ((Song) value).isActive());
+        private class SongCell extends ListCell<Song> {
 
-            collectionIdLabel.setPreferredSize(new Dimension(30, 20));
-            songNameLabel.setPreferredSize(new Dimension(250, 20));
-            songIdLabel.setPreferredSize(new Dimension(30, 20));
-            songURLLabel.setPreferredSize(new Dimension(400, 20));
-            isSongActiveBox.setPreferredSize(new Dimension(40, 20));
-
-            removeAll();
-            revalidate();
-
-            GridBagConstraints constraints = new GridBagConstraints();
-            constraints.gridx = 0;
-            constraints.gridy = 0;
-            constraints.weightx = 0.05d;
-            constraints.weighty = 1;
-            add(collectionIdLabel, constraints);
-
-            constraints.gridx = 1;
-            constraints.weightx = 0.4d;
-            add(songNameLabel, constraints);
-
-            constraints.gridx = 2;
-            constraints.weightx = 0.05d;
-            add(songIdLabel, constraints);
-
-            constraints.gridx = 3;
-            constraints.weightx = 5d;
-            add(songURLLabel, constraints);
-
-            constraints.gridx = 4;
-            constraints.weightx = 0.0d;
-            add(isSongActiveBox, constraints);
-
-            setBorder(BorderFactory.createLineBorder(Color.BLACK));
-
-            if (isSelected) {
-                setBackground(list.getSelectionBackground());
-                setForeground(list.getSelectionForeground());
-            } else if (!((Song) value).isActive()) {
-                setBackground(new Color(165, 164, 168));
-
-            } else {
-                setBackground(list.getBackground());
-                setForeground(list.getForeground());
+            public SongCell() {
             }
-            return this;
+
+            @Override
+            public void updateItem(Song s, boolean empty) {
+                super.updateItem(s, empty);
+                if (empty || s == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(null);
+                    setGraphic(new SongEntry(s));
+                }
+            }
         }
+
+        private class SongEntry extends HBox {
+            private SongEntry(Song s) {
+                if (s == null || s.getManager() == null) {
+                    throw  new IllegalArgumentException();
+                }
+                int index = s.getManager().getSortedCollectionSongIndex(s);
+                Label nLabel = new Label(String.valueOf(index));
+                nLabel.setPrefWidth(30);
+                this.getChildren().add(nLabel);
+                Label nameLabel = new Label(s.name());
+                nameLabel.setPrefWidth(250);
+                this.getChildren().add(nameLabel);
+                Label IDLabel = new Label (String.valueOf(s.id()));
+                IDLabel.setPrefWidth(30);
+                this.getChildren().add(IDLabel);
+                Label URLLabel = new Label(s.getUrl());
+                URLLabel.setPrefWidth(430);
+                this.getChildren().add(URLLabel);
+                CheckBox activityCheckBox = new CheckBox(null);
+                activityCheckBox.setSelected(s.isActive());
+                activityCheckBox.setPrefWidth(40);
+                activityCheckBox.setOnAction(actionEvent -> {
+                    if (activityCheckBox.isSelected()) {
+                        manager.activateSong(s);
+                        System.out.println("Song activated: " + s.id());
+                    } else {
+                        manager.deactivateSong(s);
+                        System.out.println("Song deactivated: " + s.id());
+                    }
+
+                });
+                this.getChildren().add(activityCheckBox);
+            }
+
+        }
+
     }
 
 }

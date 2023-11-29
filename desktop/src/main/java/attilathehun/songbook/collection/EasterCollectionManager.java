@@ -1,10 +1,10 @@
 package attilathehun.songbook.collection;
 
-import attilathehun.songbook.SongbookApplication;
+import attilathehun.songbook.window.SongbookApplication;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.environment.EnvironmentVerificator;
-import attilathehun.songbook.window.CodeEditor;
+import attilathehun.songbook.window.CodeEditorV1;
 import attilathehun.songbook.window.CollectionEditor;
 import attilathehun.songbook.util.HTMLGenerator;
 import com.google.gson.Gson;
@@ -171,7 +171,7 @@ public class EasterCollectionManager extends CollectionManager {
         }
         collection.add(s);
         save();
-        CodeEditor.open(this, s);
+        CodeEditorV1.open(this, s);
         Environment.getInstance().refresh();
         if (Environment.getInstance().getCollectionManager().equals(getInstance())) {
             Environment.navigateWebViewToSong(collection.get(collection.size() - 1));
@@ -243,7 +243,8 @@ public class EasterCollectionManager extends CollectionManager {
         }
 
         save();
-        CollectionEditor.forceRefreshInstance();
+        //TODO refresh
+        //CollectionEditor.forceRefreshInstance();
         return  song;
     }
 

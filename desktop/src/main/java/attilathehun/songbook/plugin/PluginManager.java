@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PluginManager {
+public final class PluginManager {
 
     private static final Logger logger = LogManager.getLogger(PluginManager.class);
 

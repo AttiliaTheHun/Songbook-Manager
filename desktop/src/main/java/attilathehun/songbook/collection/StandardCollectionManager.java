@@ -1,12 +1,12 @@
 package attilathehun.songbook.collection;
 
-import attilathehun.songbook.SongbookApplication;
+import attilathehun.songbook.window.SongbookApplication;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.plugin.DynamicSonglist;
 import attilathehun.songbook.plugin.Frontpage;
 import attilathehun.songbook.plugin.PluginManager;
-import attilathehun.songbook.window.CodeEditor;
+import attilathehun.songbook.window.CodeEditorV1;
 import attilathehun.songbook.util.HTMLGenerator;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -168,7 +168,7 @@ public class StandardCollectionManager extends CollectionManager {
         collection.add(song);
         save();
         onSongAdded(s);
-        CodeEditor.open(this, s);
+        CodeEditorV1.open(this, s);
         Environment.getInstance().refresh();
         Environment.navigateWebViewToSong(collection.get(collection.size() - 1));
         SongbookApplication.dialControlPLusRPressed();

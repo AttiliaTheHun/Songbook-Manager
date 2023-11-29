@@ -1,15 +1,12 @@
-package attilathehun.songbook;
+package attilathehun.songbook.window;
 
 import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.plugin.Export;
-import attilathehun.songbook.window.CodeEditor;
-import attilathehun.songbook.window.CollectionEditor;
 import attilathehun.songbook.util.HTMLGenerator;
 import attilathehun.songbook.util.KeyEventListener;
 import attilathehun.songbook.util.PDFGenerator;
-import javafx.event.EventType;
 import javafx.event.EventHandler;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -116,7 +113,7 @@ public class SongbookController implements KeyEventListener, CollectionListener 
         songTwoIdField.setText(SONG_TWO.getDisplayId());
 
         editCollectionButton.setOnAction(event -> {
-            CollectionEditor.openCollectionEditor();
+            CollectionEditor.open();
         });
 
         loadDataButton.setOnAction(event -> {
@@ -219,7 +216,7 @@ public class SongbookController implements KeyEventListener, CollectionListener 
                 Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH);
                 return;
             }
-            CodeEditor.open(SONG_ONE);
+            new CodeEditor(Environment.getInstance().getCollectionManager(), SONG_ONE);
         });
 
         editSongTwoHTML.setOnAction(event -> {
@@ -227,7 +224,7 @@ public class SongbookController implements KeyEventListener, CollectionListener 
                 Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH);
                 return;
             }
-            CodeEditor.open(SONG_TWO);
+            new CodeEditor(Environment.getInstance().getCollectionManager(), SONG_TWO);
         });
 
         exportButton.setOnAction(event -> {
