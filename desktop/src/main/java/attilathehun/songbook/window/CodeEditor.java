@@ -1,17 +1,22 @@
 package attilathehun.songbook.window;
 
+import attilathehun.annotation.TODO;
+import attilathehun.songbook.Main;
 import attilathehun.songbook.collection.CollectionListener;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.util.Misc;
+import javafx.embed.swing.SwingNode;
 import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
-import javafx.embed.swing.SwingNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -28,58 +33,122 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class CodeEditor extends Stage implements CollectionListener, DocumentListener {
     private static final Logger logger = LogManager.getLogger(CodeEditor.class);
+    private static final HashMap<Song, CodeEditor> instances = new HashMap<>();
     private static boolean SHIFT_PRESSED = false;
-
     private String filePath;
     private Song song;
+    @FXML
+    private SwingNode swingNode;
 
-    private final RSyntaxTextArea textArea;
-    private final CollectionManager manager;
+    private RSyntaxTextArea textArea;
+    private CollectionManager manager;
 
     private CodeEditor() {
-        throw new RuntimeException("Constructor not allowed");
+
     }
 
-    public CodeEditor(CollectionManager manager, Song s) {
-        setTitle("R2G2");
+    private CodeEditor(CollectionManager manager) {
+        this.manager = manager;
+    }
+
+    private CodeEditor(Song s, CollectionManager manager) {
         if (s == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Song must not be null!");
         }
+        setSong(s);
         if (manager == null) {
             if (s.getManager() == null) {
                 this.manager = Environment.getInstance().getCollectionManager();
             } else {
                 this.manager = s.getManager();
             }
-
         } else {
             this.manager = manager;
         }
 
-        this.setResizable(true);
+    }
 
-        AnchorPane root = new AnchorPane();
-        SwingNode node = new SwingNode();
+    public static void open(Song s) {
+        if (s == null) {
+            throw new IllegalArgumentException("Song must not be null!");
+        }
+        CollectionManager manager;
+        if (s.getManager() == null) {
+            manager = Environment.getInstance().getCollectionManager();
+        } else {
+            manager = s.getManager();
+        }
+        open(s, manager);
+    }
 
-        JPanel cp = new JPanel(new BorderLayout());
+    public static void open(Song s, CollectionManager manager) {
+        if (s == null) {
+            throw new IllegalArgumentException("Song must not be null!");
+        }
+        CodeEditor instance = new CodeEditor(s, manager);
+        load(instance);
+        instances.put(instance.song, instance);
+        instance.show();
+    }
+
+
+
+    @FXML
+    private void initialize() {
         textArea = new RSyntaxTextArea(100, 120);
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HTML);
         textArea.setCodeFoldingEnabled(true);
         textArea.getDocument().addDocumentListener(this);
         RTextScrollPane sp = new RTextScrollPane(textArea);
-        cp.add(sp);
 
-        node.setContent(cp);
-        root.getChildren().add(node);
-        setScene(new Scene(root));
-
-        this.setSong(s);
-
-        this.show();
+        swingNode.setContent(sp);
     }
+
+    private static void load(CodeEditor editor) {
+        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("code-editor.fxml"));
+        fxmlLoader.setController(editor);
+        Scene scene;
+        try {
+            scene = new Scene(fxmlLoader.load());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        editor.setScene(scene);
+
+    }
+
+    private void destroy() {
+        instances.remove(song);
+        close();
+    }
+
+    private void init() {
+        this.setTitle("If you read this, you should probably get a life! :)");
+        this.setResizable(true);
+
+        AnchorPane root = new AnchorPane();
+        root.prefHeightProperty().bind(this.widthProperty());
+        SwingNode node = new SwingNode();
+        node.prefHeight(600);
+        node.prefWidth(400);
+
+        textArea = new RSyntaxTextArea(100, 120);
+        textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HTML);
+        textArea.setCodeFoldingEnabled(true);
+        textArea.getDocument().addDocumentListener(this);
+        RTextScrollPane sp = new RTextScrollPane(textArea);
+
+        node.setContent(sp);
+        root.getChildren().add(node);
+
+        this.setScene(new Scene(root, 600, 600));
+
+    }
+
 
     private void registerKeyboardShortcuts() {
         focusedProperty().addListener((ov, onHidden, onShown) -> {
@@ -100,10 +169,10 @@ public class CodeEditor extends Stage implements CollectionListener, DocumentLis
                             }
                         }
                     }
-                    case SHIFT-> {
+                    case SHIFT -> {
                         if (keyEvent.getEventType().equals(KeyEvent.KEY_PRESSED)) {
                             SHIFT_PRESSED = true;
-                        } else if(keyEvent.getEventType().equals(KeyEvent.KEY_RELEASED)) {
+                        } else if (keyEvent.getEventType().equals(KeyEvent.KEY_RELEASED)) {
                             SHIFT_PRESSED = false;
                         }
                     }
@@ -113,45 +182,72 @@ public class CodeEditor extends Stage implements CollectionListener, DocumentLis
     }
 
     private void registerWindowListener() {
-       setOnCloseRequest( event -> {
-           if (getTitle().startsWith("*")) {
-               boolean confirmed = false;
-               if (SHIFT_PRESSED) {
-                   confirmed = true;
-               } else {
-                   String message = "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?";
-                   confirmed = Environment.showConfirmMessage("Songbook Manager HTML Editor", "Do you want to save the changes?", null);
-               }
-               if (!confirmed) {
-                   return;
-               }
-           }
-           close();
-       });
+        setOnCloseRequest(event -> {
+            if (getTitle().startsWith("*")) {
+                boolean confirmed = false;
+                if (SHIFT_PRESSED) {
+                    confirmed = true;
+                } else {
+                    String message = "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?";
+                    confirmed = Environment.showConfirmMessage("Songbook Manager HTML Editor", "Do you want to save the changes?", null);
+                }
+                if (!confirmed) {
+                    return;
+                }
+            }
+            destroy();
+        });
     }
 
     private void setSong(Song s) {
-        this.filePath = manager.getSongFilePath(s);
-        this.song = s;
+        if (song != null) {
+            throw new IllegalStateException("A song has already been set for this editor window! Create a new instance instead.");
+        }
+        if (s == null) {
+            throw new IllegalArgumentException("Song must not be null");
+        }
 
-        if (Misc.fileExists(filePath)) {
-            try {
-                ArrayList<String> lines = new ArrayList<String>(Files.readAllLines(Paths.get(filePath)));
-                textArea.setRows(lines.size());
-                textArea.setText(String.join("\n", lines));
-                if (this.manager.equals(EasterCollectionManager.getInstance())) {
-                    setTitle(String.format("[E] HTML editor - %s (id: %d)", s.name(), s.id()));
-                } else {
-                    setTitle(String.format("HTML editor - %s (id: %d)", s.name(), s.id()));
-                }
+        song = s;
+    }
 
-            } catch (IOException e) {
-                logger.error(e.getMessage(), e);
-                Environment.showErrorMessage("Songbook Manager HTML Editor", "Error", "Can not open song data file");
+    private void setSong2(Song s) {
+        if (song != null) {
+            throw new IllegalStateException("A song has already been set for this editor window! Create a new instance instead.");
+        }
+        if (s == null) {
+            throw new IllegalArgumentException("Song must not be null");
+        }
+
+        if (manager == null) {
+            if (s.getManager() == null) {
+                manager = Environment.getInstance().getCollectionManager();
+            } else {
+                manager = s.getManager();
+            }
+        }
+
+
+        filePath = manager.getSongFilePath(s);
+        song = s;
+
+
+        if (!Misc.fileExists(filePath)) {
+            Environment.showMessage("Song file not found", "Error", "This should never have happened!");
+            return;
+        }
+        try {
+            ArrayList<String> lines = new ArrayList<String>(Files.readAllLines(Paths.get(filePath)));
+            textArea.setRows(lines.size());
+            textArea.setText(String.join("\n", lines));
+            if (this.manager.equals(EasterCollectionManager.getInstance())) {
+                setTitle(String.format("[E] HTML editor - %s (id: %d)", s.name(), s.id()));
+            } else {
+                setTitle(String.format("HTML editor - %s (id: %d)", s.name(), s.id()));
             }
 
-        } else {
-            Environment.showMessage("Songbook Manager HTML Editor", "Error", "This should never have happened!");
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            Environment.showErrorMessage("Songbook Manager HTML Editor", "Error", "Can not open song data file");
         }
     }
 
@@ -162,7 +258,6 @@ public class CodeEditor extends Stage implements CollectionListener, DocumentLis
             writer.close();
             manager.updateSongRecordTitleFromHTML(song);
             Environment.getInstance().refresh();
-            SongbookApplication.dialControlPLusRPressed();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Songbook Manager HTML Editor", "Error", "Can not save the changes! You can save them manually to the path " + filePath + "from your clipboard");
@@ -171,7 +266,8 @@ public class CodeEditor extends Stage implements CollectionListener, DocumentLis
     }
 
 
-    @Override //TODO
+    @TODO
+    @Override
     public void onSongRemoved(Song s, CollectionManager m) {
         /*if (s.equals(song) && manager.equals(m)) {
             UIManager.put("OptionPane.okButtonText", "Recreate");
@@ -190,6 +286,7 @@ public class CodeEditor extends Stage implements CollectionListener, DocumentLis
         }*/
     }
 
+    @TODO(description = "if BIND_SONG_TITLES is active, notify about change (if change happened)")
     @Override
     public void onSongUpdated(Song s, CollectionManager m) {
 

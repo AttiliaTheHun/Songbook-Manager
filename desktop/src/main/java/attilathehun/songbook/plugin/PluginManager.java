@@ -66,7 +66,7 @@ public final class PluginManager {
 
         public void registerPlugin(Plugin plugin) {
             if (get(plugin.getName()) == null) {
-                put(plugin.getName(), plugin.getSettings());
+                put(plugin.getName(), plugin.defaultSettings());
             }
         }
 

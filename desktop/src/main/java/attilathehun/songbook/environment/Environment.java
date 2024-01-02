@@ -1,5 +1,6 @@
 package attilathehun.songbook.environment;
 
+import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.window.SongbookApplication;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
@@ -11,9 +12,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import attilathehun.songbook.vcs.VCSAdmin;
 import org.apache.logging.log4j.Logger;
@@ -24,6 +23,7 @@ import static javax.swing.JOptionPane.showMessageDialog;
 public final class Environment {
 
     private static final Logger logger = LogManager.getLogger(Environment.class);
+    private static final List<EnvironmentStateListener> listeners = new ArrayList<EnvironmentStateListener>();
 
     public static boolean FLAG_IGNORE_SEGMENTS = false;
 
@@ -51,7 +51,7 @@ public final class Environment {
             return tokenInMemory;
         }
 
-        if (fileExists(settings.user.getAuthFilePath(new Certificate()))) {
+        if (Misc.fileExists(settings.user.getAuthFilePath(new Certificate()))) {
             try {
                 return String.join("", Files.readAllLines(Path.of(settings.user.getAuthFilePath(new Certificate()))));
             } catch (IOException e) {
@@ -148,60 +148,7 @@ public final class Environment {
         } catch (NullPointerException npe) {
             logger.error(npe.getMessage(), npe);
         }
-
-    }
-
-    @Deprecated(forRemoval = true)
-    public static boolean fileExists(String path) {
-        return new File(path).exists();
-    }
-
-    /**
-     * Perform action(s) depending on the arguments. Handles command line arguments, but can be used on runtime as well.
-     * Unrecognized commands are ignored
-     *
-     * @param args series of commands
-     * @return false when any error occurs
-     */
-    //TODO
-    //Do we really need this?
-    @Deprecated(forRemoval = true)
-    public Result[] perform(String[] args) {
-        Result[] output = new Result[args.length];
-        boolean performSave = false, performLoad = false, targetRemote = false;
-        for (int i = 0; i < args.length; i++) {
-            switch (args[i]) {
-                case "-song1":
-                    break;
-                case "-song2":
-                    break;
-                case "--remote":
-                    targetRemote = true;
-                    output[i] = Result.SUCCESS;
-                    break;
-                case "save":
-                    performSave = true;
-                    output[i] = Result.SUCCESS;
-                    break;
-                case "load":
-                    performLoad = true;
-                    output[i] = Result.SUCCESS;
-                    break;
-                case "-token":
-                    break;
-                default:
-                    output[i] = Result.IGNORED;
-            }
-        }
-
-        return output;
-    }
-
-    @Deprecated(forRemoval = true)
-    public enum Result {
-        SUCCESS,
-        FAILURE,
-        IGNORED
+        notifyOnRefresh();
     }
 
     /**
@@ -254,7 +201,7 @@ public final class Environment {
     }
 
     /**
-     * Scrolls the songbook so that the requested song is visible in the webview as if the user navigated on it himself, which means that
+     * Scrolls the songbook so that the requested song is visible in the web view as if the user navigated on it himself, which means that
      * the left/right position of the song will be preserved.
      * @param s the song to be displayed
      */
@@ -267,19 +214,57 @@ public final class Environment {
         }
         int index = getInstance().getCollectionManager().getFormalCollectionSongIndex(s);
         if (index % 2 == 0) {
-            SongbookApplication.dialImaginarySongOneKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
+            notifyOnSongOneSet(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
             if (index + 1 >= Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
-                SongbookApplication.dialImaginarySongTwoKeyPressed(CollectionManager.getShadowSong());
+                notifyOnSongTwoSet(CollectionManager.getShadowSong());
             } else {
-                SongbookApplication.dialImaginarySongTwoKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index + 1));
+                notifyOnSongTwoSet(Environment.getInstance().getCollectionManager().getFormalCollection().get(index + 1));
             }
         } else {
-            SongbookApplication.dialImaginarySongTwoKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
+            notifyOnSongTwoSet(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
             if (index - 1 < 0) {
-                SongbookApplication.dialImaginarySongOneKeyPressed(CollectionManager.getShadowSong());
+                notifyOnSongOneSet(CollectionManager.getShadowSong());
             } else {
-                SongbookApplication.dialImaginarySongOneKeyPressed(Environment.getInstance().getCollectionManager().getFormalCollection().get(index - 1));
+                notifyOnSongOneSet(Environment.getInstance().getCollectionManager().getFormalCollection().get(index - 1));
             }
+        }
+    }
+
+    public static void addListener(EnvironmentStateListener listener) {
+        listeners.add(listener);
+    }
+
+    public static List<EnvironmentStateListener> getListeners() {
+        return listeners;
+    }
+
+    private static void notifyOnRefresh() {
+        for (EnvironmentStateListener listener : listeners) {
+            listener.onRefresh();
+        }
+    }
+
+    public static void notifyOnPageTurnedBack() {
+        for (EnvironmentStateListener listener : Environment.getListeners()) {
+            listener.onPageTurnedBack();
+        }
+    }
+
+    public static void notifyOnPageTurnedForward() {
+        for (EnvironmentStateListener listener : Environment.getListeners()) {
+            listener.onPageTurnedForward();
+        }
+    }
+
+    public static void notifyOnSongOneSet(Song s) {
+        for (EnvironmentStateListener listener : Environment.getListeners()) {
+            listener.onSongOneSet(s);
+        }
+    }
+
+    public static void notifyOnSongTwoSet(Song s) {
+        for (EnvironmentStateListener listener : Environment.getListeners()) {
+            listener.onSongTwoSet(s);
         }
     }
 

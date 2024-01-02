@@ -1,32 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="attilathehun.songbook.window.CollectionEditor">
+<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <BorderPane prefHeight="600.0" prefWidth="800.0">
          <top>
             <HBox prefHeight="20.0" prefWidth="800.0" BorderPane.alignment="CENTER">
                <children>
-                  <Label prefWidth="30" text="n">
+                  <Label prefWidth="38.0" text="n">
                      <font>
                         <Font name="System Bold" size="12.0" />
-                     </font></Label>
-                  <Label prefWidth="250" text="Name" >
+                     </font>
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                     <padding>
+                        <Insets left="8.0" />
+                     </padding></Label>
+                  <Label prefWidth="268.0" text="Name">
+                      <font>
+                          <Font name="System Bold" size="12.0" />
+                      </font>
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                     <padding>
+                        <Insets left="8.0" />
+                     </padding></Label>
+                  <Label prefWidth="38.0" text="ID">
+                      <font>
+                          <Font name="System Bold" size="12.0" />
+                      </font>
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                     <padding>
+                        <Insets left="8.0" />
+                     </padding></Label>
+                  <Label alignment="CENTER" prefWidth="450.0" text="URL">
                       <font>
                           <Font name="System Bold" size="12.0" />
                       </font></Label>
-                  <Label prefWidth="30" text="ID" >
-                      <font>
-                          <Font name="System Bold" size="12.0" />
-                      </font></Label>
-                  <Label prefWidth="440" text="URL" >
-                      <font>
-                          <Font name="System Bold" size="12.0" />
-                      </font></Label>
-                   <Label prefWidth="60" text="Active" >
+                   <Label alignment="CENTER" prefWidth="60" text="Active">
                        <font>
                            <Font name="System Bold" size="12.0" />
                        </font></Label>

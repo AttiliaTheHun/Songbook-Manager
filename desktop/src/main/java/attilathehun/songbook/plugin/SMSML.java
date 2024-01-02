@@ -59,7 +59,7 @@ public class SMSML extends Plugin {
     }
 
     @Override
-    public PluginSettings getSettings() {
+    public PluginSettings defaultSettings() {
         PluginSettings settings = new PluginSettings();
         settings.put("enabled", Boolean.TRUE);
         settings.put("engine", new StreamLooper().getName());

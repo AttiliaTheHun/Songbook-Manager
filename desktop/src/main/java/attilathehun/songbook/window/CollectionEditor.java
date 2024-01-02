@@ -1,5 +1,6 @@
 package attilathehun.songbook.window;
 
+import attilathehun.annotation.TODO;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
@@ -14,13 +15,16 @@ import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,11 +32,9 @@ import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 
+@TODO(priority = true)
 public class CollectionEditor extends Stage {
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
-
-    private static boolean SHIFT_PRESSED = false;
-    private static boolean CONTROL_PRESSED = false;
 
     @FXML
     public Button editSongHTMLButton;
@@ -49,19 +51,25 @@ public class CollectionEditor extends Stage {
     @FXML
     public TabPane tabbedPane;
 
-    private static CollectionEditor instance = new CollectionEditor();
+    private static final CollectionEditor instance = new CollectionEditor();
 
     private Song selectedSong = null;
     private CollectionManager selectedManager = null;
 
     @FXML
-    public void initialize() {
+    private void initialize() {
         initTabbedPane();
         initBottomToolbar();
+
+        addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, window -> hide());
+
+    }
+
+    public void postInit() {
         initKeyboardShortcuts();
     }
 
-    public CollectionEditor(){
+    private CollectionEditor(){
         this.setTitle("Collection Editor");
         this.setResizable(false);
     }
@@ -119,7 +127,7 @@ public class CollectionEditor extends Stage {
             if (selectedManager == null) {
                 selectedManager = selectedSong.getManager(); //can still be null, theoretically :)
             }
-            CodeEditorV1.open(selectedManager, selectedSong);
+            CodeEditor.open(selectedSong, selectedManager);
         });
         editSongRecordButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
@@ -184,7 +192,7 @@ public class CollectionEditor extends Stage {
             }
 
             boolean confirmed = false;
-            if (SHIFT_PRESSED) {
+            if (SongbookApplication.isShiftPressed()) {
                 confirmed = true;
             } else {
                 String message = "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?";
@@ -202,13 +210,6 @@ public class CollectionEditor extends Stage {
     //TODO
     public void initKeyboardShortcuts() {
 
-        focusedProperty().addListener((ov, onHidden, onShown) -> {
-            if (onHidden) {
-                SHIFT_PRESSED = false;
-                CONTROL_PRESSED = false;
-            }
-        });
-
         this.getScene().setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
@@ -220,7 +221,7 @@ public class CollectionEditor extends Stage {
                             confirmed = true;
                         } else {
                             String message = "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?";
-                            confirmed = Environment.showConfirmMessage("Delete song", String.format("Delete song '%s' id:%s?", selectedSong.name(), selectedSong.id()), message);
+                            confirmed = Environment.showConfirmMessage("Delete song", String.format("Delete song '%s' id:%s ?", selectedSong.name(), selectedSong.id()), message);
                         }
                         if (confirmed) {
                             selectedManager.removeSong(selectedSong);
@@ -232,20 +233,6 @@ public class CollectionEditor extends Stage {
                         if (keyEvent.isControlDown()) {
                             refreshStoredSelection();
                             //TODO refresh list
-                        }
-                    }
-                    case CONTROL -> {
-                        if (keyEvent.getEventType().equals(KeyEvent.KEY_PRESSED)) {
-                            CONTROL_PRESSED = true;
-                        } else if(keyEvent.getEventType().equals(KeyEvent.KEY_RELEASED)) {
-                            CONTROL_PRESSED = false;
-                        }
-                    }
-                    case SHIFT-> {
-                        if (keyEvent.getEventType().equals(KeyEvent.KEY_PRESSED)) {
-                            SHIFT_PRESSED = true;
-                        } else if(keyEvent.getEventType().equals(KeyEvent.KEY_RELEASED)) {
-                            SHIFT_PRESSED = false;
                         }
                     }
                 }
@@ -329,13 +316,13 @@ public class CollectionEditor extends Stage {
                 nLabel.setPrefWidth(30);
                 this.getChildren().add(nLabel);
                 Label nameLabel = new Label(s.name());
-                nameLabel.setPrefWidth(250);
+                nameLabel.setPrefWidth(260);
                 this.getChildren().add(nameLabel);
                 Label IDLabel = new Label (String.valueOf(s.id()));
                 IDLabel.setPrefWidth(30);
                 this.getChildren().add(IDLabel);
                 Label URLLabel = new Label(s.getUrl());
-                URLLabel.setPrefWidth(430);
+                URLLabel.setPrefWidth(450);
                 this.getChildren().add(URLLabel);
                 CheckBox activityCheckBox = new CheckBox(null);
                 activityCheckBox.setSelected(s.isActive());
@@ -343,14 +330,14 @@ public class CollectionEditor extends Stage {
                 activityCheckBox.setOnAction(actionEvent -> {
                     if (activityCheckBox.isSelected()) {
                         manager.activateSong(s);
-                        System.out.println("Song activated: " + s.id());
+                        logger.debug("Song activated: " + s.id());
                     } else {
                         manager.deactivateSong(s);
-                        System.out.println("Song deactivated: " + s.id());
+                        logger.debug("Song deactivated: " + s.id());
                     }
-
                 });
                 this.getChildren().add(activityCheckBox);
+                this.setFillHeight(true);
             }
 
         }

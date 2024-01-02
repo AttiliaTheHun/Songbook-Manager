@@ -70,7 +70,7 @@ public class HTMLGenerator {
     public void generateSonglistSegmentFile(int startIndex, int endIndex, int segmentNumber) {
         try {
             String path = String.format(TEMP_SONGLIST_PART_PATH, segmentNumber);
-            if (Environment.fileExists(path)) {
+            if (Misc.fileExists(path)) {
                 return;
             }
             PrintWriter printWriter = new PrintWriter(new FileWriter((path), false));
@@ -310,7 +310,7 @@ public class HTMLGenerator {
         try {
             Files.copy(Paths.get(FRONTPAGE_PICTURE_PATH), Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/frontpage.png"), StandardCopyOption.REPLACE_EXISTING);
             String path = TEMP_FRONTPAGE_PATH;
-            if (Environment.fileExists(path)) {
+            if (Misc.fileExists(path)) {
                 return;
             }
             PrintWriter printWriter = new PrintWriter(new FileWriter((path), false));
@@ -336,10 +336,10 @@ public class HTMLGenerator {
         }
 
         String path;
-        if (number == PDFGenerator.PREVIEW_SEGMENT_NUMBER) {
-            path = String.format(PDFGenerator.PREVIEW_SEGMENT_PATH, PDFGenerator.EXTENSION_HTML);
+        if (number == PDFGen.PREVIEW_SEGMENT_NUMBER) {
+            path = String.format(PDFGen.PREVIEW_SEGMENT_PATH, PDFGen.EXTENSION_HTML);
         } else {
-            path = String.format(PDFGenerator.DEFAULT_SEGMENT_PATH, number, PDFGenerator.EXTENSION_HTML);
+            path = String.format(PDFGen.DEFAULT_SEGMENT_PATH, number, PDFGen.EXTENSION_HTML);
         }
         try {
             PrintWriter printWriter = new PrintWriter(new FileWriter((path), false));

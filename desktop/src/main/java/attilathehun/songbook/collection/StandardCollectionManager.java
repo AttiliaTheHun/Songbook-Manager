@@ -171,7 +171,6 @@ public class StandardCollectionManager extends CollectionManager {
         CodeEditorV1.open(this, s);
         Environment.getInstance().refresh();
         Environment.navigateWebViewToSong(collection.get(collection.size() - 1));
-        SongbookApplication.dialControlPLusRPressed();
         return song;
     }
 
@@ -189,7 +188,6 @@ public class StandardCollectionManager extends CollectionManager {
         onSongRemoved(s);
         if (Environment.getInstance().getCollectionManager().equals(getInstance())) {
             Environment.getInstance().refresh();
-            SongbookApplication.dialControlPLusRPressed();
         }
     }
 
@@ -216,7 +214,6 @@ public class StandardCollectionManager extends CollectionManager {
         save();
         onSongUpdated(s);
         Environment.getInstance().refresh();
-        SongbookApplication.dialControlPLusRPressed();
         return s;
     }
 

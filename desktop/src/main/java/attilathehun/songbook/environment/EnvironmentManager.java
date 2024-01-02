@@ -118,7 +118,6 @@ public class EnvironmentManager {
         extractLocalDataFile();
         Environment.getInstance().refresh();
         Environment.getInstance().getCollectionManager().init();
-        SongbookApplication.dialControlPLusRPressed();
         Environment.showMessage("Success", "Songbook loaded successfully.");
         logger.debug("Songbook loaded");
     }

@@ -3,13 +3,9 @@ package attilathehun.songbook.window;
 import attilathehun.songbook.Main;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
-import attilathehun.songbook.environment.Environment;
-import attilathehun.songbook.environment.EnvironmentManager;
-import attilathehun.songbook.environment.EnvironmentVerificator;
-import attilathehun.songbook.environment.Installer;
+import attilathehun.songbook.environment.*;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.util.ExportTest;
-import attilathehun.songbook.util.KeyEventListener;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
@@ -26,6 +22,8 @@ import javafx.stage.Stage;
 
 import java.awt.*;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,15 +42,11 @@ public class SongbookApplication extends Application {
 
     private static boolean CONTROL_PRESSED = false;
     private static boolean SHIFT_PRESSED = false;
-    private static final BooleanProperty IS_FOCUSED = new SimpleBooleanProperty();
-
-    private static final List<KeyEventListener> listeners = new ArrayList<KeyEventListener>();
-
 
 
     public static void main(String[] args) {
-
-        System.setProperty("log4j.configurationFile", "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\src\\main\\resources\\log4j2.yaml");
+        System.out.println(Main.class.getResource("log4j2.yaml"));
+        System.setProperty("log4j.configurationFile", Main.class.getResource("log4j2.yaml").toString());
 
         PluginManager.loadPlugins();
 
@@ -63,13 +57,11 @@ public class SongbookApplication extends Application {
         launch(args);
         logger.debug("Application started successfully");
 
-        ExportTest.main();
+        //ExportTest.main();
     }
 
     @Override
     public void start(Stage stage) throws IOException {
-
-        initCollectionEditor();
 
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
@@ -83,15 +75,13 @@ public class SongbookApplication extends Application {
             }
         });
 
-        IS_FOCUSED.bind(stage.focusedProperty());
 
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("songbook-view.fxml"));
         AnchorPane root = fxmlLoader.load();
         stage.setMaximized(true);
         Scene scene = new Scene(root, 1000, 800);
 
-        //registerNativeHook(stage);
-
+        registerNativeHook(stage);
 
         stage.setTitle("Songbook Manager");
         stage.setScene(scene);
@@ -99,13 +89,10 @@ public class SongbookApplication extends Application {
         stage.show();
     }
 
-    //TODO: separate dials so only the focused window is notified
-    @Deprecated(forRemoval = true)
     private static void registerNativeHook(Stage stage) {
         try {
             GlobalScreen.registerNativeHook();
             GlobalScreen.addNativeKeyListener(new NativeKeyListener() {
-
 
                 @Override
                 public void nativeKeyReleased(NativeKeyEvent nativeEvent) {
@@ -118,115 +105,13 @@ public class SongbookApplication extends Application {
 
                 @Override
                 public void nativeKeyPressed(NativeKeyEvent nativeEvent) {
-                   /* if (!stage.isFocused() && !CollectionEditor.focused() && !CodeEditor.hasFocusedInstance()) {
-                        return;
-                    }*/
-                    switch (nativeEvent.getKeyCode()) {
-                        case NativeKeyEvent.VC_CONTROL -> {
-                            CONTROL_PRESSED = true;
-                        }
-                        case NativeKeyEvent.VC_SHIFT -> {
-                            SHIFT_PRESSED = true;
-                        }
-                        case NativeKeyEvent.VC_LEFT, NativeKeyEvent.VC_PAGE_DOWN -> {
-                            if (!listeners.get(0).onImaginaryIsTextFieldFocusedKeyPressed()) {
-                                dialLeftArrowPressed();
-                            }
-                        }
-                        case NativeKeyEvent.VC_RIGHT, NativeKeyEvent.VC_PAGE_UP -> {
-                            if (!listeners.get(0).onImaginaryIsTextFieldFocusedKeyPressed()) {
-                                dialRightArrowPressed();
-                            }
-                        }
-                        case NativeKeyEvent.VC_R -> { //refresh
-                            if (CONTROL_PRESSED) {
-                                Environment.getInstance().getCollectionManager().init();
-                                Environment.getInstance().refresh();
-                                EnvironmentVerificator.automated();
-                                dialControlPLusRPressed();
-                            }
-                        }
-                        case NativeKeyEvent.VC_S -> { //save
-                            if (CONTROL_PRESSED) {
-                                new EnvironmentManager().save();
-                                dialControlPLusSPressed();
-                            }
-                        }
-                        case NativeKeyEvent.VC_L -> { //load
-                            if (CONTROL_PRESSED) {
-                                new EnvironmentManager().load();
-                            }
-                        }
-                        case NativeKeyEvent.VC_H -> { //load
-                            if (CONTROL_PRESSED) {
-                                try {
-                                    Desktop.getDesktop().browse(new URL("https://github.com/AttiliaTheHun/Songbook-Manager/wiki/English").toURI());
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                        case NativeKeyEvent.VC_O -> { //open song link
-                            if (CONTROL_PRESSED) {
-                                if (SongbookController.getSongOne().getUrl().equals("") && SongbookController.getSongTwo().getUrl().equals("")) {
-                                    Environment.showMessage("Message", "None of the displayed songs has an associated URL. You can managed URLs in the Collection Editor Window.");
-                                } else if (!SongbookController.getSongOne().getUrl().equals("") && SongbookController.getSongTwo().getUrl().equals("")) {
-
-                                    int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to open the associated URL in a web browser?", String.format("%s - %s", SongbookController.getSongOne().name(), SongbookController.getSongOne().getUrl()), JOptionPane.YES_NO_OPTION);
-
-                                    if (resultCode == JOptionPane.YES_OPTION) {
-                                        try {
-                                            Desktop.getDesktop().browse(new URL(SongbookController.getSongOne().getUrl()).toURI());
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                            Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
-                                        }
-
-                                    }
-                                } else if (SongbookController.getSongOne().getUrl().equals("") && !SongbookController.getSongTwo().getUrl().equals("")) {
-
-                                    int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to open the associated URL in a web browser?", SongbookController.getSongTwo().getUrl(), JOptionPane.YES_NO_OPTION);
-
-                                    if (resultCode == JOptionPane.YES_OPTION) {
-                                        try {
-                                            Desktop.getDesktop().browse(new URL(SongbookController.getSongTwo().getUrl()).toURI());
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                            Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
-                                        }
-
-
-                                    }
-                                } else /* both have a URL */ {
-                                    UIManager.put("OptionPane.yesButtonText", SongbookController.getSongOne().name());
-                                    UIManager.put("OptionPane.noButtonText", SongbookController.getSongTwo().name());
-                                    int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Which song's associated URL do you want to open in the browser?", String.format("%s or %s?", SongbookController.getSongOne().name(), SongbookController.getSongTwo().name()), JOptionPane.YES_NO_OPTION);
-                                    if (resultCode == JOptionPane.YES_OPTION) {
-                                        try {
-                                            Desktop.getDesktop().browse(new URL(SongbookController.getSongOne().getUrl()).toURI());
-                                        } catch (Exception e) {
-                                        }
-
-                                        Environment.showWarningMessage("Warning", "The associated URL is malformed. PLease check for typos :)");
-                                    } else if (resultCode == JOptionPane.NO_OPTION) {
-                                        try {
-                                            Desktop.getDesktop().browse(new URL(SongbookController.getSongTwo().getUrl()).toURI());
-                                        } catch (Exception e) {
-                                            Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
-                                        }
-
-                                    }
-                                    UIManager.put("OptionPane.yesButtonText", "Yes");
-                                    UIManager.put("OptionPane.noButtonText", "No");
-                                }
-
-                            }
-                        }
-                        case NativeKeyEvent.VC_DELETE -> {
-                            dialDeletePressed();
-                        }
+                    if (nativeEvent.getKeyCode() == NativeKeyEvent.VC_CONTROL) {
+                        CONTROL_PRESSED = true;
+                    } else if (nativeEvent.getKeyCode() == NativeKeyEvent.VC_SHIFT) {
+                        SHIFT_PRESSED = true;
                     }
                 }
+
             });
         } catch (NativeHookException e) {
             logger.error(e.getMessage(), e);
@@ -240,27 +125,22 @@ public class SongbookApplication extends Application {
             public void handle(KeyEvent keyEvent) {
                 switch (keyEvent.getCode()) {
                     case LEFT, PAGE_DOWN -> {
-                        if (!listeners.get(0).onImaginaryIsTextFieldFocusedKeyPressed()) {
-                            dialLeftArrowPressed();
-                        }
+                        Environment.notifyOnPageTurnedBack();
+
                     }
                     case RIGHT, PAGE_UP -> {
-                        if (!listeners.get(0).onImaginaryIsTextFieldFocusedKeyPressed()) {
-                            dialRightArrowPressed();
-                        }
+                        Environment.notifyOnPageTurnedForward();
                     }
                     case R -> { //refresh
                         if (keyEvent.isControlDown()) {
                             Environment.getInstance().getCollectionManager().init();
                             Environment.getInstance().refresh();
                             EnvironmentVerificator.automated();
-                            dialControlPLusRPressed();
                         }
                     }
                     case S -> { //save
                         if (keyEvent.isControlDown()) {
                             new EnvironmentManager().save();
-                            dialControlPLusSPressed();
                         }
                     }
                     case L -> { //load
@@ -279,132 +159,49 @@ public class SongbookApplication extends Application {
                     }
                     case O -> { //open song link
                         if (keyEvent.isControlDown()) {
-                            if (SongbookController.getSongOne().getUrl().equals("") && SongbookController.getSongTwo().getUrl().equals("")) {
-                                Environment.showMessage("Message", "None of the displayed songs has an associated URL. You can managed URLs in the Collection Editor Window.");
-                            } else if (!SongbookController.getSongOne().getUrl().equals("") && SongbookController.getSongTwo().getUrl().equals("")) {
-
-                                int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to open the associated URL in a web browser?", String.format("%s - %s", SongbookController.getSongOne().name(), SongbookController.getSongOne().getUrl()), JOptionPane.YES_NO_OPTION);
-
-                                if (resultCode == JOptionPane.YES_OPTION) {
-                                    try {
-                                        Desktop.getDesktop().browse(new URL(SongbookController.getSongOne().getUrl()).toURI());
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                        Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
-                                    }
-
-                                }
-                            } else if (SongbookController.getSongOne().getUrl().equals("") && !SongbookController.getSongTwo().getUrl().equals("")) {
-
-                                int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to open the associated URL in a web browser?", SongbookController.getSongTwo().getUrl(), JOptionPane.YES_NO_OPTION);
-
-                                if (resultCode == JOptionPane.YES_OPTION) {
-                                    try {
-                                        Desktop.getDesktop().browse(new URL(SongbookController.getSongTwo().getUrl()).toURI());
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                        Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
-                                    }
-
-
-                                }
-                            } else /* both have a URL */ {
-                                UIManager.put("OptionPane.yesButtonText", SongbookController.getSongOne().name());
-                                UIManager.put("OptionPane.noButtonText", SongbookController.getSongTwo().name());
-                                int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Which song's associated URL do you want to open in the browser?", String.format("%s or %s?", SongbookController.getSongOne().name(), SongbookController.getSongTwo().name()), JOptionPane.YES_NO_OPTION);
-                                if (resultCode == JOptionPane.YES_OPTION) {
-                                    try {
-                                        Desktop.getDesktop().browse(new URL(SongbookController.getSongOne().getUrl()).toURI());
-                                    } catch (Exception e) {
-                                    }
-
-                                    Environment.showWarningMessage("Warning", "The associated URL is malformed. PLease check for typos :)");
-                                } else if (resultCode == JOptionPane.NO_OPTION) {
-                                    try {
-                                        Desktop.getDesktop().browse(new URL(SongbookController.getSongTwo().getUrl()).toURI());
-                                    } catch (Exception e) {
-                                        Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
-                                    }
-
-                                }
-                                UIManager.put("OptionPane.yesButtonText", "Yes");
-                                UIManager.put("OptionPane.noButtonText", "No");
-                            }
-
+                           openAssociatedLink();
                         }
-                    }
-                    case DELETE -> {
-                        dialDeletePressed();
                     }
                 }
             }
         });
     }
 
-    private void initCollectionEditor() {
-        try {
-            CollectionEditor wind = CollectionEditor.getInstance();
-            FXMLLoader fxmlLoader = new FXMLLoader();
-            fxmlLoader.setLocation(Main.class.getResource("collection-editor.fxml"));
-            System.out.println(fxmlLoader.getLocation());
-            System.out.println(System.getProperty("user.dir"));
-            AnchorPane root = fxmlLoader.load();
-            Scene scene = new Scene(root, 800, 600);
-            wind.setScene(scene);
-
-            //wind.initKeyboardShortcuts();
-            //wind.show();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+    private void openAssociatedLink() {
+        final boolean songOneHasURL = !SongbookController.getSongOne().getUrl().equals("");
+        final boolean songTwoHasURL = !SongbookController.getSongTwo().getUrl().equals("");
+        if (! (songOneHasURL && songTwoHasURL)) {
+            Environment.showMessage("Message", "None of the displayed songs has an associated URL. You can managed URLs in the Collection Editor Window.");
         }
-    }
-
-    public static void addListener(KeyEventListener listener) {
-        listeners.add(listener);
-        logger.debug("registered listener: " + listener.getClass().getName());
-    }
-
-    private static void dialLeftArrowPressed() {
-        for (KeyEventListener listener : listeners) {
-            listener.onLeftArrowPressed();
+        int resultCode = -1;
+        boolean pass = false;
+        Song song = null;
+        if (songOneHasURL && !songTwoHasURL) {
+            resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to open the associated URL in a web browser?", SongbookController.getSongOne().getUrl(), JOptionPane.YES_NO_OPTION);
+            song = SongbookController.getSongOne();
+        } else if(!songOneHasURL && songTwoHasURL) {
+            resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to open the associated URL in a web browser?", SongbookController.getSongTwo().getUrl(), JOptionPane.YES_NO_OPTION);
+            song = SongbookController.getSongTwo();
+        } else if(songOneHasURL && songTwoHasURL) {
+            UIManager.put("OptionPane.yesButtonText", SongbookController.getSongOne().name());
+            UIManager.put("OptionPane.noButtonText", SongbookController.getSongTwo().name());
+            resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Which song's associated URL do you want to open in the browser?", String.format("%s or %s?", SongbookController.getSongOne().name(), SongbookController.getSongTwo().name()), JOptionPane.YES_NO_OPTION);
+            UIManager.put("OptionPane.yesButtonText", "Yes");
+            UIManager.put("OptionPane.noButtonText", "No");
+            if (resultCode == JOptionPane.NO_OPTION) {
+                song = SongbookController.getSongOne();
+                pass = true;
+            } else {
+                song = SongbookController.getSongTwo();
+            }
         }
-    }
-
-    private static void dialRightArrowPressed() {
-        for (KeyEventListener listener : listeners) {
-            listener.onRightArrowPressed();
-        }
-    }
-
-    private static void dialDeletePressed() {
-        for (KeyEventListener listener : listeners) {
-            listener.onDeletePressed();
-        }
-    }
-
-    public static void dialControlPLusRPressed() {
-        for (KeyEventListener listener : listeners) {
-            listener.onControlPlusRPressed();
-        }
-    }
-
-    public static void dialControlPLusSPressed() {
-        for (KeyEventListener listener : listeners) {
-            listener.onControlPlusSPressed();
-        }
-    }
-
-    public static void dialImaginarySongOneKeyPressed(Song s) {
-        for (KeyEventListener listener : listeners) {
-            listener.onImaginarySongOneKeyPressed(s);
-        }
-    }
-
-    public static void dialImaginarySongTwoKeyPressed(Song s) {
-        for (KeyEventListener listener : listeners) {
-            listener.onImaginarySongTwoKeyPressed(s);
+        if (resultCode == JOptionPane.YES_OPTION || pass) {
+            try {
+                Desktop.getDesktop().browse(new URL(song.getUrl()).toURI());
+            } catch (Exception e) {
+                e.printStackTrace();
+                Environment.showWarningMessage("Warning", "The associated URL is malformed. Please check for typos :)");
+            }
         }
     }
 
@@ -414,10 +211,6 @@ public class SongbookApplication extends Application {
 
     public static boolean isShiftPressed() {
         return SHIFT_PRESSED;
-    }
-
-    public static boolean isFocused() {
-        return IS_FOCUSED.get();
     }
 
 }

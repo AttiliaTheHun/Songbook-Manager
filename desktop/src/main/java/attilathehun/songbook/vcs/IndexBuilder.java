@@ -1,5 +1,6 @@
 package attilathehun.songbook.vcs;
 
+import attilathehun.annotation.TODO;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
@@ -31,24 +32,24 @@ public class IndexBuilder {
      */
     //TODO rewrite using loops and environment registered managers api
     public SaveIndex createSaveIndex(Index local, Index remote)  throws IOException, NoSuchAlgorithmException  {
-        Collection<String> standardAdditions = getExtraItems((Collection) remote.getData().get("standard"), (Collection) local.getData().get("standard"));
-        Collection<String> easterAdditions = getExtraItems((Collection) remote.getData().get("easter"), (Collection) local.getData().get("easter"));
-        Collection<String> standardDeletions = getMissingItems((Collection) remote.getData().get("standard"), (Collection) local.getData().get("standard"));
-        Collection<String> easterDeletions = getMissingItems((Collection) remote.getData().get("easter"), (Collection) local.getData().get("easter"));
+        Collection<String> standardAdditions = getExtraItems((Collection) remote.getData().get(StandardCollectionManager.getInstance().getCollectionName()), (Collection) local.getData().get(StandardCollectionManager.getInstance().getCollectionName()));
+        Collection<String> easterAdditions = getExtraItems((Collection) remote.getData().get(EasterCollectionManager.getInstance().getCollectionName()), (Collection) local.getData().get(EasterCollectionManager.getInstance().getCollectionName()));
+        Collection<String> standardDeletions = getMissingItems((Collection) remote.getData().get(StandardCollectionManager.getInstance().getCollectionName()), (Collection) local.getData().get(StandardCollectionManager.getInstance().getCollectionName()));
+        Collection<String> easterDeletions = getMissingItems((Collection) remote.getData().get(EasterCollectionManager.getInstance().getCollectionName()), (Collection) local.getData().get(EasterCollectionManager.getInstance().getCollectionName()));
         Collection<String> standardChanges = new ArrayList<String>();
         Collection<String> easterChanges = new ArrayList<String>();
         SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
         String standardCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
         String easterCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
         SaveIndex index = new SaveIndex(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
-        index.getAdditions().put("standard", standardAdditions);
-        index.getAdditions().put("easter", easterAdditions);
-        index.getDeletions().put("standard", standardDeletions);
-        index.getDeletions().put("easter", easterDeletions);
-        index.getChanges().put("standard", standardChanges);
-        index.getChanges().put("easter", easterChanges);
-        index.getCollections().put("standard", standardCollectionHash);
-        index.getCollections().put("easter", easterCollectionHash);
+        index.getAdditions().put(StandardCollectionManager.getInstance().getCollectionName(), standardAdditions);
+        index.getAdditions().put(EasterCollectionManager.getInstance().getCollectionName(), easterAdditions);
+        index.getDeletions().put(StandardCollectionManager.getInstance().getCollectionName(), standardDeletions);
+        index.getDeletions().put(EasterCollectionManager.getInstance().getCollectionName(), easterDeletions);
+        index.getChanges().put(StandardCollectionManager.getInstance().getCollectionName(), standardChanges);
+        index.getChanges().put(EasterCollectionManager.getInstance().getCollectionName(), easterChanges);
+        index.getCollections().put(StandardCollectionManager.getInstance().getCollectionName(), standardCollectionHash);
+        index.getCollections().put(EasterCollectionManager.getInstance().getCollectionName(), easterCollectionHash);
         return index;
     }
 
@@ -59,7 +60,7 @@ public class IndexBuilder {
      * @param remote remote songbook index
      * @return load index of the differences
      */
-    @Deprecated
+    @TODO
     public LoadIndex createLoadIndex(Index local, Index remote) {
         Collection<String> standardMissing = getExtraItems((Collection) remote.getData().get("standard"), (Collection) local.getData().get("standard"));
         Collection<String> easterMissing = getExtraItems((Collection) remote.getData().get("easter"), (Collection) local.getData().get("easter"));
@@ -79,26 +80,26 @@ public class IndexBuilder {
      */
     public Index createLocalIndex() throws IOException, NoSuchAlgorithmException {
         BuildWorker.spamCPUAndMemoryWithThreads(listFiles(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()));
-        Map standardSongs = BuildWorker.map;
+        Map<String, String> standardSongs = BuildWorker.map;
         BuildWorker.spamCPUAndMemoryWithThreads(listFiles(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()));
-        Map easterSongs = BuildWorker.map;
+        Map<String, String> easterSongs = BuildWorker.map;
         SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
         String standardCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
         String easterCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
         Index index = new Index(null);
         Property data = new Property();
-        data.put("standard", standardSongs.keySet());
-        data.put("easter", easterSongs.keySet());
+        data.put(StandardCollectionManager.getInstance().getCollectionName(), standardSongs.keySet());
+        data.put(EasterCollectionManager.getInstance().getCollectionName(), easterSongs.keySet());
         index.setData(data);
         Property hashes = new Property();
-        hashes.put("standard", standardSongs.values());
-        hashes.put("easter", easterSongs.values());
+        hashes.put(StandardCollectionManager.getInstance().getCollectionName(), standardSongs.values());
+        hashes.put(EasterCollectionManager.getInstance().getCollectionName(), easterSongs.values());
         index.setHashes(hashes);
         Property metadata = new Property();
         index.setMetadata(metadata);
         Property collections = new Property();
-        collections.put("standard", standardCollectionHash);
-        collections.put("easter", easterCollectionHash);
+        collections.put(StandardCollectionManager.getInstance().getCollectionName(), standardCollectionHash);
+        collections.put(EasterCollectionManager.getInstance().getCollectionName(), easterCollectionHash);
         index.setCollections(collections);
         index.setVersionTimestamp(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
         return index;
@@ -140,10 +141,10 @@ public class IndexBuilder {
      * @return elements from old absent in current
      */
     private Collection<String> getMissingItems(Collection<String> old, Collection<String> current) {
-        Collection missing = new ArrayList<>();
-        for (Object o : old) {
-            if (!current.contains(o)) {
-                missing.add(o);
+        Collection<String> missing = new ArrayList<>();
+        for (String s : old) {
+            if (!current.contains(s)) {
+                missing.add(s);
             }
         }
        return missing;
@@ -165,6 +166,12 @@ public class IndexBuilder {
         return new ArrayList<String>();
     }
 
+    /**
+     * Compares collection hashes in the indexes and returns a lists collections that have been modified (whose hashes do not match)
+     * @param localIndex the index to compare against
+     * @param remoteIndex the index to be compared
+     * @return modified collection names list
+     */
     public static List<String> compareCollections(Index localIndex, Index remoteIndex) {
         List<String> modifiedCollections = new ArrayList<>();
         if (!localIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()).equals(remoteIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()))) {
@@ -191,7 +198,6 @@ public class IndexBuilder {
         @Override
         public void run() {
                 activeThreads.incrementAndGet();
-
             try {
                 SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
                 File file;
@@ -206,7 +212,7 @@ public class IndexBuilder {
         }
 
         /**
-         * Initialization method to perform the necessary task setup. Internal method, do not use outside class.
+         * Initialization method to perform the necessary task setup.
          * @param dequeData task input data
          */
         private static void init(Collection<File> dequeData) {
@@ -216,7 +222,7 @@ public class IndexBuilder {
         }
 
         /**
-         * A verification method to be called when the task execution is finished. Internal method, do not use outside class.
+         * A verification method to be called when the task execution is finished.
          */
         private static void postExecution() {
             if (deque.size() > 0) {

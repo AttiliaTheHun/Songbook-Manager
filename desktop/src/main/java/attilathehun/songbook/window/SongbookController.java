@@ -1,8 +1,11 @@
 package attilathehun.songbook.window;
 
+import attilathehun.annotation.TODO;
+import attilathehun.songbook.Main;
 import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
+import attilathehun.songbook.environment.EnvironmentStateListener;
 import attilathehun.songbook.plugin.Export;
 import attilathehun.songbook.util.HTMLGenerator;
 import attilathehun.songbook.util.KeyEventListener;
@@ -12,6 +15,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.TextField;
@@ -25,16 +30,16 @@ import org.controlsfx.control.ToggleSwitch;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 //TODO: when songs get disabled, there is a problem with the latest page/song being out of bonds, fixing it?
-public class SongbookController implements KeyEventListener, CollectionListener {
+@TODO()
+public class SongbookController implements CollectionListener, EnvironmentStateListener {
 
     private static final Logger logger = LogManager.getLogger(SongbookController.class);
 
-    @Deprecated
-    private static boolean CONTROL_PRESSED = false;
     private static Song SONG_ONE;
     private static int SONG_ONE_INDEX;
     private static Song SONG_TWO;
@@ -78,15 +83,22 @@ public class SongbookController implements KeyEventListener, CollectionListener 
 
     private final HTMLGenerator generator = new HTMLGenerator();
 
-    public void initialize() throws MalformedURLException {
-        SongbookApplication.addListener(this);
+    @FXML
+    private void initialize() throws MalformedURLException {
+        Environment.addListener(this);
 
         initWebView();
 
-        initUIComponents();
+        initCollectionEditor();
 
+        initUIComponents();
     }
 
+    /**
+     * Initializes the web view to the default position. Default position is start of the songbook, more practically speaking the beginning of the default collection manager's collection
+     * substituted, if necessary, by shadow songs.
+     * @throws MalformedURLException
+     */
     private void initWebView() throws MalformedURLException {
         SONG_ONE_INDEX = 0;
         SONG_TWO_INDEX = 1;
@@ -104,13 +116,33 @@ public class SongbookController implements KeyEventListener, CollectionListener 
 
         URL url = new File(generator.generatePageFile(SONG_ONE, SONG_TWO)).toURI().toURL();
         webview.getEngine().load(url.toExternalForm());
+    }
 
+    /**
+     * Initializes and creates the CollectionEditor window, which is an instance of {@link CollectionEditor}. The window is hidden in background and can be summoned using
+     * {@link CollectionEditor#open()}.
+     */
+    private void initCollectionEditor() {
+        CollectionEditor editorController = CollectionEditor.getInstance();
+        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("collection-editor.fxml"));
+        fxmlLoader.setController(editorController);
+        Scene scene;
+        try {
+            scene = new Scene(fxmlLoader.load());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        scene.getStylesheets().add(Main.class.getResource("/css/style.css").toExternalForm());
+        editorController.setScene(scene);
+        editorController.postInit();
     }
 
     private void initUIComponents() {
 
         songOneIdField.setText(SONG_ONE.getDisplayId());
         songTwoIdField.setText(SONG_TWO.getDisplayId());
+
+
 
         editCollectionButton.setOnAction(event -> {
             CollectionEditor.open();
@@ -216,7 +248,7 @@ public class SongbookController implements KeyEventListener, CollectionListener 
                 Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH);
                 return;
             }
-            new CodeEditor(Environment.getInstance().getCollectionManager(), SONG_ONE);
+            CodeEditor.open(SONG_ONE, Environment.getInstance().getCollectionManager());
         });
 
         editSongTwoHTML.setOnAction(event -> {
@@ -224,7 +256,7 @@ public class SongbookController implements KeyEventListener, CollectionListener 
                 Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH);
                 return;
             }
-            new CodeEditor(Environment.getInstance().getCollectionManager(), SONG_TWO);
+            CodeEditor.open(SONG_TWO, Environment.getInstance().getCollectionManager());
         });
 
         exportButton.setOnAction(event -> {
@@ -313,119 +345,12 @@ public class SongbookController implements KeyEventListener, CollectionListener 
 
         initAddSongButton();
 
-
     }
 
     private void initAddSongButton() {
         addSongButton.setOnAction(event -> {
             EnvironmentManager.addSongDialog(Environment.getInstance().getCollectionManager());
         });
-    }
-
-
-    @Override
-    public void onLeftArrowPressed() {
-        if (!SongbookApplication.isFocused()) {
-            return;
-        }
-        if ((SONG_ONE.name().equals("frontpage") || SONG_ONE.name().equals("songlist0") || SONG_ONE.equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(0))) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1) {
-            return;
-        } else {
-            switchPage(false);
-        }
-    }
-
-    @Override
-    public void onRightArrowPressed() {
-        if (!SongbookApplication.isFocused()) {
-            return;
-        }
-        if (SONG_TWO.name().equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(Environment.getInstance().getCollectionManager().getFormalCollection().size() - 1).name()) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1 || SONG_TWO.id() == CollectionManager.SHADOW_SONG_ID) {
-            return;
-        } else {
-            switchPage(true);
-        }
-    }
-
-    @Override
-    public void onControlPlusRPressed() {
-        if (!SongbookApplication.isFocused()) {
-            return;
-        }
-        if (Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(SONG_ONE) == -1) {
-            if (SONG_ONE_INDEX == Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
-                switchPage(false);
-                return;
-            } else {
-                SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_ONE_INDEX);
-            }
-        }
-        if (Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(SONG_TWO) == -1) {
-            if (SONG_TWO_INDEX == Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
-                SONG_TWO = CollectionManager.getShadowSong();
-            } else {
-                SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
-            }
-        }
-
-        refreshWebView();
-    }
-
-    @Override
-    public void onDeletePressed() {
-    }
-
-    @Override
-    public void onControlPlusSPressed() {
-
-    }
-
-    @Override
-    public void onImaginarySongOneKeyPressed(Song s) {
-        try {
-            if (s.id() == CollectionManager.INVALID_SONG_ID) {
-                return;
-            }
-            if (s.id() == CollectionManager.SHADOW_SONG_ID) {
-                SONG_ONE_INDEX = Environment.getInstance().getCollectionManager().getFormalCollection().size();
-            } else {
-                SONG_ONE_INDEX = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(s);
-            }
-
-            SONG_ONE = s;
-
-            refreshWebView();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    @Override
-    public void onImaginarySongTwoKeyPressed(Song s) {
-        try {
-            if (s.id() == CollectionManager.INVALID_SONG_ID) {
-                return;
-            }
-            if (s.id() == CollectionManager.SHADOW_SONG_ID) {
-                SONG_TWO_INDEX = Environment.getInstance().getCollectionManager().getFormalCollection().size();
-            } else {
-                SONG_TWO_INDEX = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(s);
-            }
-
-            SONG_TWO = s;
-
-            refreshWebView();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public boolean onImaginaryIsTextFieldFocusedKeyPressed() {
-        if (songOneIdField.isFocused()) {
-            return true;
-        }
-        return songTwoIdField.isFocused();
     }
 
     private void switchPage(boolean toTheRight) {
@@ -500,6 +425,69 @@ public class SongbookController implements KeyEventListener, CollectionListener 
 
     @Override
     public void onSongAdded(Song s, CollectionManager m) {
+        refreshWebView();
+    }
 
+    @Override
+    public void onRefresh() {
+        refreshWebView();
+    }
+
+    @Override
+    public void onPageTurnedBack() {
+                if ((SONG_ONE.name().equals("frontpage") || SONG_ONE.name().equals("songlist0") || SONG_ONE.equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(0))) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1) {
+            return;
+        } else {
+            switchPage(false);
+        }
+    }
+
+    @Override
+    public void onPageTurnedForward() {
+                if (SONG_TWO.name().equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(Environment.getInstance().getCollectionManager().getFormalCollection().size() - 1).name()) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1 || SONG_TWO.id() == CollectionManager.SHADOW_SONG_ID) {
+            return;
+        } else {
+            switchPage(true);
+        }
+    }
+
+    @Override
+    public void onSongOneSet(Song s) {
+        try {
+            if (s.id() == CollectionManager.INVALID_SONG_ID) {
+                return;
+            }
+            if (s.id() == CollectionManager.SHADOW_SONG_ID) {
+                SONG_ONE_INDEX = Environment.getInstance().getCollectionManager().getFormalCollection().size();
+            } else {
+                SONG_ONE_INDEX = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(s);
+            }
+
+            SONG_ONE = s;
+
+            refreshWebView();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void onSongTwoSet(Song s) {
+        try {
+            if (s.id() == CollectionManager.INVALID_SONG_ID) {
+                return;
+            }
+            if (s.id() == CollectionManager.SHADOW_SONG_ID) {
+                SONG_TWO_INDEX = Environment.getInstance().getCollectionManager().getFormalCollection().size();
+            } else {
+                SONG_TWO_INDEX = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(s);
+            }
+
+            SONG_TWO = s;
+
+            refreshWebView();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

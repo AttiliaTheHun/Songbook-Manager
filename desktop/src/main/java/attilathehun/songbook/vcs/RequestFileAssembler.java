@@ -1,8 +1,10 @@
 package attilathehun.songbook.vcs;
 
+import attilathehun.annotation.TODO;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.util.ZipBuilder;
 import attilathehun.songbook.vcs.index.SaveIndex;
 import org.apache.logging.log4j.LogManager;
@@ -25,7 +27,7 @@ public class RequestFileAssembler {
      * @return this
      * @throws IOException
      */
-    @Deprecated
+    @TODO(priority = true)
     public RequestFileAssembler assembleSaveFile(SaveIndex index, List<String> collections) throws IOException {
         if (index == null) {
             throw new IllegalArgumentException();
@@ -34,17 +36,17 @@ public class RequestFileAssembler {
         try (ZipBuilder builder = new ZipBuilder()
                 .setOutputPath(outputFilePath)) {
 
-            for (Object s : (Collection) index.getAdditions().get("standard")) {
+            for (Object s : (Collection) index.getAdditions().get(StandardCollectionManager.getInstance().getCollectionName())) {
                 builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/html");
             }
-            for (Object s : (Collection) index.getAdditions().get("easter")) {
+            for (Object s : (Collection) index.getAdditions().get(EasterCollectionManager.getInstance().getCollectionName())) {
                 builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/egg");
             }
 
-            for (Object s : (Collection) index.getChanges().get("standard")) {
+            for (Object s : (Collection) index.getChanges().get(StandardCollectionManager.getInstance().getCollectionName())) {
                 builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/html");
             }
-            for (Object s : (Collection) index.getChanges().get("easter")) {
+            for (Object s : (Collection) index.getChanges().get(EasterCollectionManager.getInstance().getCollectionName())) {
                 builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/egg");
             }
             for (String collection : collections) {
@@ -52,7 +54,9 @@ public class RequestFileAssembler {
             }
 
             builder.addFile(new File(Environment.getInstance().settings.vcs.CHANGE_LOG_FILE_PATH), "");
-            builder.addFile(CacheManager.getInstance().getCachedIndexFile(), "");
+            File saveIndexTemp = new File(Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH, "index.json").toString());
+            Misc.saveObjectToFileInJSON(index, saveIndexTemp);
+            builder.addFile(saveIndexTemp, "");
         }
         return this;
     }

@@ -22,7 +22,7 @@ public class Frontpage extends Plugin {
     }
 
     @Override
-    public PluginSettings getSettings() {
+    public PluginSettings defaultSettings() {
         PluginSettings settings = new PluginSettings();
         settings.put("enabled", Boolean.TRUE);
         return settings;

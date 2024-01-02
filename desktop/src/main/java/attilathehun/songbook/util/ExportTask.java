@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Deprecated(forRemoval = true)
 public class ExportTask extends Task<String> {
     private static final Logger logger = LogManager.getLogger(ExportTask.class);
     private ConcurrentLinkedDeque<Integer> tasks;

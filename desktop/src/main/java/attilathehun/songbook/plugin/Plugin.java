@@ -18,7 +18,7 @@ public abstract class Plugin {
      * already a custom settings.json file.
      * @return
      */
-    public abstract PluginSettings getSettings();
+    public abstract PluginSettings defaultSettings();
 
     public static class PluginSettings extends HashMap<String, Object> {
 

@@ -32,7 +32,7 @@ public class DynamicSonglist extends Plugin {
     }
 
     @Override
-    public Plugin.PluginSettings getSettings() {
+    public Plugin.PluginSettings defaultSettings() {
         Plugin.PluginSettings settings = new Plugin.PluginSettings();
         settings.put("enabled", Boolean.TRUE);
         return settings;

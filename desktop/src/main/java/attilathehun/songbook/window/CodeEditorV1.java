@@ -18,14 +18,15 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
-import attilathehun.songbook.util.KeyEventListener;
+import attilathehun.songbook.environment.EnvironmentStateListener;
+import attilathehun.songbook.util.Misc;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.*;
 import org.fife.ui.rsyntaxtextarea.*;
 
 @Deprecated(forRemoval = true)
-public class CodeEditorV1 extends JFrame implements KeyEventListener, DocumentListener, CollectionListener {
+public class CodeEditorV1 extends JFrame implements EnvironmentStateListener, DocumentListener, CollectionListener {
 
     private static final Logger logger = LogManager.getLogger(CodeEditorV1.class);
 //TODO we need something better than the song to keep track of instances, Song lead to possible duplicates
@@ -87,7 +88,7 @@ public class CodeEditorV1 extends JFrame implements KeyEventListener, DocumentLi
 
         registerWindowListener();
         registerWindowFocusListener();
-        SongbookApplication.addListener(this);
+        Environment.addListener(this);
         manager.addListener(this);
         setSong(s);
 
@@ -200,7 +201,7 @@ public class CodeEditorV1 extends JFrame implements KeyEventListener, DocumentLi
         this.filePath = manager.getSongFilePath(s);
         this.song = s;
 
-        if (Environment.fileExists(filePath)) {
+        if (Misc.fileExists(filePath)) {
             try {
                 ArrayList<String> lines = new ArrayList<String>(Files.readAllLines(Paths.get(filePath)));
                 textArea.setRows(lines.size());
@@ -223,7 +224,6 @@ public class CodeEditorV1 extends JFrame implements KeyEventListener, DocumentLi
             writer.close();
             manager.updateSongRecordTitleFromHTML(song);
             Environment.getInstance().refresh();
-            SongbookApplication.dialControlPLusRPressed();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("Error", "Can not save the changes! You can save them manually to the path " + filePath + "from your clipboard");
@@ -249,49 +249,31 @@ public class CodeEditorV1 extends JFrame implements KeyEventListener, DocumentLi
     }
 
     @Override
-    public void onLeftArrowPressed() {
+    public void onPageTurnedForward() {
 
     }
 
     @Override
-    public void onRightArrowPressed() {
+    public void onPageTurnedBack() {
 
     }
 
     @Override
-    public void onControlPlusRPressed() {
+    public void onRefresh() {
+
+    }
+
+
+    @Override
+    public void onSongOneSet(Song s) {
 
     }
 
     @Override
-    public void onDeletePressed() {
+    public void onSongTwoSet(Song s) {
 
     }
 
-    @Override
-    public void onControlPlusSPressed() {
-        if (IS_FOCUSED) {
-            saveChanges();
-            if (getTitle().startsWith("*")) {
-                CodeEditorV1.super.setTitle(getTitle().substring(1));
-            }
-        }
-    }
-
-    @Override
-    public void onImaginarySongOneKeyPressed(Song s) {
-
-    }
-
-    @Override
-    public void onImaginarySongTwoKeyPressed(Song s) {
-
-    }
-
-    @Override
-    public boolean onImaginaryIsTextFieldFocusedKeyPressed() {
-        return false;
-    }
 
     @Override
     public void insertUpdate(DocumentEvent e) {

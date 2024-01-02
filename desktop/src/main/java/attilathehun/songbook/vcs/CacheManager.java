@@ -51,7 +51,7 @@ public class CacheManager {
      */
     public Index getCachedIndex() {
         try {
-            File file = new File(CACHED_INDEX_FILE_PATH);
+            File file = getCachedIndexFile();
             if (!file.exists()) {
                 return null;
             }
@@ -59,7 +59,7 @@ public class CacheManager {
             String json = String.join("", Files.readAllLines(file.toPath()));
             Type targetClassType = new TypeToken<Index>() {
             }.getType();
-            Index index = new Gson().fromJson(json, targetClassType);
+            return new Gson().fromJson(json, targetClassType);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }

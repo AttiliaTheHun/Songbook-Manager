@@ -2,6 +2,7 @@ package attilathehun.songbook.environment;
 
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.plugin.PluginManager;
+import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.vcs.VCSAdmin;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -60,7 +61,7 @@ public final class Settings implements Serializable {
             logger.error(e.getMessage(), e);
         }
         Settings settings = new Settings();
-        if (!Environment.fileExists(Environment.EnvironmentSettings.SETTINGS_FILE_PATH)) {
+        if (!Misc.fileExists(Environment.EnvironmentSettings.SETTINGS_FILE_PATH)) {
             save(settings);
         }
 

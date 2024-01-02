@@ -1,6 +1,7 @@
 package attilathehun.songbook.collection;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Song implements Serializable {
     private int id;
@@ -93,9 +94,7 @@ public class Song implements Serializable {
             return false;
         } else if (!(((Song) o).id == this.id)) {
             return false;
-        } else if (!(((Song) o).name == this.name)) {
-            return false;
-        } else if (!(((Song) o).author == this.author)) {
+        } else if (!(Objects.equals(((Song) o).name, this.name))) {
             return false;
         } else if (!(((Song) o).active == this.active)) {
             return false;

@@ -5,7 +5,7 @@ import attilathehun.songbook.collection.Song;
 /**
  * This interface provides a communication about specific key presses.
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public interface KeyEventListener {
 
     /**

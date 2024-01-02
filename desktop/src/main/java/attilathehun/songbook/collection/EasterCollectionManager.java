@@ -176,7 +176,6 @@ public class EasterCollectionManager extends CollectionManager {
         if (Environment.getInstance().getCollectionManager().equals(getInstance())) {
             Environment.navigateWebViewToSong(collection.get(collection.size() - 1));
         }
-        SongbookApplication.dialControlPLusRPressed();
         return s;
     }
 
@@ -191,7 +190,6 @@ public class EasterCollectionManager extends CollectionManager {
         onSongRemoved(s);
         if (Environment.getInstance().getCollectionManager().equals(getInstance())) {
             Environment.getInstance().refresh();
-            SongbookApplication.dialControlPLusRPressed();
         }
     }
 
