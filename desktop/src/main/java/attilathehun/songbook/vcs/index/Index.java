@@ -92,5 +92,6 @@ public class Index implements Serializable {
         index.setVersionTimestamp(-1);
         return index;
     }
+
 }
 

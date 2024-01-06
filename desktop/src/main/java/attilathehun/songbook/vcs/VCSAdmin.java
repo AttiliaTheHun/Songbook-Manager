@@ -1,5 +1,6 @@
 package attilathehun.songbook.vcs;
 
+import attilathehun.annotation.TODO;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
@@ -21,9 +22,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 /**
- * The Version Control System Administrator. This class is the main class of the Version Control System and provides a simple API to interact with.
+ * The Version Control System Administrator. This class is the main class of the Version Control System and provides a simple API to be used from other components.
+ * The parts of the version control system are not meant to be used directly..
  */
-public class VCSAdmin {
+public final class VCSAdmin {
 
     private static final Logger logger = LogManager.getLogger(VCSAdmin.class);
 
@@ -59,8 +61,8 @@ public class VCSAdmin {
     }
 
     /**
-     * Pushes local changes to the server using custom vcs agent. Upon overshadowing danger, asks the user what to do. Requests an
-     * access token if none is loaded.
+     * Pushes local changes to the server using custom vcs agent. In this case, it is up to the agent to check status of the songbook and prevent
+     * overshadowing of the remote changes.
      */
     public void push(VCSAgent agent) {
         try {
@@ -75,28 +77,36 @@ public class VCSAdmin {
     }
 
     public void pull(VCSAgent agent) {
-//TODO
+        try {
+            loadRemoteChanges(agent);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private void saveLocalChanges(VCSAgent a) throws IOException, NoSuchAlgorithmException {
         if (!Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
-            Environment.showMessage("Remote saving and loading disabled","Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation.");
+            Environment.showMessage("Remote saving and loading disabled", "", "Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation.");
             return;
         }
+        CacheManager.getInstance().cacheSongbookVersionTimestamp();
         VCSAgent agent;
         if (a == null) {
             agent = new VCSAgent();
+            int status = agent.compare();
             try {
-                if (agent.compareChanges() == VCSAgent.STATUS_UP_TO_DATE) {
-                    Environment.showMessage("Already up to date", "The remote version of the songbook matches the local version.");
+                if (status == VCSAgent.STATUS_UP_TO_DATE) {
+                    Environment.showMessage("Already up to date", "",  "The remote version of the songbook matches the local version.");
                     return;
-                } else if (agent.compareChanges() == VCSAgent.STATUS_BEHIND) {
+                } else if (status == VCSAgent.STATUS_BEHIND) {
                     UIManager.put("OptionPane.yesButtonText", "Overwrite");
                     UIManager.put("OptionPane.noButtonText", "Cancel");
 
                     int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Overwrite remote changes?", "The remote version has more recent changes than the local version. Continuing may overwrite those changes if that have been made to the same files as have been locally edited. Do you want to proceed?", JOptionPane.YES_NO_OPTION);
 
                     if (resultCode != JOptionPane.YES_OPTION) {
+                        UIManager.put("OptionPane.yesButtonText", "Yes");
+                        UIManager.put("OptionPane.noButtonText", "No");
                         return;
                     }
 
@@ -104,7 +114,7 @@ public class VCSAdmin {
                     UIManager.put("OptionPane.noButtonText", "No");
                 }
             } catch (Exception e) {
-                Environment.showErrorMessage("Failure", e.getMessage());
+                Environment.showErrorMessage("Failure", "Something went wrong while pushing the changes: ", e.getMessage());
                 return;
             }
         } else {
@@ -120,7 +130,6 @@ public class VCSAdmin {
                 return;
             }
         }
-        CacheManager.getInstance().cacheSongbookVersionTimestamp();
         updateSongbookChangeLog();
         IndexBuilder indexBuilder = new IndexBuilder();
         Index remote = agent.getRemoteIndex(token);
@@ -131,19 +140,20 @@ public class VCSAdmin {
             return;
         }
         RequestFileAssembler RFAssembler = new RequestFileAssembler().assembleSaveFile(new IndexBuilder().createSaveIndex(local, remote), IndexBuilder.compareCollections(local, remote));
-        //Client client = new Client().postFile(Environment.getInstance().settings.vcs.REMOTE_DATA_ZIP_FILE_UPLOAD_URL, RFAssembler.getOutputFilePath(), token);
+        Client client = new Client();
+        client.postRequestFile(Environment.getInstance().settings.vcs.REMOTE_DATA_UPLOAD_URL, RFAssembler.getOutputFilePath(), token);
 
-       /* if (client.getStatus().getCode() == Client.Status.SUCCESS) {
-            Environment.showMessage("Success", "Data saved successfully!");
+        if (client.getStatus().getCode() == Client.Status.SUCCESS) {
+            Environment.showMessage("Success", "Data uploaded successfully!");
         } else {
-            Environment.showMessage("Failure", "The data could not be saved. Check the application log for more information.");
-        }*/
+            Environment.showMessage("Failure", "The data could not be uploaded. Check the application log for more information.");
+        }
     }
 
-    @Deprecated
-    public void loadRemoteChanges() {
+    @TODO
+    public void loadRemoteChanges(VCSAgent agent) {
         if (!Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
-            Environment.showMessage("Remote saving and loading disabled","Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation");
+            Environment.showMessage("Remote saving and loading disabled", "", "Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation");
             return;
         }
 

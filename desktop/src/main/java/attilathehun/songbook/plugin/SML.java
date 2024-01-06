@@ -1,6 +1,5 @@
 package attilathehun.songbook.plugin;
 
-import attilathehun.songbook.environment.Settings;
 import attilathehun.songbook.util.Misc;
 import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -12,16 +11,16 @@ import java.util.HashMap;
 
 /**
  * Songbook Manager Song Mark-up Language utility provider. Provides a simple API to convert
- * SMSML into HTML and vice versa utilising the Songbook Manager resource templates.
+ * SML into HTML and vice versa utilising the Songbook Manager resource templates.
  */
-public class SMSML extends Plugin {
-    private static final Logger logger = LogManager.getLogger(SMSML.class);
-    private static final SMSML instance = new SMSML();
+public class SML extends Plugin {
+    private static final Logger logger = LogManager.getLogger(SML.class);
+    private static final SML instance = new SML();
 
-    private final String name = SMSML.class.getSimpleName();
+    private final String name = SML.class.getSimpleName();
     protected static final String STRING_PLACEHOLDER = "%s";
 
-    private SMSML() {
+    private SML() {
         PluginManager.registerPlugin(this);
     }
     @Override
@@ -70,8 +69,8 @@ public class SMSML extends Plugin {
         return instance;
     }
 
-    public static abstract class SMSMLEngine {
-        private static final Logger logger = LogManager.getLogger(SMSMLEngine.class);
+    public static abstract class SMLEngine {
+        private static final Logger logger = LogManager.getLogger(SMLEngine.class);
         protected static final String[] languageTokens = {"#song", "#name", "#author", "#active", "#url", "#endheader", "#column", "#line", "#chords", "#lyrics", "#emptyline"};
         protected static final String[] marginClasses = {"ultra-small-br", "very-small-br", "small-br", "smaller-br", "little-bigger-br", "bigger-br", "big-br", "very-big-br", "ultra-big-br"};
         protected static String[] fontSizes = {"default", "small", "very-small", "ultra-small"};
@@ -85,7 +84,7 @@ public class SMSML extends Plugin {
 
         static {
             if (!(languageTokens.length  == types.length && types.length == defaultClasses.length && defaultClasses.length == defaultAttributes.length)) {
-                PluginManager.getInstance().getSettings().get(SMSML.getInstance().getName()).put("enabled", Boolean.FALSE);
+                PluginManager.getInstance().getSettings().get(SML.getInstance().getName()).put("enabled", Boolean.FALSE);
                 logger.error("SMSML Plugin disabled because of interpreter engine misconfiguration");
                 throw new IllegalStateException("The SMSML plugin is broken: Cannot load the engine!");
             }
@@ -120,7 +119,7 @@ public class SMSML extends Plugin {
         public abstract String getName();
     }
 
-    private static class DemoDOM extends SMSMLEngine {
+    private static class DemoDOM extends SMLEngine {
 
         @Override
         public String interpret(String s) throws ParseException {
@@ -256,7 +255,7 @@ public class SMSML extends Plugin {
 
     }
 
-    private static class StreamLooper extends SMSMLEngine {
+    private static class StreamLooper extends SMLEngine {
 
         @Override
         public String interpret(String s) {

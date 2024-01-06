@@ -24,10 +24,10 @@ public class RequestFileAssembler {
      * Create a request.zip file to the temp folder. The file contains all songbook files that changes have been made to,
      * the songbook changelog and the save request index.
      * @param index the save request index
+     * @param collections collections whose .json files should be sent along the request
      * @return this
      * @throws IOException
      */
-    @TODO(priority = true)
     public RequestFileAssembler assembleSaveFile(SaveIndex index, List<String> collections) throws IOException {
         if (index == null) {
             throw new IllegalArgumentException();

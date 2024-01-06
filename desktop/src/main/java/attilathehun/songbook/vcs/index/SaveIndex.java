@@ -4,6 +4,9 @@ import com.google.gson.annotations.SerializedName;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
  * This class represents the object of metadata about a save request to the server.
  */
@@ -13,16 +16,12 @@ public class SaveIndex extends PartialIndex {
     private Property additions;
     private Property deletions;
     private Property changes;
-    private Property collections;
+    private Collection<String> collections;
     @SerializedName("version_timestamp")
     private long versionTimestamp;
 
     public SaveIndex(long versionTimestamp) {
         this.versionTimestamp = versionTimestamp;
-        this.additions = new Property();
-        this.deletions = new Property();
-        this.collections = new Property();
-        this.changes = new Property();
     }
 
     public void setAdditions(Property additions) {
@@ -37,7 +36,7 @@ public class SaveIndex extends PartialIndex {
         this.changes = changes;
     }
 
-    public void setCollections(Property collections) {
+    public void setCollections(Collection<String> collections) {
         this.collections = collections;
     }
 
@@ -53,11 +52,20 @@ public class SaveIndex extends PartialIndex {
         return changes;
     }
 
-    public Property getCollections() {
+    public Collection<String> getCollections() {
         return collections;
     }
 
     public long getVersionTimestamp() {
         return versionTimestamp;
+    }
+
+    public static SaveIndex empty() {
+        SaveIndex index = new SaveIndex(-1);
+        index.setAdditions(new Property());
+        index.setCollections(new ArrayList<>());
+        index.setChanges(new Property());
+        index.setDeletions(new Property());
+        return index;
     }
 }

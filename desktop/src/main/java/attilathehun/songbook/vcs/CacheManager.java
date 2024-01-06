@@ -74,7 +74,7 @@ public class CacheManager {
      * Save an index to the vcs cache folder.
      * @param index the index to save
      */
-    public void cacheIndex(Index index) {
+    void cacheIndex(Index index) {
         if (index == null) {
             throw new IllegalArgumentException();
         }
@@ -104,8 +104,7 @@ public class CacheManager {
     public File getCachedSongbookVersionTimestampFile() {
         return new File(Environment.getInstance().settings.vcs.VERSION_TIMESTAMP_FILE_PATH);
     }
-
-    private void cacheSongbookVersionTimestamp(long versionTimestamp) {
+    void cacheSongbookVersionTimestamp(long versionTimestamp) {
         if (versionTimestamp < 0) {
             throw new IllegalArgumentException();
         }
@@ -128,21 +127,14 @@ public class CacheManager {
         long timestamp = -1;
         long tempStamp;
 
-        for (File file : Stream.of(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()).listFiles())
-                .filter(file -> !file.isDirectory())
-                .toList()) {
-            tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();
-            if (tempStamp > timestamp) {
-                timestamp = tempStamp;
-            }
-        }
-
-        for (File file : Stream.of(new File(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()).listFiles())
-                .filter(file -> !file.isDirectory())
-                .toList()) {
-            tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();
-            if (tempStamp > timestamp) {
-                timestamp = tempStamp;
+        for (String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
+            for (File file : Stream.of(new File(Environment.getInstance().settings.collections.get(collection).getSongDataFilePath()).listFiles())
+                    .filter(file -> !file.isDirectory())
+                    .toList()) {
+                tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();
+                if (tempStamp > timestamp) {
+                    timestamp = tempStamp;
+                }
             }
         }
 
@@ -155,7 +147,6 @@ public class CacheManager {
                 timestamp = tempStamp;
             }
         }
-
 
         cacheSongbookVersionTimestamp(timestamp);
     }

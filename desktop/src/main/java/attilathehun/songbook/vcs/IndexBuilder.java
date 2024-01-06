@@ -1,6 +1,7 @@
 package attilathehun.songbook.vcs;
 
 import attilathehun.annotation.TODO;
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
@@ -30,47 +31,43 @@ public class IndexBuilder {
      * @param remote remote songbook index
      * @return save index of the differences
      */
-    //TODO rewrite using loops and environment registered managers api
-    public SaveIndex createSaveIndex(Index local, Index remote)  throws IOException, NoSuchAlgorithmException  {
-        Collection<String> standardAdditions = getExtraItems((Collection) remote.getData().get(StandardCollectionManager.getInstance().getCollectionName()), (Collection) local.getData().get(StandardCollectionManager.getInstance().getCollectionName()));
-        Collection<String> easterAdditions = getExtraItems((Collection) remote.getData().get(EasterCollectionManager.getInstance().getCollectionName()), (Collection) local.getData().get(EasterCollectionManager.getInstance().getCollectionName()));
-        Collection<String> standardDeletions = getMissingItems((Collection) remote.getData().get(StandardCollectionManager.getInstance().getCollectionName()), (Collection) local.getData().get(StandardCollectionManager.getInstance().getCollectionName()));
-        Collection<String> easterDeletions = getMissingItems((Collection) remote.getData().get(EasterCollectionManager.getInstance().getCollectionName()), (Collection) local.getData().get(EasterCollectionManager.getInstance().getCollectionName()));
-        Collection<String> standardChanges = new ArrayList<String>();
-        Collection<String> easterChanges = new ArrayList<String>();
-        SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
-        String standardCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
-        String easterCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
+    public SaveIndex createSaveIndex(Index local, Index remote) {
         SaveIndex index = new SaveIndex(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
-        index.getAdditions().put(StandardCollectionManager.getInstance().getCollectionName(), standardAdditions);
-        index.getAdditions().put(EasterCollectionManager.getInstance().getCollectionName(), easterAdditions);
-        index.getDeletions().put(StandardCollectionManager.getInstance().getCollectionName(), standardDeletions);
-        index.getDeletions().put(EasterCollectionManager.getInstance().getCollectionName(), easterDeletions);
-        index.getChanges().put(StandardCollectionManager.getInstance().getCollectionName(), standardChanges);
-        index.getChanges().put(EasterCollectionManager.getInstance().getCollectionName(), easterChanges);
-        index.getCollections().put(StandardCollectionManager.getInstance().getCollectionName(), standardCollectionHash);
-        index.getCollections().put(EasterCollectionManager.getInstance().getCollectionName(), easterCollectionHash);
+        index.setAdditions(new Property());
+        index.setDeletions(new Property());
+        Collection<String> collectionAdditions;
+        Collection<String> collectionDeletions;
+        for (String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
+            collectionAdditions = getExtraItems((Collection) remote.getData().get(collection), (Collection) local.getData().get(collection));
+            index.getAdditions().put(collection, collectionAdditions);
+            collectionDeletions = getMissingItems((Collection) remote.getData().get(collection), (Collection) local.getData().get(collection));
+            index.getDeletions().put(collection, collectionDeletions);
+        }
+        Property changes = new Property(getChanges(local, remote));
+
+        index.setChanges(changes);
+        index.setCollections(new ArrayList<>(compareCollections(local, remote)));
         return index;
     }
 
     /**
      * Generates a load request index mapping the files we need to obtain from the server.
-     * //TODO make the collections part of the index, to be only received when there are changes to them (same for saving) to save bandwidth
      * @param local local songbook index
      * @param remote remote songbook index
      * @return load index of the differences
      */
-    @TODO
     public LoadIndex createLoadIndex(Index local, Index remote) {
-        Collection<String> standardMissing = getExtraItems((Collection) remote.getData().get("standard"), (Collection) local.getData().get("standard"));
-        Collection<String> easterMissing = getExtraItems((Collection) remote.getData().get("easter"), (Collection) local.getData().get("easter"));
-        Collection<String> standardOutdated = getChanges();
-        Collection<String> easterOutdated = getChanges();
+        Property missing = new Property();
+        Collection<String> collectionMissing;
+        for (String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
+            collectionMissing = getMissingItems((Collection) remote.getData().get(collection), (Collection) local.getData().get(collection));
+            missing.put(collection, collectionMissing);
+        }
+        Property outdated = new Property(getChanges(local, remote));
         LoadIndex index = new LoadIndex();
-        index.getMissing().put("standard", standardMissing);
-        index.getMissing().put("easter", easterMissing);
-        index.getOutdated().put("standard", standardOutdated);
-        index.getOutdated().put("easter", easterOutdated);
+        index.setMissing(missing);
+        index.setOutdated(outdated);
+        index.setCollections(new ArrayList<>(compareCollections(local, remote)));
         return index;
     }
 
@@ -79,28 +76,24 @@ public class IndexBuilder {
      * @return local songbook index
      */
     public Index createLocalIndex() throws IOException, NoSuchAlgorithmException {
-        BuildWorker.spamCPUAndMemoryWithThreads(listFiles(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()));
-        Map<String, String> standardSongs = BuildWorker.map;
-        BuildWorker.spamCPUAndMemoryWithThreads(listFiles(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()));
-        Map<String, String> easterSongs = BuildWorker.map;
         SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
-        String standardCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
-        String easterCollectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()));
-        Index index = new Index(null);
-        Property data = new Property();
-        data.put(StandardCollectionManager.getInstance().getCollectionName(), standardSongs.keySet());
-        data.put(EasterCollectionManager.getInstance().getCollectionName(), easterSongs.keySet());
-        index.setData(data);
-        Property hashes = new Property();
-        hashes.put(StandardCollectionManager.getInstance().getCollectionName(), standardSongs.values());
-        hashes.put(EasterCollectionManager.getInstance().getCollectionName(), easterSongs.values());
-        index.setHashes(hashes);
-        Property metadata = new Property();
-        index.setMetadata(metadata);
-        Property collections = new Property();
-        collections.put(StandardCollectionManager.getInstance().getCollectionName(), standardCollectionHash);
-        collections.put(EasterCollectionManager.getInstance().getCollectionName(), easterCollectionHash);
-        index.setCollections(collections);
+        Index index = new Index();
+        index.setData(new Property());
+        index.setHashes(new Property());
+        index.setCollections(new Property());
+        index.setMetadata(new Property());
+
+        Map<String, String> collectionSongs;
+        String collectionHash;
+        for (String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
+            BuildWorker.spamCPUAndMemoryWithThreads(listFiles(Environment.getInstance().settings.collections.get(collection).getSongDataFilePath()));
+            collectionSongs = BuildWorker.map;
+            collectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(collection).getCollectionFilePath()));
+            index.getData().put(collection, collectionSongs.keySet());
+            index.getHashes().put(collection, collectionSongs.values());
+            index.getCollections().put(collection, collectionHash);
+        }
+
         index.setVersionTimestamp(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
         return index;
     }
@@ -160,10 +153,58 @@ public class IndexBuilder {
         return getMissingItems(current, old);
     }
 
-    private Collection<String> getChanges() {
+    /**
+     * Returns a HashMap mapping songs present in both indices whose hashes do not match for every collection that is registered within the environment.
+     * See {@link Environment#registerCollectionManager(CollectionManager)}.
+     * @param localIndex the index to compare against
+     * @param remoteIndex the index to be compared
+     * @return a map of collections containing the actual changes
+     */
+    private HashMap<String, Collection<String>> getChanges(Index localIndex, Index remoteIndex) {
+        HashMap<String, Collection<String>> changes = new HashMap<>();
 
-        //TODO
-        return new ArrayList<String>();
+        for (String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
+
+            ArrayList<String> localSongs = (ArrayList<String>) localIndex.getData().get(collection);
+            ArrayList<String> localSongHashes = (ArrayList<String>) localIndex.getHashes().get(collection);
+            if (localSongs.size() != localSongHashes.size()) {
+                throw new MalformedIndexException("Song count and song hash count do not match!");
+            }
+            ArrayList<String> remoteSongs = (ArrayList<String>) remoteIndex.getData().get(collection);
+            ArrayList<String> remoteSongHashes = (ArrayList<String>) remoteIndex.getHashes().get(collection);
+            if (remoteSongs.size() != remoteSongHashes.size()) {
+                throw new MalformedIndexException("Song count and song hash count do not match!");
+            }
+
+            HashMap<String, String> localSongData = new HashMap<>();
+
+            for (int i = 0; i < localSongs.size(); i++) {
+                localSongData.put(localSongs.get(i), localSongHashes.get(i));
+            }
+
+            HashMap<String, String> remoteSongData = new HashMap<>();
+
+            for (int i = 0; i < remoteSongs.size(); i++) {
+                remoteSongData.put(remoteSongs.get(i), remoteSongHashes.get(i));
+            }
+
+            Collection<String> collectionChanges = new ArrayList<>();
+
+            for (String song : localSongData.keySet()) {
+                if (remoteSongData.get(song) == null) {
+                    continue;
+                }
+
+                if (!localSongData.get(song).equals(remoteSongData.get(song))) {
+                    collectionChanges.add(song);
+                }
+            }
+
+            changes.put(collection, collectionChanges);
+
+        }
+
+        return changes;
     }
 
     /**
