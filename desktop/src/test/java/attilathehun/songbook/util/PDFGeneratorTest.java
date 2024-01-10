@@ -14,7 +14,7 @@ class PDFGeneratorTest {
 
 
     @Test
-    void test() throws IOException {
+    void test() throws Exception {
         PluginManager.loadPlugins();
         Export.getInstance();
         PDFGen gen = new PDFGen();

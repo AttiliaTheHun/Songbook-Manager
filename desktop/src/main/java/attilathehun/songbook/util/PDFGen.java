@@ -6,6 +6,9 @@ import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.plugin.Export;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.vcs.IndexBuilder;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.tool.xml.XMLWorkerHelper;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -14,12 +17,10 @@ import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.W3CDom;
-import org.jsoup.nodes.Document;
+//import org.jsoup.nodes.Document;
+import com.itextpdf.text.Document;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import java.util.*;
@@ -68,15 +69,15 @@ public class PDFGen {
         }
     }
 
-    public void generateDefault() throws IOException {
+    public void generateDefault() throws Exception {
         exec(createDataCollection(EXPORT_OPTION_DEFAULT), DEFAULT_PDF_OUTPUT_PATH);
     }
 
-    public void generateSinglepage() throws IOException {
+    public void generateSinglepage() throws Exception {
         exec(createDataCollection(EXPORT_OPTION_SINGLEPAGE), SINGLEPAGE_PDF_OUTPUT_PATH);
     }
 
-    public void generatePrintable() throws IOException {
+    public void generatePrintable() throws Exception {
         exec(createDataCollection(EXPORT_OPTION_PRINTABLE), PRINTABLE_PDF_OUTPUT_PATH);
     }
 
@@ -119,10 +120,10 @@ public class PDFGen {
         return  output;
     }
 
-    private void exec(Collection<SegmentDataModel> data, String outputFileName) throws IOException {
+    private void exec(Collection<SegmentDataModel> data, String outputFileName) throws Exception {
         ExportWorker.performTask(data);
         for (int i = 0; i < data.size(); i++) {
-            HTMLtoPDF(String.format(DEFAULT_SEGMENT_PATH, i, EXTENSION_HTML), String.format(DEFAULT_SEGMENT_PATH, i, EXTENSION_PDF));
+            HTMLtoPDFv2(String.format(DEFAULT_SEGMENT_PATH, i, EXTENSION_HTML), String.format(DEFAULT_SEGMENT_PATH, i, EXTENSION_PDF));
         }
         joinSegments(data.size(), outputFileName);
     }
@@ -143,7 +144,7 @@ public class PDFGen {
         ut.mergeDocuments(settings);
     }
 
-    private void HTMLtoPDF(String inputPath, String outputPath) {
+    /*private void HTMLtoPDF(String inputPath, String outputPath) {
         try {
             File inputHTML = new File(inputPath);
             Document document = Jsoup.parse(inputHTML, "UTF-8");
@@ -165,6 +166,16 @@ public class PDFGen {
             e.printStackTrace();
             logger.error(e.getMessage(), e);
         }
+    }*/
+
+    private void HTMLtoPDFv2(String inputPath, String outputPath) throws IOException, DocumentException {
+        Document document = new Document();
+        PdfWriter writer = PdfWriter.getInstance(document,
+                new FileOutputStream(outputPath));
+        document.open();
+        XMLWorkerHelper.getInstance().parseXHtml(writer, document,
+                new FileInputStream(inputPath));
+        document.close();
     }
 
 

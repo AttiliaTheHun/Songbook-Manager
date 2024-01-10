@@ -4,15 +4,14 @@ import attilathehun.annotation.TODO;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
+import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.vcs.index.Index;
+import attilathehun.songbook.vcs.index.LoadIndex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Serializable;
+import java.io.*;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
@@ -151,11 +150,81 @@ public final class VCSAdmin {
     }
 
     @TODO
-    public void loadRemoteChanges(VCSAgent agent) {
+    public void loadRemoteChanges(VCSAgent a) throws IOException, NoSuchAlgorithmException {
         if (!Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
-            Environment.showMessage("Remote saving and loading disabled", "", "Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation");
+            Environment.showMessage("Remote saving and loading disabled", "", "Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation.");
             return;
         }
+        CacheManager.getInstance().cacheSongbookVersionTimestamp();
+        VCSAgent agent;
+        if (a == null) {
+            agent = new VCSAgent();
+            int status = agent.compare();
+            try {
+                if (status == VCSAgent.STATUS_UP_TO_DATE) {
+                    Environment.showMessage("Already up to date", "",  "The remote version of the songbook matches the local version.");
+                    return;
+                } else if (status == VCSAgent.STATUS_AHEAD) {
+                    UIManager.put("OptionPane.yesButtonText", "Overwrite");
+                    UIManager.put("OptionPane.noButtonText", "Cancel");
+
+                    int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Overwrite local changes?", "The local version has more recent changes than the remote version. Continuing may overwrite those changes if that have been made to the same files as have been locally edited. Do you want to proceed?", JOptionPane.YES_NO_OPTION);
+
+                    if (resultCode != JOptionPane.YES_OPTION) {
+                        UIManager.put("OptionPane.yesButtonText", "Yes");
+                        UIManager.put("OptionPane.noButtonText", "No");
+                        return;
+                    }
+
+                    UIManager.put("OptionPane.yesButtonText", "Yes");
+                    UIManager.put("OptionPane.noButtonText", "No");
+                }
+            } catch (Exception e) {
+                Environment.showErrorMessage("Failure", "Something went wrong while pulling the changes: ", e.getMessage());
+                return;
+            }
+        } else {
+            //trust the custom agent it has already verified the state of the changes
+            agent = a;
+        }
+
+        String token = Environment.getInstance().acquireToken(new Certificate());
+        if (token == null || token.length() == 0) {
+            token = requestOneTimeToken();
+            if (token == null || token.length() == 0) {
+                Environment.showErrorMessage("Error", "Invalid token!");
+                return;
+            }
+        }
+
+        IndexBuilder indexBuilder = new IndexBuilder();
+        Index remote = agent.getRemoteIndex(token);
+        Index local = indexBuilder.createLocalIndex();
+        CacheManager.getInstance().cacheIndex(local);
+        if (local == null || remote == null) {
+            Environment.showErrorMessage("Error", "Something went wrong");
+            return;
+        }
+        LoadIndex index = indexBuilder.createLoadIndex(local, remote);
+        String indexFilePath = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH, "index.json").toString();
+        Misc.saveObjectToFileInJSON(index, new File(indexFilePath));
+        Client client = new Client();
+        String responseFilePath = client.getResponseFile(Environment.getInstance().settings.vcs.REMOTE_DATA_UPLOAD_URL, indexFilePath, token);
+
+        if (client.getStatus().getCode() != Client.Status.SUCCESS) {
+            Environment.showMessage("Failure", "The data could not be uploaded. Check the application log for more information.");
+            return;
+        }
+        RequestFileAssembler disassembler = RequestFileAssembler.disassemble(responseFilePath);
+        if (disassembler.success()) {
+            local = indexBuilder.createLocalIndex();
+            local.setVersionTimestamp(disassembler.index().getVersionTimestamp());
+            CacheManager.getInstance().cacheIndex(local);
+            CacheManager.getInstance().cacheSongbookVersionTimestamp(local.getVersionTimestamp());
+            Environment.showMessage("Success", "", "Remote data have been loaded with success!");
+        }
+
+        Environment.showWarningMessage("Warning", "", "Something went wring when loading the remote data. Check the application log for more information.");
 
     }
 

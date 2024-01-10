@@ -365,14 +365,20 @@ public class ZipBuilder implements AutoCloseable {
         return null;
     }
 
-    public static void extract(String zipFilePath) throws IOException {
+    /**
+     * Extracts a zip file specified by path to the directory of the same name as the zip file trimmed of its extension.
+     * @param zipFilePath
+     * @throws IOException
+     * @return the extraction directory path
+     */
+    public static String extract(String zipFilePath) throws IOException {
         String dirName;
         if (zipFilePath.endsWith(".zip")) {
             dirName = zipFilePath.substring(0, zipFilePath.lastIndexOf(".zip"));
         } else {
             dirName = zipFilePath;
         }
-        extract(zipFilePath, dirName);
+        return extract(zipFilePath, dirName);
     }
 
     /**
@@ -381,11 +387,12 @@ public class ZipBuilder implements AutoCloseable {
      * @param zipFilePath
      * @param destDirectory
      * @throws IOException
+     * @return the extraction directory path
      */
-    public static void extract(String zipFilePath, String destDirectory) throws IOException {
+    public static String extract(String zipFilePath, String destDirectory) throws IOException {
         File destDir = new File(destDirectory);
         if (!destDir.exists()) {
-            destDir.mkdir();
+            destDir.mkdirs();
         }
         ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath));
         ZipEntry entry = zipIn.getNextEntry();
@@ -404,6 +411,7 @@ public class ZipBuilder implements AutoCloseable {
             entry = zipIn.getNextEntry();
         }
         zipIn.close();
+        return destDirectory;
     }
 
     /**

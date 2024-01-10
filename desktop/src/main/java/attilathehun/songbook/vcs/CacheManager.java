@@ -120,9 +120,8 @@ public class CacheManager {
     }
 
     /**
-     * Scans all the songbook files to find the newest modify date which becomes the new version timestamp.
+     * Scans all the songbook files to find the newest modify date which becomes the new version timestamp. If the currently cached timestamp is
      */
-    //TODO scan both collections under a single loop using the new Environment registered managers api
     public void cacheSongbookVersionTimestamp() throws IOException {
         long timestamp = -1;
         long tempStamp;

@@ -35,7 +35,7 @@ public class HTMLGenerator {
     private static final String LANGUAGE_REPLACE_MARK = "<replace \"language\">";
     private static final String SONG_ONE_REPLACE_MARK = "<replace \"song1\">";
     private static final String SONG_TWO_REPLACE_MARK = "<replace \"song2\">";
-    private static final String BASE_STYLE_HTML_LINK = "<link rel=\"stylesheet\" href=\"" + "style.css" + "\"></link>";
+    private static final String BASE_STYLE_HTML_LINK = "<link rel=\"stylesheet\" href=\"" + "style.css" + "\" />";
     private static final String SONG_AUTHOR_REPLACE_MARK = "<replace \"songauthor\">";
     private static final String SONG_NAME_REPLACE_MARK = "<replace \"songname\">";
     private static final String SONG_URL_REPLACE_MARK = "<replace \"songurl\">";
@@ -123,7 +123,7 @@ public class HTMLGenerator {
                 payload.append("</li>\n");
             }
 
-            payload.append("</td></ul>\n");
+            payload.append("</ul></td>\n");
             payload.append("</div>\n");
 
             columnStartIndex = columnEndIndex;

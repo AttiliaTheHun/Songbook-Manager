@@ -1,5 +1,6 @@
 package attilathehun.songbook.vcs.index;
 
+import com.google.gson.annotations.SerializedName;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -15,6 +16,8 @@ public class LoadIndex extends PartialIndex {
     private Property missing;
     private Property outdated;
     private Collection<String> collections;
+    @SerializedName("version_timestamp")
+    private long versionTimestamp;
 
     public LoadIndex() {
 
@@ -33,6 +36,10 @@ public class LoadIndex extends PartialIndex {
         this.collections = collections;
     }
 
+    public void setVersionTimestamp(long versionTimestamp) {
+        this.versionTimestamp = versionTimestamp;
+    }
+
     public Property getMissing() {
         return missing;
     }
@@ -45,11 +52,16 @@ public class LoadIndex extends PartialIndex {
         return collections;
     }
 
+    public long getVersionTimestamp() {
+        return versionTimestamp;
+    }
+
     public static LoadIndex empty() {
         LoadIndex index = new LoadIndex();
         index.setMissing(new Property());
         index.setOutdated(new Property());
         index.setCollections(new ArrayList<>());
+        index.versionTimestamp = -1;
         return index;
     }
 }

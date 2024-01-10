@@ -12,13 +12,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * An HTTP utility class.
- */
-public class Client {
+
+class Client {
 
     private static final Logger logger = LogManager.getLogger(Client.class);
     private Status status = null;
+
+    public static final String METHOD_POST = "POST";
+    public static final String METHOD_GET = "GET";
 
 
     public void postRequestFile(String targetUrl, String requestFileUrl, String authToken) throws IOException {
