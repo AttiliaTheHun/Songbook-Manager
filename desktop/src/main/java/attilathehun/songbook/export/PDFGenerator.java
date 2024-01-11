@@ -1,34 +1,27 @@
-package attilathehun.songbook.util;
+package attilathehun.songbook.export;
 
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.plugin.Export;
 import attilathehun.songbook.plugin.PluginManager;
-import attilathehun.songbook.vcs.IndexBuilder;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.tool.xml.XMLWorkerHelper;
-import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
-import javafx.util.Pair;
+import attilathehun.songbook.util.HTMLGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
-import org.jsoup.Jsoup;
-import org.jsoup.helper.W3CDom;
-//import org.jsoup.nodes.Document;
-import com.itextpdf.text.Document;
 
-import java.io.*;
-import java.nio.file.FileSystems;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class PDFGen {
-    private static final Logger logger = LogManager.getLogger(PDFGen.class);
+public class PDFGenerator {
+
+    private static final Logger logger = LogManager.getLogger(PDFGenerator.class);
 
     private static final int EXPORT_OPTION_DEFAULT = 0;
     private static final int EXPORT_OPTION_PRINTABLE = 1;
@@ -40,7 +33,7 @@ public class PDFGen {
     }
 
     static final int PREVIEW_SEGMENT_NUMBER = -1;
-    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String)PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("defaultExportName")).toString();
+    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String) PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("defaultExportName")).toString();
     private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String)PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("singlepageExportName")).toString();
     private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String)PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("printableExportName")).toString();
     public static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment%d%s").toString();
@@ -50,11 +43,11 @@ public class PDFGen {
 
     private CollectionManager manager;
 
-    public PDFGen() {
+    public PDFGenerator() {
         this(Environment.getInstance().getCollectionManager());
     }
 
-    public PDFGen(CollectionManager manager) {
+    public PDFGenerator(CollectionManager manager) {
         if (manager == null) {
             this.manager = Environment.getInstance().getCollectionManager().copy();
         } else {
@@ -89,7 +82,6 @@ public class PDFGen {
 
     }
 
-
     private Collection<SegmentDataModel> createDataCollection(int option) {
         if (option < EXPORT_OPTION_DEFAULT || option > EXPORT_OPTION_SINGLEPAGE) {
             throw  new IllegalArgumentException();
@@ -122,9 +114,6 @@ public class PDFGen {
 
     private void exec(Collection<SegmentDataModel> data, String outputFileName) throws Exception {
         ExportWorker.performTask(data);
-        for (int i = 0; i < data.size(); i++) {
-            HTMLtoPDFv2(String.format(DEFAULT_SEGMENT_PATH, i, EXTENSION_HTML), String.format(DEFAULT_SEGMENT_PATH, i, EXTENSION_PDF));
-        }
         joinSegments(data.size(), outputFileName);
     }
 
@@ -144,41 +133,6 @@ public class PDFGen {
         ut.mergeDocuments(settings);
     }
 
-    /*private void HTMLtoPDF(String inputPath, String outputPath) {
-        try {
-            File inputHTML = new File(inputPath);
-            Document document = Jsoup.parse(inputHTML, "UTF-8");
-            document.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
-
-            try (OutputStream os = new FileOutputStream(outputPath)) {
-                PdfRendererBuilder builder = new PdfRendererBuilder();
-                builder.withUri(inputPath);
-                builder.toStream(os);
-                String baseUrl = FileSystems.getDefault()
-                        .getPath(new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).toString())
-                        .toUri().toURL().toString();
-                builder.withW3cDocument(new W3CDom().fromJsoup(document), baseUrl);
-                builder.run();
-            }
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.getMessage(), e);
-        }
-    }*/
-
-    private void HTMLtoPDFv2(String inputPath, String outputPath) throws IOException, DocumentException {
-        Document document = new Document();
-        PdfWriter writer = PdfWriter.getInstance(document,
-                new FileOutputStream(outputPath));
-        document.open();
-        XMLWorkerHelper.getInstance().parseXHtml(writer, document,
-                new FileInputStream(inputPath));
-        document.close();
-    }
-
-
 
     private static class ExportWorker implements Runnable {
         private static final Logger logger = LogManager.getLogger(ExportWorker.class);
@@ -188,6 +142,8 @@ public class PDFGen {
 
         HTMLGenerator HTMLgenerator = new HTMLGenerator();
 
+        BrowserWrapper browser = BrowserWrapper.getInstance();
+
         @Override
         public void run() {
             activeThreads.incrementAndGet();
@@ -195,11 +151,13 @@ public class PDFGen {
                 SegmentDataModel content;
                 while (segmentContent.size() > 0) {
                     content = segmentContent.pollLast();
+                    String path;
                     if (content.isSinglepage()) {
-                        String path = HTMLgenerator.generatePrintableSongFile(content.song1(), content.number());
+                        path = HTMLgenerator.generatePrintableSongFile(content.song1(), content.number());
                     } else {
-                        String path = HTMLgenerator.generateSegmentFile(content.song1(), content.song2(), content.number());
+                        path = HTMLgenerator.generateSegmentFile(content.song1(), content.song2(), content.number());
                     }
+                    browser.print(path, path.replace(EXTENSION_HTML, EXTENSION_PDF));
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
@@ -247,4 +205,7 @@ public class PDFGen {
             return song2 == null;
         }
     }
+
+
+
 }

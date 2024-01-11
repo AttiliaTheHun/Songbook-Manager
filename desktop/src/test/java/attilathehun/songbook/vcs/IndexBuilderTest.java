@@ -2,17 +2,11 @@ package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
-import attilathehun.songbook.environment.Environment;
-import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.vcs.index.Index;
 import attilathehun.songbook.vcs.index.LoadIndex;
 import attilathehun.songbook.vcs.index.SaveIndex;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

@@ -1,7 +1,6 @@
 package attilathehun.songbook.environment;
 
-import attilathehun.songbook.util.Misc;
-import attilathehun.songbook.window.SongbookApplication;
+import attilathehun.songbook.misc.Misc;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.collection.CollectionManager;

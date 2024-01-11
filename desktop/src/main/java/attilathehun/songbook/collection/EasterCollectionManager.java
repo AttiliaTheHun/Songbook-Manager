@@ -17,6 +17,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import javax.swing.*;
+import javax.swing.text.NumberFormatter;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.DirectoryStream;
@@ -24,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.Collator;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -419,6 +421,125 @@ public class EasterCollectionManager extends CollectionManager {
         return new CollectionSettings(Paths.get(new Environment.EnvironmentSettings().DATA_FILE_PATH + "/easter_collection.json").toString(), Paths.get(new Environment.EnvironmentSettings().DATA_FILE_PATH + "/songs/egg/").toString());
     }
 
+    @Override
+    public Song addSongDialog() {
+        UIManager.put("OptionPane.okButtonText", "Add");
+        UIManager.put("OptionPane.cancelButtonText", "Cancel");
+
+        NumberFormat longFormat = NumberFormat.getIntegerInstance();
+
+        NumberFormatter numberFormatter = new NumberFormatter(longFormat);
+        numberFormatter.setAllowsInvalid(false);
+        numberFormatter.setMinimum(0l);
+
+        JTextField songNameField = new JTextField();
+        songNameField.setToolTipText("Name of the song. For example 'I Will Always Return'.");
+        JFormattedTextField songIdField = new JFormattedTextField(numberFormatter);
+        songIdField.setToolTipText("Identificator of the song. Do not confuse with collection index (n).");
+        JTextField songAuthorField = new JTextField();
+        songAuthorField.setToolTipText("Author or interpret of the song. For example 'Leonard Cohen'.");
+        JTextField songURLField = new JTextField();
+        songURLField.setToolTipText("Link to a video performance of the song.");
+        JCheckBox songActiveSwitch = new JCheckBox("Active");
+        songActiveSwitch.setToolTipText("When disabled, the song will not be included in the songbook.");
+
+        Song s = getPlaceholderSong();
+        songNameField.setText(s.name());
+        songIdField.setText(String.valueOf(s.id()));
+        songAuthorField.setText(s.getAuthor());
+        songURLField.setText(s.getUrl());
+        songActiveSwitch.setSelected(true);
+
+        Object[] message = new Object[]{
+                "Name:", songNameField,
+                "Id:", songIdField,
+                "Author:", songAuthorField,
+                "URL:", songURLField,
+                songActiveSwitch
+        };
+
+        int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), message, "Add Easter Song", JOptionPane.OK_CANCEL_OPTION);
+
+        UIManager.put("OptionPane.okButtonText", "Ok");
+        UIManager.put("OptionPane.cancelButtonText", "Cancel");
+
+        if (option == JOptionPane.OK_OPTION) {
+            if (songIdField.getText().equals("")) {
+                Environment.showErrorMessage("Error", "Invalid Id value!");
+                return null;
+            }
+
+            Song song = new Song(songNameField.getText(), Integer.parseInt(songIdField.getText()));
+            song.setUrl(songURLField.getText());
+            song.setAuthor(songAuthorField.getText());
+            song.setActive(songActiveSwitch.isSelected());
+            song = addSong(song);
+            //TODO CollectionEditor.forceRefreshInstance();
+            return song;
+        }
+
+        return null;
+    }
+
+    @Override
+    public Song editSongDialog(Song s) {
+        UIManager.put("OptionPane.okButtonText", "Save Changes");
+        UIManager.put("OptionPane.cancelButtonText", "Cancel");
+
+        NumberFormat longFormat = NumberFormat.getIntegerInstance();
+
+        NumberFormatter numberFormatter = new NumberFormatter(longFormat);
+        numberFormatter.setAllowsInvalid(false);
+        numberFormatter.setMinimum(0l);
+
+        JTextField songNameField = new JTextField();
+        songNameField.setToolTipText("Name of the song. For example 'I Will Always Return'.");
+        JFormattedTextField songIdField = new JFormattedTextField(numberFormatter);
+        songIdField.setToolTipText("Identificator of the song. Do not confuse with collection index (n).");
+        JTextField songAuthorField = new JTextField();
+        songAuthorField.setToolTipText("Author or interpret of the song. For example 'Leonard Cohen'.");
+        JTextField songURLField = new JTextField();
+        songURLField.setToolTipText("Link to a video performance of the song.");
+        JCheckBox songActiveSwitch = new JCheckBox("Active");
+        songActiveSwitch.setToolTipText("When disabled, the song will not be included in the songbook.");
+
+        songNameField.setText(s.name());
+        songIdField.setText(String.valueOf(s.id()));
+        songAuthorField.setText(s.getAuthor());
+        songURLField.setText(s.getUrl());
+        songActiveSwitch.setSelected(true);
+
+        Object[] message = new Object[]{
+                "Name:", songNameField,
+                "Id:", songIdField,
+                "URL:", songURLField,
+                songActiveSwitch
+        };
+
+
+        int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), message, "Edit Easter Song id: " + s.id(), JOptionPane.OK_CANCEL_OPTION);
+
+        UIManager.put("OptionPane.okButtonText", "Ok");
+        UIManager.put("OptionPane.cancelButtonText", "Cancel");
+
+        if (option == JOptionPane.OK_OPTION) {
+            if (songIdField.getText().equals("")) {
+                Environment.showErrorMessage("Error", "Invalid Id value!");
+                return null;
+            }
+
+            Song song = new Song(songNameField.getText(), Integer.parseInt(songIdField.getText()));
+            song.setFormerId(s.id());
+            song.setUrl(songURLField.getText());
+            song.setActive(songActiveSwitch.isSelected());
+            song = updateSongRecord(song);
+            //TODO CollectionEditor.forceRefreshInstance();
+            return song;
+        }
+
+        return null;
+    }
+
     private void onSongRemoved(Song s) {
         for (CollectionListener listener : listeners) {
             listener.onSongRemoved(s, this);
@@ -515,7 +636,7 @@ public class EasterCollectionManager extends CollectionManager {
     private void createNewCollection() {
         try {
             File songDataFolder = new File(EASTER_SONG_DATA_FILE_PATH);
-            songDataFolder.mkdir();
+            songDataFolder.mkdirs();
             File collectionJSONFile = new File(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getCollectionFilePath());
             collectionJSONFile.createNewFile();
             collection = new ArrayList<Song>();
@@ -530,7 +651,7 @@ public class EasterCollectionManager extends CollectionManager {
             int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to add your first easter song?", "Add Easter Song?", JOptionPane.OK_CANCEL_OPTION);
 
             if (option == JOptionPane.OK_OPTION) {
-                EnvironmentManager.addSongDialog(getInstance());
+                addSongDialog();
             }
 
         } catch (IOException e) {

@@ -19,7 +19,7 @@ import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentStateListener;
-import attilathehun.songbook.util.Misc;
+import attilathehun.songbook.misc.Misc;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.*;

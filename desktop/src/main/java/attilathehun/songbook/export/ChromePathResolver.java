@@ -7,11 +7,11 @@ import java.util.prefs.Preferences;
 // further resources https://stackoverflow.com/questions/779793/query-windows-search-from-java
 // https://devblogs.microsoft.com/scripting/use-powershell-to-find-installed-software/
 
-public class ChromePathResolver extends BrowserPathResolver {
+class ChromePathResolver extends BrowserPathResolver {
     // Windows
     private static final String USERNAME_PLACEHOLDER = "%UserName%";
     private static final String EXECUTABLE_NAME = "chrome.exe";
-    private static final String CHROME_PATH_VARIABLE = "browser.chrome.path";
+    public static final String CHROME_PATH_VARIABLE = "export.browser.chrome.path";
     private static final String[] WHERE_COMMAND = {"where", EXECUTABLE_NAME};
     private static final String[] GET_COMMAND_COMMAND = {"Get-Command", EXECUTABLE_NAME};
     private static final String[] READ_REGISTRY_COMMAND = {"reg", "query", "HKEY_CLASSES_ROOT\\ChromeHTML\\shell\\open\\command"};
@@ -28,7 +28,7 @@ public class ChromePathResolver extends BrowserPathResolver {
     private static final String[] WHEREIS_COMMAND = {"whereis", "google-chrome"};
     private static final String[] LOCATE_COMMAND = {"locate", "google-chrome"};
 
-    private final Preferences preferences = Preferences.userRoot().node(this.getClass().getName());
+    private final Preferences preferences = Preferences.userRoot().node(BrowserWrapper.class.getName());
 
     /**
      * Searches for the path of the Google Chrome executable (its parent). If the executable is not found, returns null;

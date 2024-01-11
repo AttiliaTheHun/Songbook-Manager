@@ -1,11 +1,9 @@
 package attilathehun.songbook.vcs;
 
-import attilathehun.annotation.TODO;
 import attilathehun.songbook.collection.EasterCollectionManager;
-import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
-import attilathehun.songbook.util.Misc;
+import attilathehun.songbook.misc.Misc;
 import attilathehun.songbook.util.ZipBuilder;
 import attilathehun.songbook.vcs.index.LoadIndex;
 import attilathehun.songbook.vcs.index.SaveIndex;
@@ -20,7 +18,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 

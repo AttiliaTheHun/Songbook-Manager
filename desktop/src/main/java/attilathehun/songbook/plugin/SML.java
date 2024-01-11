@@ -1,6 +1,6 @@
 package attilathehun.songbook.plugin;
 
-import attilathehun.songbook.util.Misc;
+import attilathehun.songbook.misc.Misc;
 import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -85,8 +85,8 @@ public class SML extends Plugin {
         static {
             if (!(languageTokens.length  == types.length && types.length == defaultClasses.length && defaultClasses.length == defaultAttributes.length)) {
                 PluginManager.getInstance().getSettings().get(SML.getInstance().getName()).put("enabled", Boolean.FALSE);
-                logger.error("SMSML Plugin disabled because of interpreter engine misconfiguration");
-                throw new IllegalStateException("The SMSML plugin is broken: Cannot load the engine!");
+                logger.error("SML Plugin disabled because of interpreter engine misconfiguration");
+                throw new IllegalStateException("The SML plugin is broken: Cannot load the engine!");
             }
         }
 
@@ -95,10 +95,10 @@ public class SML extends Plugin {
             temp.put("div", "<div%s>%s</div>\n");
             temp.put("h1", "<h1%s>%s</h1>\n");
             temp.put("h4", "<h4%s>%s</h4>\n");
-            temp.put("meta", "<meta%s>\n");
+            temp.put("meta", "<meta%s/>\n");
             temp.put("pre", "<pre%s>%s</pre>\n");
             temp.put("span", "<span%s>%s</span>\n");
-            temp.put("br", "<br>\n");
+            temp.put("br", "<br/>\n");
             temp.put("%class", "class=\"%s\"");
             temp.put("%attr", "%s=\"%s\"");
             temp.put("%style", "style=\"%s\"");

@@ -1,6 +1,5 @@
-package attilathehun.songbook.util;
+package attilathehun.songbook.misc;
 
-import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

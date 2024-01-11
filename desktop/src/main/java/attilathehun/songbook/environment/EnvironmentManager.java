@@ -20,7 +20,9 @@ public class EnvironmentManager {
 
     private static final Logger logger = LogManager.getLogger(EnvironmentManager.class);
 
+    @Deprecated
     private static final int ACTION_EDIT = 0;
+    @Deprecated
     private static final int ACTION_ADD = 1;
 
 
@@ -123,7 +125,7 @@ public class EnvironmentManager {
     }
 
 
-
+    @Deprecated
     public static Song addSongDialog(CollectionManager manager) {
         if (StandardCollectionManager.getInstance().equals(manager)) {
             return addStandardSongDialog(manager);
@@ -133,6 +135,7 @@ public class EnvironmentManager {
         return null;
     }
 
+    @Deprecated
     public static Song editSongDialog(Song s, CollectionManager manager) {
         if (StandardCollectionManager.getInstance().equals(manager)) {
             return editStandardSongDialog(s, manager);
@@ -142,18 +145,21 @@ public class EnvironmentManager {
         return null;
     }
 
+    @Deprecated
     private static Song addStandardSongDialog(CollectionManager manager) {
         UIManager.put("OptionPane.okButtonText", "Add");
         UIManager.put("OptionPane.cancelButtonText", "Cancel");
          return songActionDialog(manager.getPlaceholderSong(), manager, ACTION_ADD);
     }
 
+    @Deprecated
     private static Song editStandardSongDialog(Song s, CollectionManager manager) {
         UIManager.put("OptionPane.okButtonText", "Save Changes");
         UIManager.put("OptionPane.cancelButtonText", "Cancel");
         return songActionDialog(s, manager, ACTION_EDIT);
     }
 
+    @Deprecated
     private static Song songActionDialog(Song s, CollectionManager manager, int action) {
 
         if (action < ACTION_EDIT || action > ACTION_ADD) {
@@ -224,6 +230,7 @@ public class EnvironmentManager {
 
     }
 
+    @Deprecated
     private static Song addEasterSongDialog(CollectionManager manager) {
         UIManager.put("OptionPane.okButtonText", "Add");
         UIManager.put("OptionPane.cancelButtonText", "Cancel");
@@ -239,6 +246,7 @@ public class EnvironmentManager {
         return easterSongActionDialog(s, manager, ACTION_ADD);
     }
 
+    @Deprecated
     private static Song editEasterSongDialog(Song s, CollectionManager manager) {
         UIManager.put("OptionPane.okButtonText", "Save Changes");
         UIManager.put("OptionPane.cancelButtonText", "Cancel");

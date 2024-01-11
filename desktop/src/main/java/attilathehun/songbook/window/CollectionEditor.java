@@ -8,16 +8,14 @@ import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.plugin.Export;
-import attilathehun.songbook.util.Misc;
+import attilathehun.songbook.misc.Misc;
 import attilathehun.songbook.util.PDFGenerator;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -111,7 +109,7 @@ public class CollectionEditor extends Stage {
             if (SongbookApplication.isControlPressed()) {
                 song = EnvironmentManager.addEasterSongFromTemplateDialog(selectedSong, selectedManager);
             } else {
-                song = EnvironmentManager.addSongDialog(selectedManager);
+                song = Environment.getInstance().getCollectionManager().addSongDialog();
             }
             if (song == null) {
                 return;
@@ -136,7 +134,7 @@ public class CollectionEditor extends Stage {
                 return;
             }
 
-            Song song = EnvironmentManager.editSongDialog(selectedSong, selectedManager);
+            Song song = Environment.getInstance().getCollectionManager().editSongDialog(selectedSong);
 
             if (song == null) {
                 return;

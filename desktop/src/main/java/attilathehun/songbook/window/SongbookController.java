@@ -349,7 +349,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
     private void initAddSongButton() {
         addSongButton.setOnAction(event -> {
-            EnvironmentManager.addSongDialog(Environment.getInstance().getCollectionManager());
+            Environment.getInstance().getCollectionManager().addSongDialog();
         });
     }
 

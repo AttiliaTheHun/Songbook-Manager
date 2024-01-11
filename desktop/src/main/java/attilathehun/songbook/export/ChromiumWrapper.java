@@ -1,6 +1,6 @@
 package attilathehun.songbook.export;
 
-public class PuppeteerWrapper extends BrowserWrapper {
+public class ChromiumWrapper extends BrowserWrapper {
     @Override
     public void print(String inputPath, String outputPath) {
 
