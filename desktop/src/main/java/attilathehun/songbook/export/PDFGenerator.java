@@ -32,7 +32,7 @@ public class PDFGenerator {
         return logger;
     }
 
-    static final int PREVIEW_SEGMENT_NUMBER = -1;
+    public static final int PREVIEW_SEGMENT_NUMBER = -1;
     private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String) PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("defaultExportName")).toString();
     private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String)PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("singlepageExportName")).toString();
     private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String)PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("printableExportName")).toString();
@@ -74,12 +74,24 @@ public class PDFGenerator {
         exec(createDataCollection(EXPORT_OPTION_PRINTABLE), PRINTABLE_PDF_OUTPUT_PATH);
     }
 
-    public void generatePreview(Song s) {
-
+    public String generatePreview(Song s) throws Exception {
+        HTMLGenerator generator = new HTMLGenerator();
+        String path = generator.generatePrintableSongFile(s, PREVIEW_SEGMENT_NUMBER);
+        BrowserWrapper browser = BrowserWrapper.getInstance();
+        String outputPath = path.replace(EXTENSION_HTML, EXTENSION_PDF);
+        browser.print(path, outputPath);
+        browser.close();
+        return outputPath;
     }
 
-    public void generatePreview(Song s1, Song s2) {
-
+    public String generatePreview(Song s1, Song s2) throws Exception {
+        HTMLGenerator generator = new HTMLGenerator();
+        String path = generator.generateSegmentFile(s1, s2, PREVIEW_SEGMENT_NUMBER);
+        BrowserWrapper browser = BrowserWrapper.getInstance();
+        String outputPath = path.replace(EXTENSION_HTML, EXTENSION_PDF);
+        browser.print(path, outputPath);
+        browser.close();
+        return outputPath;
     }
 
     private Collection<SegmentDataModel> createDataCollection(int option) {
@@ -166,6 +178,11 @@ public class PDFGenerator {
                 logger.error(e.getMessage(), e);
             }
             activeThreads.decrementAndGet();
+            try {
+                browser.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         private static void init(Collection<SegmentDataModel> contentData) {

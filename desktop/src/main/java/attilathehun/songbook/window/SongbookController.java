@@ -6,6 +6,7 @@ import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.environment.EnvironmentStateListener;
+import attilathehun.songbook.export.PDFGenerator;
 import attilathehun.songbook.plugin.Export;
 import attilathehun.songbook.util.HTMLGenerator;
 import javafx.event.EventHandler;
@@ -282,7 +283,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
         singlepageSelection.setOnAction(event -> {
             try {
-              //  new PDFGenerator().generateSinglePage();
+                new PDFGenerator().generateSinglepage();
             } catch (Exception e) {
                 Environment.showErrorMessage("Error", e.getMessage());
             }
@@ -291,7 +292,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
         defaultSelection.setOnAction(event -> {
             try {
-               // new PDFGenerator().generateDefault();
+                new PDFGenerator().generateDefault();
             } catch (Exception e) {
                 Environment.showErrorMessage("Error", e.getMessage());
             }
@@ -299,7 +300,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
         printableSelection.setOnAction(event -> {
             try {
-               // new PDFGenerator().generatePrintable();
+                new PDFGenerator().generatePrintable();
             } catch (Exception e) {
                 Environment.showErrorMessage("Error", e.getMessage());
             }
@@ -334,7 +335,8 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
 
             try {
-              //  Desktop.getDesktop().open(new File(new PDFGenerator().generatePreview(SONG_ONE, SONG_TWO).replace(".html", ".pdf")));
+
+                Desktop.getDesktop().open(new File(new PDFGenerator().generatePreview(SONG_ONE, SONG_TWO)));
             } catch (Exception ex) {
                 logger.error(ex.getMessage(), ex);
                 Environment.showErrorMessage("Error", ex.getMessage());

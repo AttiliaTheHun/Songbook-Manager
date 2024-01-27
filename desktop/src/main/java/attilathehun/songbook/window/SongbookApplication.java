@@ -56,8 +56,6 @@ public class SongbookApplication extends Application {
         EnvironmentVerificator.automated();
         launch(args);
         logger.debug("Application started successfully");
-
-        //ExportTest.main();
     }
 
     @Override

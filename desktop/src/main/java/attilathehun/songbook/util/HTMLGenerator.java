@@ -3,6 +3,7 @@ package attilathehun.songbook.util;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.export.PDFGenerator;
 import attilathehun.songbook.misc.Misc;
 import attilathehun.songbook.plugin.DynamicSonglist;
 import attilathehun.songbook.plugin.PluginManager;
@@ -254,7 +255,7 @@ public class HTMLGenerator {
         }
 
         try {
-            File songFile = null;
+            File songFile;
             songFile = new File(manager.getSongFilePath(s));
 
             File songTemplate = new File(Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH + "/song.html");
@@ -332,15 +333,15 @@ public class HTMLGenerator {
      * @return songbook page file HTML
      */
     public String generateSegmentFile(Song songOne, Song songTwo, int number, CollectionManager manager) {
-        /*if (number != -1 && number < 0) {
+        if (number != -1 && number < 0) {
             throw  new IllegalArgumentException();
         }
 
         String path;
-        if (number == PDFGen.PREVIEW_SEGMENT_NUMBER) {
-            path = String.format(PDFGen.PREVIEW_SEGMENT_PATH, PDFGen.EXTENSION_HTML);
+        if (number == PDFGenerator.PREVIEW_SEGMENT_NUMBER) {
+            path = String.format(PDFGenerator.PREVIEW_SEGMENT_PATH, PDFGenerator.EXTENSION_HTML);
         } else {
-            path = String.format(PDFGen.DEFAULT_SEGMENT_PATH, number, PDFGen.EXTENSION_HTML);
+            path = String.format(PDFGenerator.DEFAULT_SEGMENT_PATH, number, PDFGenerator.EXTENSION_HTML);
         }
         try {
             PrintWriter printWriter = new PrintWriter(new FileWriter((path), false));
@@ -350,8 +351,7 @@ public class HTMLGenerator {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("HTML Generation Error", "Unable to generate current segment file.");
         }
-        return path;*/
-        return null;
+        return path;
     }
 
     /**
@@ -423,7 +423,7 @@ public class HTMLGenerator {
      * @return path to the file
      */
     public String generatePrintableSongFile(Song s, int number, CollectionManager manager) {
-      /*  if (number != -1 && number < 0) {
+        if (number != -1 && number < 0) {
             throw  new IllegalArgumentException();
         }
 
@@ -445,8 +445,7 @@ public class HTMLGenerator {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("HTML Generation Error", "Unable to generate current segment file.");
         }
-        return path;*/
-        return null;
+        return path;
     }
 
     /**

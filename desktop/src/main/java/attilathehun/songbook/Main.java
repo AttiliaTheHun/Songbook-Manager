@@ -14,19 +14,6 @@ public class Main {
     public static void main(String[] args) {
         System.setProperty("log4j.configurationFile", "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\src\\main\\resources\\log4j2.yaml");
 
-        try {
-            String inputPath = "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\temp\\current_page.html";
-            String outputPath = "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\temp\\test.pdf";
-            BrowserWrapper wrapper = new EdgeWrapper();
-            wrapper.print(inputPath, outputPath);
-            wrapper.close();
-            throw new RuntimeException();
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(0);
-        }
-
-
         PluginManager.loadPlugins();
         SongbookApplication.main(args);
     }
