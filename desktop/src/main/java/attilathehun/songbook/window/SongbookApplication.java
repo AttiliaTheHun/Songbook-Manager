@@ -45,7 +45,8 @@ public class SongbookApplication extends Application {
 
     public static void main(String[] args) {
         System.out.println(Main.class.getResource("log4j2.yaml"));
-        System.setProperty("log4j.configurationFile", Main.class.getResource("log4j2.yaml").toString());
+       // System.setProperty("log4j.configurationFile", Main.class.getResource("log4j2.yaml").toString());
+        System.setProperty("log4j.configurationFile", "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\src\\main\\resources\\log4j2.yaml");
 
         PluginManager.loadPlugins();
 

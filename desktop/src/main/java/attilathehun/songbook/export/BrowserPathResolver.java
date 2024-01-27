@@ -6,7 +6,7 @@ public abstract class BrowserPathResolver {
     public static final String SHELL_LOCATION_WINDOWS = "C:/Windows/System32/cmd.exe";
     public static final String SHELL_DELIMETER_WINDOWS = ">";
     public static final String SHELL_LOCATION_LINUX = "/bin/bash";
-    public static final String SHELL_DELIMETER_LINUX = "$"; // if this thing runs as su, we better deploy some ransomware :)
+    public static final String SHELL_DELIMETER_LINUX = "$"; // if this thing runs as su, we better deploy some ransomware
 
     /**
      * Searches for the browser's executable, hopefully returning its full path. The method should also save the path

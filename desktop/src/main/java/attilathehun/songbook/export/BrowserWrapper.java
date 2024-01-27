@@ -7,15 +7,12 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.prefs.Preferences;
 
-public abstract class BrowserWrapper {
-
+public abstract class BrowserWrapper implements AutoCloseable {
     private static final Logger logger = LogManager.getLogger(BrowserWrapper.class);
 
     public static final String OS_WINDOWS = "Windows";
     public static final String OS_LINUX = "Linux";
-    protected final String[] DEFAULT_ARGS = {"--headless"};
-    protected final String PRINT_OPTION_TEMPLATE = "--print-to-pdf=\"%s\"";
-
+    protected final String[] DEFAULT_PRINT_ARGS = {"--headless", "--print-to-pdf=\"%s\"", "--no-pdf-header-footer", "%s"};
     private static final String DEFAULT_OPTION = "export.browser.default";
     private static final String OPTION_CHROME = "export.browser.chrome";
     private static final String OPTION_EDGE = "export.browser.edge";
@@ -24,11 +21,23 @@ public abstract class BrowserWrapper {
 
     private static final Preferences preferences = Preferences.userRoot().node(BrowserWrapper.class.getName());
 
-    public abstract void print(String inputPath, String outputPath);
+    /**
+     * Converts target file to PDF using the corresponding browser.
+     * @param inputPath full path to target HTML file
+     * @param outputPath full path to the output PDF file
+     */
+    public abstract void print(String inputPath, String outputPath) throws IOException;
+
+    /**
+     * Frees up the resources in use by this particular wrapper. Using the wrapper after calling {@link BrowserWrapper#close()} will throw exceptions.
+     */
+    @Override
+    public abstract void close() throws IOException;
 
     static {
         try {
-           // init();
+            // TODO only if export enabled
+            init();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -36,7 +45,7 @@ public abstract class BrowserWrapper {
 
     /**
      * Attempts to find one of the supported browser and if successful, saves it as the default option.
-     * @throws IOException when one of the path resolutions fails
+     * @throws IOException when one of the path resolutions fails really miserably
      */
     private static void init() throws IOException, InterruptedException {
         String browser = preferences.get(DEFAULT_OPTION, null);
@@ -99,7 +108,7 @@ public abstract class BrowserWrapper {
      * and manually changing the value.
      * @return a {@link BrowserWrapper} subclass or null
      */
-    public static BrowserWrapper getInstance() {
+    public static BrowserWrapper getInstance() throws IOException {
         final String browser = preferences.get(DEFAULT_OPTION, "");
         switch (browser) {
             case OPTION_CHROME -> {

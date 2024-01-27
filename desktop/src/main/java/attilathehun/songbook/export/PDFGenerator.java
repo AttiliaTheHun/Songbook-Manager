@@ -144,6 +144,9 @@ public class PDFGenerator {
 
         BrowserWrapper browser = BrowserWrapper.getInstance();
 
+        private ExportWorker() throws IOException {
+        }
+
         @Override
         public void run() {
             activeThreads.incrementAndGet();
@@ -182,7 +185,7 @@ public class PDFGenerator {
             }
         }
 
-        public static void performTask(Collection<SegmentDataModel> contentData) {
+        public static void performTask(Collection<SegmentDataModel> contentData) throws IOException {
             init(contentData);
             Thread[] threads = new Thread[((Double)PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("conversionThreadCount")).intValue()];
             for (int i = 0; i < threads.length; i++) {

@@ -17,14 +17,14 @@ import java.util.prefs.Preferences;
 public class ChromiumPathResolver extends BrowserPathResolver {
     private static final Logger logger = LogManager.getLogger(ChromiumPathResolver.class);
     //windows
-    private static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe"; // yup, it is same as with chrome
+    static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe"; // yup, it is same as with chrome
     public static final String CHROMIUM_PATH_VARIABLE = "export.browser.chromium.path";
     private static final String[] WHERE_COMMAND = {"where", EXECUTABLE_NAME_WINDOWS};
     private static final String DEFAULT_PATH_WIN11 = "C:\\Program Files (x86)\\Chromium";
     private static final String DEFAULT_PATH_WIN11_2 = "C:\\Program Files (x86)\\Chromium\\Application";
     //linux
 
-    private static final String EXECUTABLE_NAME_LINUX = "chromium-browser";
+    static final String EXECUTABLE_NAME_LINUX = "chromium-browser";
     private static final String EXECUTABLE_NAME_LINUX_2 = "chromium";
     private static final String DEFAULT_PATH_UBUNTU = "/usr/bin/chromium-browser";
     private static final String DEFAULT_PATH_UBUNTU_2 = "/usr/bin/chromium";

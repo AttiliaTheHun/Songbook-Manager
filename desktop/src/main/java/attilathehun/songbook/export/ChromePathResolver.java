@@ -19,7 +19,7 @@ public class ChromePathResolver extends BrowserPathResolver {
 
     // Windows
     private static final String USERNAME_PLACEHOLDER = "%UserName%";
-    private static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe";
+    static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe";
     public static final String CHROME_PATH_VARIABLE = "export.browser.chrome.path";
     private static final String[] WHERE_COMMAND = {"where", EXECUTABLE_NAME_WINDOWS};
    // private static final String[] GET_COMMAND_COMMAND = {"Get-Command", EXECUTABLE_NAME_WINDOWS}; POWERSHELL ONLY
@@ -31,7 +31,7 @@ public class ChromePathResolver extends BrowserPathResolver {
     private static final String DEFAULT_PATH_WIN10 = "C:\\Program Files (x86)\\Google\\Chrome\\Application";
     private static final String DEFAULT_PATH_WIN10_2 = "C:\\Program Files\\Google\\Chrome\\Application";
     // Linux
-    private static final String EXECUTABLE_NAME_LINUX = "google-chrome";
+    static final String EXECUTABLE_NAME_LINUX = "google-chrome";
     private static final String DEFAULT_PATH_UBUNTU = "/usr/bin/google-chrome-stable";
     private static final String DEFAULT_PATH_UBUNTU_2 = "/usr/bin/google-chrome";
     private static final String[] WHEREIS_COMMAND = {"whereis", EXECUTABLE_NAME_LINUX};

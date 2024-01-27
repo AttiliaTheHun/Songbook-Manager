@@ -17,7 +17,7 @@ public class EdgePathResolver extends BrowserPathResolver {
     private static final Logger logger = LogManager.getLogger(EdgePathResolver.class);
 
     //Windows
-    private static final String EXECUTABLE_NAME_WINDOWS = "msedge.exe";
+    static final String EXECUTABLE_NAME_WINDOWS = "msedge.exe";
     public static final String EDGE_PATH_VARIABLE = "export.browser.edge.path";
     private static final String[] WHERE_COMMAND = {"where", EXECUTABLE_NAME_WINDOWS};
     private static final String[] READ_REGISTRY_COMMAND = {"reg", "query", "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\", "/s", "/f", "\\msedge.exe", "|", "findstr", "Default"};
@@ -26,7 +26,7 @@ public class EdgePathResolver extends BrowserPathResolver {
 
     // Linux
 
-    private static final String EXECUTABLE_NAME_LINUX = "microsoft-edge";
+   static final String EXECUTABLE_NAME_LINUX = "microsoft-edge";
     private static final String DEFAULT_PATH_UBUNTU = "/usr/bin/microsoft-edge-stable";
     private static final String DEFAULT_PATH_UBUNTU_2 = "/usr/bin/microsoft-edge";
     private static final String[] WHEREIS_COMMAND = {"whereis", EXECUTABLE_NAME_LINUX};
