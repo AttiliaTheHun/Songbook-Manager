@@ -332,7 +332,7 @@ public class HTMLGenerator {
      * @return songbook page file HTML
      */
     public String generateSegmentFile(Song songOne, Song songTwo, int number, CollectionManager manager) {
-        if (number != -1 && number < 0) {
+        /*if (number != -1 && number < 0) {
             throw  new IllegalArgumentException();
         }
 
@@ -350,7 +350,8 @@ public class HTMLGenerator {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("HTML Generation Error", "Unable to generate current segment file.");
         }
-        return path;
+        return path;*/
+        return null;
     }
 
     /**
@@ -422,7 +423,7 @@ public class HTMLGenerator {
      * @return path to the file
      */
     public String generatePrintableSongFile(Song s, int number, CollectionManager manager) {
-        if (number != -1 && number < 0) {
+      /*  if (number != -1 && number < 0) {
             throw  new IllegalArgumentException();
         }
 
@@ -444,7 +445,8 @@ public class HTMLGenerator {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("HTML Generation Error", "Unable to generate current segment file.");
         }
-        return path;
+        return path;*/
+        return null;
     }
 
     /**

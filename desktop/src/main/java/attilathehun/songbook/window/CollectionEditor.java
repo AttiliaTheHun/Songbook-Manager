@@ -9,7 +9,6 @@ import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.plugin.Export;
 import attilathehun.songbook.misc.Misc;
-import attilathehun.songbook.util.PDFGenerator;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
@@ -173,7 +172,7 @@ public class CollectionEditor extends Stage {
                 public void run() {
                     try {
                         //TODO port this to the new PDFGenerator when complete
-                        Desktop.getDesktop().open(new File(new PDFGenerator(selectedManager).generatePreview(selectedSong).replace(".html", ".pdf")));
+                       // Desktop.getDesktop().open(new File(new PDFGenerator(selectedManager).generatePreview(selectedSong).replace(".html", ".pdf")));
                     } catch (Exception ex) {
                         logger.error(ex.getMessage(), ex);
                         Environment.showErrorMessage("Error", ex.getMessage(), null);

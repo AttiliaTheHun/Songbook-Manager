@@ -1,4 +1,4 @@
-package attilathehun.songbook.util;
+/*package attilathehun.songbook.util;
 
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
@@ -48,7 +48,7 @@ public class PDFGenerator {
     /**
      * Constructor that allows for use of specific CollectionManager.
      * @param manager the Collection Manager to use (null if default)
-     */
+     *//*
     public PDFGenerator(CollectionManager manager) throws IllegalStateException {
         if (manager == null) {
             this.manager = Environment.getInstance().getCollectionManager().copy();
@@ -65,7 +65,7 @@ public class PDFGenerator {
 
     /**
      * Constructor that uses the default CollectionManager.
-     */
+     *//*
     public PDFGenerator() {
         this(Environment.getInstance().getCollectionManager());
     }
@@ -80,7 +80,7 @@ public class PDFGenerator {
     /**
      * Creates a progress dialog for the given export Task.
      * @param exportTask target export task
-     */
+     *//*
     private String progressUI(ExportTask exportTask) {
         ProgressDialog dialog = new ProgressDialog(exportTask);
         dialog.initStyle(StageStyle.UNIFIED);
@@ -98,7 +98,7 @@ public class PDFGenerator {
 
     /**
      * Generates a portrait-oriented PDF with each song having its own page. Songs are ordered alphabetically.
-     */
+     *//*
     public void generateSinglePage() {
         logger.info("Exporting singlepage....");
 
@@ -109,7 +109,7 @@ public class PDFGenerator {
 
     /**
      * Generates a landscape-oriented PDF with two songs on a page. Songs are ordered alphabetically.
-     */
+     *//*
     public void generateDefault() {
         logger.info("Exporting default....");
 
@@ -121,7 +121,7 @@ public class PDFGenerator {
     /**
      * Generates a landscape-oriented PDF with two songs on a page. Songs are ordered alphabetically, but their position
      * is optimised for two-sided printing (1-4 & 3-2).
-     */
+     *//*
     public void generatePrintable() {
         logger.info("Exporting printable....");
 
@@ -152,7 +152,7 @@ public class PDFGenerator {
      * Constructs an export Task for the specific export option.
      * @param exportOption EXPORT_OPTION_PRINTABLE, EXPORT_OPTION_SINGLEPAGE or EXPORT_OPTION_DEFAULT
      * @return the Task object
-     */
+     *//*
     @Deprecated(forRemoval = true)
     private Task getExportTask(int exportOption) {
         return new Task<Void>() {
@@ -278,7 +278,7 @@ public class PDFGenerator {
      * @param segmentCount number of the segments
      * @param documentName final file name
      * @throws IOException
-     */
+     *//*
     private void joinSegments(int segmentCount, String documentName) throws IOException {
         PDFMergerUtility ut = new PDFMergerUtility();
         for (int i = 0; i < segmentCount; i++) {
@@ -294,3 +294,4 @@ public class PDFGenerator {
     }
 
 }
+*/

@@ -2,7 +2,7 @@ package attilathehun.songbook.export;
 
 import java.util.prefs.Preferences;
 
-class ChromeWrapper extends BrowserWrapper {
+public class ChromeWrapper extends BrowserWrapper {
     private static final Preferences preferences = Preferences.userRoot().node(BrowserWrapper.class.getName());
     private static final String CHROME_PARENT_PATH = preferences.get(ChromePathResolver.CHROME_PATH_VARIABLE, null);
     @Override

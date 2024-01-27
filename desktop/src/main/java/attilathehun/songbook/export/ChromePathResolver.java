@@ -1,19 +1,30 @@
 package attilathehun.songbook.export;
 
+import attilathehun.annotation.TODO;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.*;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Scanner;
 import java.util.prefs.Preferences;
 
 // further resources https://stackoverflow.com/questions/779793/query-windows-search-from-java
 // https://devblogs.microsoft.com/scripting/use-powershell-to-find-installed-software/
 
-class ChromePathResolver extends BrowserPathResolver {
+@TODO(description = "Replace hardcoded paths with win path variables like %ProgramFile(x86)%")
+public class ChromePathResolver extends BrowserPathResolver {
+    private static final Logger logger = LogManager.getLogger(ChromePathResolver.class);
+
     // Windows
     private static final String USERNAME_PLACEHOLDER = "%UserName%";
-    private static final String EXECUTABLE_NAME = "chrome.exe";
+    private static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe";
     public static final String CHROME_PATH_VARIABLE = "export.browser.chrome.path";
-    private static final String[] WHERE_COMMAND = {"where", EXECUTABLE_NAME};
-    private static final String[] GET_COMMAND_COMMAND = {"Get-Command", EXECUTABLE_NAME};
+    private static final String SHELL_LOCATION_WINDOWS = "C:/Windows/System32/cmd.exe";
+    private static final String SHELL_DELIMETER_WINDOWS = ">";
+    private static final String[] WHERE_COMMAND = {"where", EXECUTABLE_NAME_WINDOWS};
+   // private static final String[] GET_COMMAND_COMMAND = {"Get-Command", EXECUTABLE_NAME_WINDOWS}; POWERSHELL ONLY
     private static final String[] READ_REGISTRY_COMMAND = {"reg", "query", "HKEY_CLASSES_ROOT\\ChromeHTML\\shell\\open\\command"};
     private static final String[] READ_REGISTRY_COMMAND_2 = {"reg", "query", "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\", "/s", "/f", "\\chrome.exe", "|", "findstr", "Default"};
     private static final String DEFAULT_PATH_XP = "C:\\Documents and Settings\\%UserName%\\Local Settings\\Application Data\\Google\\Chrome";
@@ -22,99 +33,161 @@ class ChromePathResolver extends BrowserPathResolver {
     private static final String DEFAULT_PATH_WIN10 = "C:\\Program Files (x86)\\Google\\Chrome\\Application";
     private static final String DEFAULT_PATH_WIN10_2 = "C:\\Program Files\\Google\\Chrome\\Application";
     // Linux
-
+    private static final String EXECUTABLE_NAME_LINUX = "google-chrome";
     private static final String DEFAULT_PATH_UBUNTU = "/usr/bin/google-chrome-stable";
     private static final String DEFAULT_PATH_UBUNTU_2 = "/usr/bin/google-chrome";
-    private static final String[] WHEREIS_COMMAND = {"whereis", "google-chrome"};
-    private static final String[] LOCATE_COMMAND = {"locate", "google-chrome"};
+    private static final String SHELL_LOCATION_LINUX = "/bin/bash";
+    private static final String SHELL_DELIMETER_LINUX = "$"; // if this thing runs as su, we better deploy some ransomware
+    private static final String[] WHEREIS_COMMAND = {"whereis", EXECUTABLE_NAME_LINUX};
+    private static final String[] LOCATE_COMMAND = {"locate", EXECUTABLE_NAME_LINUX};
 
     private final Preferences preferences = Preferences.userRoot().node(BrowserWrapper.class.getName());
 
     /**
      * Searches for the path of the Google Chrome executable (its parent). If the executable is not found, returns null;
-     * @return path to chrome.exe or null
+     * @return path to chrome.exe (chrome binary) or null
      */
-    public String resolve() throws IOException {
+    public String resolve() throws IOException, InterruptedException {
+        final String executable = (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) ? EXECUTABLE_NAME_WINDOWS : EXECUTABLE_NAME_LINUX;
 
+        // First try if any of the default paths won't do
         File file;
         String path;
         String[] possiblePaths = initPaths();
+
         for (String s : possiblePaths) {
             path = s;
             if (path != null && path.length() != 0) {
-                file = new File(Paths.get(path, EXECUTABLE_NAME).toString());
+                file = new File(Paths.get(path, executable).toString());
                 if (file.exists()) {
+                    savePath(file.getParent());
+                    return file.getParent();
+                }
+            }
+        }
+
+
+        // We are gonna try to find the executable on our own now, using our very good friend, the shell
+
+        final String shell = (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) ? SHELL_LOCATION_WINDOWS : SHELL_LOCATION_LINUX;
+        final String delimeter = (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) ? SHELL_DELIMETER_WINDOWS : SHELL_DELIMETER_LINUX;
+
+        String[][] commands = initCommands();
+
+        if (commands.length == 0) {
+            return null;
+        }
+
+        Process process = new ProcessBuilder(shell).start();
+        BufferedWriter stdin = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+        Scanner stdout = new Scanner(process.getInputStream());
+
+        // first we try to execute all our commands
+        for (String[] command : commands) {
+            String commandString = String.join(" ", command);
+            logger.debug("Executing: " + commandString);
+            stdin.write(commandString);
+            stdin.newLine();
+            stdin.flush();
+        }
+
+        stdin.write("exit");
+        stdin.newLine();
+        stdin.flush();
+        stdin.close();
+
+        // now we will look at their output
+        // However we receive the complete stream which includes the commands we executed, so we gotta sort these out
+        int counter = 0;
+        boolean extracted = false;
+        while (stdout.hasNextLine()) {
+            extracted = false;
+            path = stdout.nextLine();
+            if (path.contains(delimeter)) { // means this is the line that executed the command (this is actually our input from before)
+                continue;
+            }
+            if (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) { // this relates to windows-specific commands
+                if (counter < 2) { // Skip the microsoft copyright stuff
+                    counter++;
+                    continue;
+                }
+
+                if (path.indexOf("\"") != path.lastIndexOf("\"")) { // means there is at least a duo of double quotes, which could indicate a path with spaces
+                    path = path.substring(path.indexOf("\"") + 1, path.lastIndexOf("\""));
+                    extracted = true;
+                }
+
+                if (path.contains("(Default)") && path.contains("REG_SZ")) { // this is what the registry output entry starts with
+                    path = path.substring(path.indexOf("(Default)") + "(Default)".length() + 1);
+                    path = path.substring(path.indexOf("REG_SZ") + "REG_SZ".length() + 1);
+                    extracted = true;
+                }
+            } else if (BrowserWrapper.getOS().equals(BrowserWrapper.OS_LINUX)) {
+                //TODO
+                // need to check what the commands output on linux and implements similar path extracting as done for windows
+            }
+
+            if (!extracted) {
+                continue; // let's not risk some unexpected output being used as a file path
+            }
+
+            path = path.trim();
+
+            // now we check if the path we got exists
+            if (path != null && path.length() != 0) {
+                file = new File(path);
+                if (file.exists()) {
+                    path = file.getParent();
+                    logger.info("path found " + path);
                     savePath(path);
+                    stdout.close();
                     return path;
                 }
             }
+
         }
 
-        Process process;
-        BufferedReader out;
-        StringBuilder buffer;
-        String s;
+        // if we got here, we are fucked, we have no idea where the executable is (may or may not mean it does not exist on the machine)
+        // we clean up and graciously return null
 
-        String[][] commands = initCommands();
-        for (String[] command : commands) {
-            process = Runtime.getRuntime().exec(command);
-            for (int i = 0; i < 4; i++) {
-                System.out.println("i: " + i);
-
-                out = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                buffer = new StringBuilder(4000);
-
-                while ((s = out.readLine()) != null) {
-                    buffer.append(s).append("\n");
-                }
-                String result = out.toString();
-                System.out.println(result);
-
-                path = buffer.toString();
-                System.out.println(path);
-                if (path != null && path.length() != 0) {
-                    file = new File(Paths.get(path, EXECUTABLE_NAME).toString());
-                    if (file.exists()) {
-                        savePath(path);
-                        out.close();
-                        return path;
-                    }
-                }
-
-                out.close();
-            }
-        }
-
+        stdout.close();
 
         return null;
     }
 
     private String[] initPaths() {
-        String[] possiblePaths = {
+        if (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) {
+            return new String[]{
+                    preferences.get(CHROME_PATH_VARIABLE, null),
+                    DEFAULT_PATH_WIN10_2,
+                    DEFAULT_PATH_WIN10,
+                    DEFAULT_PATH_WIN7,
+                    DEFAULT_PATH_VISTA.replace(USERNAME_PLACEHOLDER, System.getProperty("user.name")),
+                    DEFAULT_PATH_XP.replace(USERNAME_PLACEHOLDER, System.getProperty("user.name")),
+            };
+        }
+
+        return new String[]{
                 preferences.get(CHROME_PATH_VARIABLE, null),
-                DEFAULT_PATH_WIN10_2,
-                DEFAULT_PATH_WIN10,
-                DEFAULT_PATH_WIN7,
-                DEFAULT_PATH_VISTA.replace(USERNAME_PLACEHOLDER, System.getProperty("user.name")),
-                DEFAULT_PATH_XP.replace(USERNAME_PLACEHOLDER, System.getProperty("user.name")),
                 DEFAULT_PATH_UBUNTU,
                 DEFAULT_PATH_UBUNTU_2
         };
-
-        return possiblePaths;
     }
 
     private String[][] initCommands() {
-        String[][] commands = {
-                WHERE_COMMAND,
-                GET_COMMAND_COMMAND,
-                READ_REGISTRY_COMMAND,
-                READ_REGISTRY_COMMAND_2,
+        if (BrowserWrapper.getOS().equals((BrowserWrapper.OS_WINDOWS))) {
+            return new String[][]{
+                    WHERE_COMMAND,
+                    //GET_COMMAND_COMMAND,
+                    READ_REGISTRY_COMMAND,
+                    READ_REGISTRY_COMMAND_2,
+            };
+        }
+
+        return new String[][]{
                 WHEREIS_COMMAND,
                 LOCATE_COMMAND
         };
-
-        return commands;
     }
 
     private void savePath(String path) {
