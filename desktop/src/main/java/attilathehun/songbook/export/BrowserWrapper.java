@@ -40,7 +40,6 @@ public abstract class BrowserWrapper {
      */
     private static void init() throws IOException, InterruptedException {
         String browser = preferences.get(DEFAULT_OPTION, null);
-        String path;
 
         if (browser != null) {
             logger.info("Init: default export browser value " + browser);

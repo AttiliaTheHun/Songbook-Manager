@@ -21,8 +21,6 @@ public class ChromePathResolver extends BrowserPathResolver {
     private static final String USERNAME_PLACEHOLDER = "%UserName%";
     private static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe";
     public static final String CHROME_PATH_VARIABLE = "export.browser.chrome.path";
-    private static final String SHELL_LOCATION_WINDOWS = "C:/Windows/System32/cmd.exe";
-    private static final String SHELL_DELIMETER_WINDOWS = ">";
     private static final String[] WHERE_COMMAND = {"where", EXECUTABLE_NAME_WINDOWS};
    // private static final String[] GET_COMMAND_COMMAND = {"Get-Command", EXECUTABLE_NAME_WINDOWS}; POWERSHELL ONLY
     private static final String[] READ_REGISTRY_COMMAND = {"reg", "query", "HKEY_CLASSES_ROOT\\ChromeHTML\\shell\\open\\command"};
@@ -36,8 +34,6 @@ public class ChromePathResolver extends BrowserPathResolver {
     private static final String EXECUTABLE_NAME_LINUX = "google-chrome";
     private static final String DEFAULT_PATH_UBUNTU = "/usr/bin/google-chrome-stable";
     private static final String DEFAULT_PATH_UBUNTU_2 = "/usr/bin/google-chrome";
-    private static final String SHELL_LOCATION_LINUX = "/bin/bash";
-    private static final String SHELL_DELIMETER_LINUX = "$"; // if this thing runs as su, we better deploy some ransomware
     private static final String[] WHEREIS_COMMAND = {"whereis", EXECUTABLE_NAME_LINUX};
     private static final String[] LOCATE_COMMAND = {"locate", EXECUTABLE_NAME_LINUX};
 
