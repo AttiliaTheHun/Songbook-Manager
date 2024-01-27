@@ -24,6 +24,13 @@
             <version>2.4.1</version>
         </dependency>
         <dependency>
+            <groupId>eu.mihosoft.monacofx</groupId>
+            <artifactId>monacofx</artifactId>
+            <version>0.0.8</version>
+        </dependency>
+
+
+        <dependency>
             <groupId>de.intarsys.opensource</groupId>
             <artifactId>jPod</artifactId>
             <version>5.6</version>

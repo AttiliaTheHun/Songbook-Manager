@@ -250,6 +250,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             CodeEditor.open(SONG_ONE, Environment.getInstance().getCollectionManager());
         });
 
+        // TODO when SML is enabled, change text to "Edit SML" and allow for "Edit HTML" with Shift-Click
         editSongTwoHTML.setOnAction(event -> {
             if (SONG_TWO.id() < 0) {
                 Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH);

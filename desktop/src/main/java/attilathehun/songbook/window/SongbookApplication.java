@@ -44,12 +44,8 @@ public class SongbookApplication extends Application {
 
 
     public static void main(String[] args) {
-        System.out.println(Main.class.getResource("log4j2.yaml"));
-       // System.setProperty("log4j.configurationFile", Main.class.getResource("log4j2.yaml").toString());
-        System.setProperty("log4j.configurationFile", "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\src\\main\\resources\\log4j2.yaml");
-
+        System.setProperty("log4j.configurationFile", Main.class.getResource("log4j2.yaml").toString());
         PluginManager.loadPlugins();
-
         Installer.runDiagnostics();
         new EnvironmentManager().autoLoad();
         Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
@@ -60,6 +56,7 @@ public class SongbookApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+       CodeEditor.open((Song)((ArrayList) StandardCollectionManager.getInstance().getCollection()).get(0), StandardCollectionManager.getInstance());
 
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override

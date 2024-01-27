@@ -65,7 +65,7 @@ public class CodeEditorV1 extends JFrame implements EnvironmentStateListener, Do
         throw new RuntimeException("Constructor not allowed");
     }
 
-    private CodeEditorV1(CollectionManager manager, Song s) {
+    public CodeEditorV1(CollectionManager manager, Song s) {
         if (manager == null) {
             this.manager = Environment.getInstance().getCollectionManager();
         } else {
