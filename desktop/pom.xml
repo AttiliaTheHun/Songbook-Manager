@@ -28,25 +28,12 @@
             <artifactId>monacofx</artifactId>
             <version>0.0.8</version>
         </dependency>
-
-
-        <dependency>
-            <groupId>de.intarsys.opensource</groupId>
-            <artifactId>jPod</artifactId>
-            <version>5.6</version>
-        </dependency>
-
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.15.4</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.fifesoft</groupId>
-            <artifactId>rsyntaxtextarea</artifactId>
-            <version>3.3.3</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>

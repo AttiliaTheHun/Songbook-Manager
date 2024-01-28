@@ -27,10 +27,37 @@ public class RequestFileAssembler {
     private boolean disassemblySuccessful = false;
     private LoadIndex loadIndex = null;
 
+    public static RequestFileAssembler disassemble(String filePath) throws IOException {
+        RequestFileAssembler assembler = new RequestFileAssembler();
+        if (filePath == null || filePath.length() == 0) {
+            throw new IllegalArgumentException("Invalid response file path for disassembly!");
+        }
+        File file = new File(filePath);
+
+        if (!file.exists()) {
+            throw new FileNotFoundException("Could not find the response file");
+        }
+        String responseFilesPath = ZipBuilder.extract(filePath);
+        File indexFile = new File(Paths.get(responseFilesPath, "index,json").toString());
+        if (!indexFile.exists()) {
+            throw new FileNotFoundException("Could not find the response load index file");
+        }
+        String json = String.join("", Files.readAllLines(indexFile.toPath()));
+        Type targetClassType = new TypeToken<LoadIndex>() {
+        }.getType();
+        LoadIndex index = new Gson().fromJson(json, targetClassType);
+
+
+        assembler.loadIndex = index;
+        assembler.disassemblySuccessful = true;
+        return assembler;
+    }
+
     /**
      * Create a request.zip file to the temp folder. The file contains all songbook files that changes have been made to,
      * the songbook changelog and the save request index.
-     * @param index the save request index
+     *
+     * @param index       the save request index
      * @param collections collections whose .json files should be sent along the request
      * @return this
      * @throws IOException
@@ -70,32 +97,6 @@ public class RequestFileAssembler {
 
     public String getOutputFilePath() {
         return outputFilePath;
-    }
-
-    public static RequestFileAssembler disassemble(String filePath) throws IOException {
-        RequestFileAssembler assembler = new RequestFileAssembler();
-        if (filePath == null || filePath.length() == 0) {
-            throw new IllegalArgumentException("Invalid response file path for disassembly!");
-        }
-        File file = new File(filePath);
-
-        if (!file.exists()) {
-            throw new FileNotFoundException("Could not find the response file");
-        }
-        String responseFilesPath = ZipBuilder.extract(filePath);
-        File indexFile = new File(Paths.get(responseFilesPath, "index,json").toString());
-        if (!indexFile.exists()) {
-            throw new FileNotFoundException("Could not find the response load index file");
-        }
-        String json = String.join("", Files.readAllLines(indexFile.toPath()));
-        Type targetClassType = new TypeToken<LoadIndex>() {
-        }.getType();
-        LoadIndex index = new Gson().fromJson(json, targetClassType);
-
-
-        assembler.loadIndex = index;
-        assembler.disassemblySuccessful = true;
-        return assembler;
     }
 
     public boolean success() {

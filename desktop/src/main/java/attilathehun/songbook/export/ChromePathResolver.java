@@ -4,9 +4,11 @@ import attilathehun.annotation.TODO;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Scanner;
 import java.util.prefs.Preferences;
 
@@ -15,14 +17,15 @@ import java.util.prefs.Preferences;
 
 @TODO(description = "Replace hardcoded paths with win path variables like %ProgramFile(x86)%")
 public class ChromePathResolver extends BrowserPathResolver {
+    public static final String CHROME_PATH_VARIABLE = "export.browser.chrome.path";
+    static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe";
+    // Linux
+    static final String EXECUTABLE_NAME_LINUX = "google-chrome";
     private static final Logger logger = LogManager.getLogger(ChromePathResolver.class);
-
     // Windows
     private static final String USERNAME_PLACEHOLDER = "%UserName%";
-    static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe";
-    public static final String CHROME_PATH_VARIABLE = "export.browser.chrome.path";
     private static final String[] WHERE_COMMAND = {"where", EXECUTABLE_NAME_WINDOWS};
-   // private static final String[] GET_COMMAND_COMMAND = {"Get-Command", EXECUTABLE_NAME_WINDOWS}; POWERSHELL ONLY
+    // private static final String[] GET_COMMAND_COMMAND = {"Get-Command", EXECUTABLE_NAME_WINDOWS}; POWERSHELL ONLY
     private static final String[] READ_REGISTRY_COMMAND = {"reg", "query", "HKEY_CLASSES_ROOT\\ChromeHTML\\shell\\open\\command"};
     private static final String[] READ_REGISTRY_COMMAND_2 = {"reg", "query", "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\", "/s", "/f", "\\chrome.exe", "|", "findstr", "Default"};
     private static final String DEFAULT_PATH_XP = "C:\\Documents and Settings\\%UserName%\\Local Settings\\Application Data\\Google\\Chrome";
@@ -30,8 +33,6 @@ public class ChromePathResolver extends BrowserPathResolver {
     private static final String DEFAULT_PATH_WIN7 = "C:\\Program Files (x86)\\Google\\Application";
     private static final String DEFAULT_PATH_WIN10 = "C:\\Program Files (x86)\\Google\\Chrome\\Application";
     private static final String DEFAULT_PATH_WIN10_2 = "C:\\Program Files\\Google\\Chrome\\Application";
-    // Linux
-    static final String EXECUTABLE_NAME_LINUX = "google-chrome";
     private static final String DEFAULT_PATH_UBUNTU = "/usr/bin/google-chrome-stable";
     private static final String DEFAULT_PATH_UBUNTU_2 = "/usr/bin/google-chrome";
     private static final String[] WHEREIS_COMMAND = {"whereis", EXECUTABLE_NAME_LINUX};
@@ -41,6 +42,7 @@ public class ChromePathResolver extends BrowserPathResolver {
 
     /**
      * Searches for the path of the Google Chrome executable (its parent). If the executable is not found, returns null;
+     *
      * @return path to chrome.exe (chrome binary) or null
      */
     public String resolve() throws IOException, InterruptedException {

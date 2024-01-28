@@ -6,14 +6,16 @@ import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.util.ZipBuilder;
 import attilathehun.songbook.vcs.VCSAdmin;
-import attilathehun.songbook.window.CollectionEditor;
-import attilathehun.songbook.window.SongbookApplication;
+import attilathehun.songbook.window.AlertDialog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.NumberFormat;
 
 public class EnvironmentManager {
@@ -24,106 +26,6 @@ public class EnvironmentManager {
     private static final int ACTION_EDIT = 0;
     @Deprecated
     private static final int ACTION_ADD = 1;
-
-
-    public void load() {
-        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
-            VCSAdmin.getInstance().pull();
-            return;
-        }
-        logger.info("Importing a local data zip file...");
-        if (!new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH).exists()) {
-            Environment.showErrorMessage("Error", "Could not find a local data zip file. Make sure it is in the same directory as the program.");
-            logger.info("Import aborted: file not found!");
-            return;
-        }
-        if (!extractLocalDataFile()) {
-            Environment.showErrorMessage("Error", "Extracting the data zip failed.");
-            logger.info("Import failed!");
-            return;
-        }
-        Environment.showMessage("Success", "Data loaded successfully.");
-        logger.info("Import successful!");
-    }
-
-    private boolean extractLocalDataFile() {
-        try {
-            ZipBuilder.extract(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.environment.DATA_FILE_PATH);
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Could not extract the data");
-            return false;
-        }
-        return true;
-    }
-
-    public void save() {
-        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
-            VCSAdmin.getInstance().push();
-            return;
-        }
-        logger.info("Exporting data to local zip file...");
-        if (!archiveDataToLocalFile()) {
-            Environment.showErrorMessage("Error", "Error creating the data zip file.");
-            logger.info("Export failed!");
-            return;
-        }
-        Environment.showMessage("Success", "Data saved successfully.");
-        logger.info("Export successful!");
-    }
-
-    private boolean archiveDataToLocalFile() {
-        try (ZipBuilder builder = new ZipBuilder()){
-            builder.setOutputPath(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
-            builder.addFolderContent(new File(Environment.getInstance().settings.environment.DATA_FILE_PATH), "");
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Could not archive the data");
-            return false;
-        }
-        return true;
-    }
-
-
-    public void createNewSongbook() {
-        try {
-            File songDataFolder = new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath());
-            songDataFolder.mkdirs();
-            File collectionJSONFile = new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath());
-            collectionJSONFile.createNewFile();
-            PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
-            printWriter.write("[]");
-            printWriter.close();
-            EnvironmentVerificator.SUPPRESS_WARNINGS = true;
-
-            UIManager.put("OptionPane.okButtonText", "Add");
-            UIManager.put("OptionPane.cancelButtonText", "Cancel");
-
-            int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to add your first song?", "Add a Song?", JOptionPane.OK_CANCEL_OPTION);
-
-            if (option == JOptionPane.OK_OPTION) {
-                addSongDialog(Environment.getInstance().getCollectionManager());
-            }
-
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Could not create a new songbook!", true);
-        }
-    }
-
-    @Deprecated
-    public void loadSongbook() {
-        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
-            VCSAdmin.getInstance().pull();
-            return;
-        }
-        extractLocalDataFile();
-        Environment.getInstance().refresh();
-        Environment.getInstance().getCollectionManager().init();
-        Environment.showMessage("Success", "Songbook loaded successfully.");
-        logger.debug("Songbook loaded");
-    }
-
 
     @Deprecated
     public static Song addSongDialog(CollectionManager manager) {
@@ -149,7 +51,7 @@ public class EnvironmentManager {
     private static Song addStandardSongDialog(CollectionManager manager) {
         UIManager.put("OptionPane.okButtonText", "Add");
         UIManager.put("OptionPane.cancelButtonText", "Cancel");
-         return songActionDialog(manager.getPlaceholderSong(), manager, ACTION_ADD);
+        return songActionDialog(manager.getPlaceholderSong(), manager, ACTION_ADD);
     }
 
     @Deprecated
@@ -313,7 +215,6 @@ public class EnvironmentManager {
         UIManager.put("OptionPane.cancelButtonText", "Cancel");
 
 
-
         if (action == ACTION_ADD) {
             if (option == JOptionPane.OK_OPTION) {
                 if (songIdField.getText().equals("")) {
@@ -349,11 +250,115 @@ public class EnvironmentManager {
 
     }
 
+    public void load() {
+        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
+            VCSAdmin.getInstance().pull();
+            return;
+        }
+        logger.info("Importing a local data zip file...");
+        if (!new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH).exists()) {
+            logger.info("Import aborted: file not found!");
+            new AlertDialog.Builder().setTitle("Error").setMessage("Could not find a local data zip file. Make sure it is in the same directory as the program.")
+            .setIcon(AlertDialog.Builder.Icon.WARNING).addOkButton().build().open();
+            return;
+        }
+        if (!extractLocalDataFile()) {
+            logger.info("Import failed!");
+            new AlertDialog.Builder().setTitle("Error").setMessage("Extracting data from the zip failed.")
+                    .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open();
+            return;
+        }
+        logger.info("Import successful!");
+        new AlertDialog.Builder().setTitle("Success").setMessage("Data loaded successfully.")
+                .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
+    }
+
+    private boolean extractLocalDataFile() {
+        try {
+            ZipBuilder.extract(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.environment.DATA_FILE_PATH);
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            new AlertDialog.Builder().setTitle("Error").setMessage("Could not extract the data. For complete error message view the log file.")
+                    .setIcon(AlertDialog.Builder.Icon.WARNING).addOkButton().build().open();
+            return false;
+        }
+        return true;
+    }
+
+    public void save() {
+        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
+            VCSAdmin.getInstance().push();
+            return;
+        }
+        logger.info("Exporting data to local zip file...");
+        if (!archiveDataToLocalFile()) {
+            logger.info("Export failed!");
+            new AlertDialog.Builder().setTitle("Error").setMessage("Error creating data zip file.")
+                    .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open();
+            return;
+        }
+        logger.info("Export successful!");
+        new AlertDialog.Builder().setTitle("Success").setMessage("data saved successfully.")
+                .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
+    }
+
+    private boolean archiveDataToLocalFile() {
+        try (ZipBuilder builder = new ZipBuilder()) {
+            builder.setOutputPath(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
+            builder.addFolderContent(new File(Environment.getInstance().settings.environment.DATA_FILE_PATH), "");
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            new AlertDialog.Builder().setTitle("Error").setMessage("Could not archive the data.")
+                    .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open();
+            return false;
+        }
+        return true;
+    }
+
+    @Deprecated
+    public void createNewSongbook() {
+        try {
+            File songDataFolder = new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath());
+            songDataFolder.mkdirs();
+            File collectionJSONFile = new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath());
+            collectionJSONFile.createNewFile();
+            PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
+            printWriter.write("[]");
+            printWriter.close();
+            EnvironmentVerificator.SUPPRESS_WARNINGS = true;
+
+            UIManager.put("OptionPane.okButtonText", "Add");
+            UIManager.put("OptionPane.cancelButtonText", "Cancel");
+
+            int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to add your first song?", "Add a Song?", JOptionPane.OK_CANCEL_OPTION);
+
+            if (option == JOptionPane.OK_OPTION) {
+                addSongDialog(Environment.getInstance().getCollectionManager());
+            }
+
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            Environment.showErrorMessage("Error", "Could not create a new songbook!", true);
+        }
+    }
+
+    @Deprecated
+    public void loadSongbook() {
+        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
+            VCSAdmin.getInstance().pull();
+            return;
+        }
+        extractLocalDataFile();
+        Environment.getInstance().refresh();
+        Environment.getInstance().getCollectionManager().init();
+        Environment.showMessage("Success", "Songbook loaded successfully.");
+        logger.debug("Songbook loaded");
+    }
+
     public void autoLoad() {
         if (Environment.getInstance().settings.user.AUTO_LOAD_DATA) {
             load();
         }
     }
-
 
 }

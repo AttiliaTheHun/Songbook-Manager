@@ -1,6 +1,5 @@
 package attilathehun.songbook.vcs;
 
-import attilathehun.annotation.TODO;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
@@ -26,8 +25,27 @@ public class IndexBuilder {
     private static final Logger logger = LogManager.getLogger(IndexBuilder.class);
 
     /**
+     * Compares collection hashes in the indexes and returns a lists collections that have been modified (whose hashes do not match)
+     *
+     * @param localIndex  the index to compare against
+     * @param remoteIndex the index to be compared
+     * @return modified collection names list
+     */
+    public static List<String> compareCollections(Index localIndex, Index remoteIndex) {
+        List<String> modifiedCollections = new ArrayList<>();
+        if (!localIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()).equals(remoteIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()))) {
+            modifiedCollections.add(StandardCollectionManager.getInstance().getCollectionName());
+        }
+        if (!localIndex.getCollections().get(EasterCollectionManager.getInstance().getCollectionName()).equals(remoteIndex.getCollections().get(EasterCollectionManager.getInstance().getCollectionName()))) {
+            modifiedCollections.add(EasterCollectionManager.getInstance().getCollectionName());
+        }
+        return modifiedCollections;
+    }
+
+    /**
      * Generates a save request index mapping all the files and data we need to pass to the server.
-     * @param local local songbook index
+     *
+     * @param local  local songbook index
      * @param remote remote songbook index
      * @return save index of the differences
      */
@@ -52,7 +70,8 @@ public class IndexBuilder {
 
     /**
      * Generates a load request index mapping the files we need to obtain from the server.
-     * @param local local songbook index
+     *
+     * @param local  local songbook index
      * @param remote remote songbook index
      * @return load index of the differences
      */
@@ -73,6 +92,7 @@ public class IndexBuilder {
 
     /**
      * Generates a complete index of the local songbook data. Performs blocking operations.
+     *
      * @return local songbook index
      */
     public Index createLocalIndex() throws IOException, NoSuchAlgorithmException {
@@ -100,6 +120,7 @@ public class IndexBuilder {
 
     /**
      * Obtain a list of file names inside the specified directory. Should throw exceptions when the path is invalid.
+     *
      * @param dir target directory
      * @return list of file names
      */
@@ -115,6 +136,7 @@ public class IndexBuilder {
 
     /**
      * Obtain a list of file objects inside the specified directory. Should throw exceptions when the path is invalid.
+     *
      * @param dir target directory
      * @return list of file objects
      */
@@ -129,7 +151,8 @@ public class IndexBuilder {
 
     /**
      * Returns a collection of items from the first collection that are absent in the second one.
-     * @param old the collection to compare against
+     *
+     * @param old     the collection to compare against
      * @param current to collection to compare
      * @return elements from old absent in current
      */
@@ -140,12 +163,13 @@ public class IndexBuilder {
                 missing.add(s);
             }
         }
-       return missing;
+        return missing;
     }
 
     /**
      * Returns a collection of items from the second collection that are not present in the first one.
-     * @param old the collection to compare against
+     *
+     * @param old     the collection to compare against
      * @param current to collection to compare
      * @return elements from current absent in old
      */
@@ -156,7 +180,8 @@ public class IndexBuilder {
     /**
      * Returns a HashMap mapping songs present in both indices whose hashes do not match for every collection that is registered within the environment.
      * See {@link Environment#registerCollectionManager(CollectionManager)}.
-     * @param localIndex the index to compare against
+     *
+     * @param localIndex  the index to compare against
      * @param remoteIndex the index to be compared
      * @return a map of collections containing the actual changes
      */
@@ -208,23 +233,6 @@ public class IndexBuilder {
     }
 
     /**
-     * Compares collection hashes in the indexes and returns a lists collections that have been modified (whose hashes do not match)
-     * @param localIndex the index to compare against
-     * @param remoteIndex the index to be compared
-     * @return modified collection names list
-     */
-    public static List<String> compareCollections(Index localIndex, Index remoteIndex) {
-        List<String> modifiedCollections = new ArrayList<>();
-        if (!localIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()).equals(remoteIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()))) {
-            modifiedCollections.add(StandardCollectionManager.getInstance().getCollectionName());
-        }
-        if (!localIndex.getCollections().get(EasterCollectionManager.getInstance().getCollectionName()).equals(remoteIndex.getCollections().get(EasterCollectionManager.getInstance().getCollectionName()))) {
-            modifiedCollections.add(EasterCollectionManager.getInstance().getCollectionName());
-        }
-        return modifiedCollections;
-    }
-
-    /**
      * A specially configured class for obtaining song file hashes.
      */
     private static class BuildWorker implements Runnable {
@@ -234,26 +242,8 @@ public class IndexBuilder {
         static AtomicInteger activeThreads;
 
         /**
-         * Generates hash for the file that is in the bottom of the deck and registers the hash in the map.
-         */
-        @Override
-        public void run() {
-                activeThreads.incrementAndGet();
-            try {
-                SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
-                File file;
-                while (deque.size() > 0) {
-                    file = deque.pollLast();
-                    map.put(file.getName(), hashGenerator.getHash(file));
-                }
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-            }
-            activeThreads.decrementAndGet();
-        }
-
-        /**
          * Initialization method to perform the necessary task setup.
+         *
          * @param dequeData task input data
          */
         private static void init(Collection<File> dequeData) {
@@ -267,16 +257,17 @@ public class IndexBuilder {
          */
         private static void postExecution() {
             if (deque.size() > 0) {
-                throw  new IllegalStateException();
+                throw new IllegalStateException();
             }
             if (activeThreads.intValue() != 0) {
-                throw  new IllegalStateException();
+                throw new IllegalStateException();
             }
         }
 
         /**
          * PerformBuildTask method. Executes the preconfigured task upon a given data set. Blocks the thread until the task
          * is finished.
+         *
          * @param collection task input data
          */
         private static void spamCPUAndMemoryWithThreads(Collection<File> collection) {
@@ -294,6 +285,25 @@ public class IndexBuilder {
                 }
             }
             postExecution();
+        }
+
+        /**
+         * Generates hash for the file that is in the bottom of the deck and registers the hash in the map.
+         */
+        @Override
+        public void run() {
+            activeThreads.incrementAndGet();
+            try {
+                SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
+                File file;
+                while (deque.size() > 0) {
+                    file = deque.pollLast();
+                    map.put(file.getName(), hashGenerator.getHash(file));
+                }
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+            activeThreads.decrementAndGet();
         }
 
     }

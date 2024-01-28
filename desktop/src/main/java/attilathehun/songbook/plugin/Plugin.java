@@ -16,6 +16,7 @@ public abstract class Plugin {
      * Returns default settings for the particular plugin. These settings are applied when
      * environment settings are being generated anew and do not take effect when the user has
      * already a custom settings.json file.
+     *
      * @return
      */
     public abstract PluginSettings defaultSettings();

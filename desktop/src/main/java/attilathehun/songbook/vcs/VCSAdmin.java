@@ -34,6 +34,7 @@ public final class VCSAdmin {
             instance = null;
         }
     }
+
     private VCSAgent defaultAgent = null;
 
     public static VCSAdmin getInstance() {
@@ -92,7 +93,7 @@ public final class VCSAdmin {
             int status = agent.compare();
             try {
                 if (status == VCSAgent.STATUS_UP_TO_DATE) {
-                    Environment.showMessage("Already up to date", "",  "The remote version of the songbook matches the local version.");
+                    Environment.showMessage("Already up to date", "", "The remote version of the songbook matches the local version.");
                     return;
                 } else if (status == VCSAgent.STATUS_BEHIND) {
                     UIManager.put("OptionPane.yesButtonText", "Overwrite");
@@ -159,7 +160,7 @@ public final class VCSAdmin {
             int status = agent.compare();
             try {
                 if (status == VCSAgent.STATUS_UP_TO_DATE) {
-                    Environment.showMessage("Already up to date", "",  "The remote version of the songbook matches the local version.");
+                    Environment.showMessage("Already up to date", "", "The remote version of the songbook matches the local version.");
                     return;
                 } else if (status == VCSAgent.STATUS_AHEAD) {
                     UIManager.put("OptionPane.yesButtonText", "Overwrite");
@@ -252,8 +253,6 @@ public final class VCSAdmin {
     }
 
 
-
-
     public static class VCSSettings implements Serializable {
         private static final Logger logger = LogManager.getLogger(VCSSettings.class);
 
@@ -268,7 +267,6 @@ public final class VCSAdmin {
         public final String VERSION_TIMESTAMP_FILE_PATH;
         public final String LOCAL_INDEX_FILE_PATH;
         public final int VCS_THREAD_COUNT;
-
 
 
         public VCSSettings() {

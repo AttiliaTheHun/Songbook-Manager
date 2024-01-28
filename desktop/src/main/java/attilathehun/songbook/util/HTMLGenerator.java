@@ -7,11 +7,18 @@ import attilathehun.songbook.export.PDFGenerator;
 import attilathehun.songbook.misc.Misc;
 import attilathehun.songbook.plugin.DynamicSonglist;
 import attilathehun.songbook.plugin.PluginManager;
+import attilathehun.songbook.window.AlertDialog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
-import java.nio.file.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 
 /**
@@ -58,15 +65,18 @@ public class HTMLGenerator {
             shadowSongFile.createNewFile();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Can not instantiate the HTML generator", true);
+            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage("Cannot instantiate the HTML generator").addOkButton().build().open();
+            System.exit(0);
         }
     }
 
     /**
      * Generates HTML file with the list of songs from a specified portion of the formal collection to the temp folder. The default Collection Manager is used.
      * This method is part of the DynamicSonglist plugin.
-     * @param startIndex formal collection first song index (inclusive)
-     * @param endIndex formal collection last song index (exclusive)
+     *
+     * @param startIndex    formal collection first song index (inclusive)
+     * @param endIndex      formal collection last song index (exclusive)
      * @param segmentNumber number of the part of the songlist
      */
     public void generateSonglistSegmentFile(int startIndex, int endIndex, int segmentNumber) {
@@ -80,7 +90,8 @@ public class HTMLGenerator {
             printWriter.close();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("HTML Generation Error", "Unable to generate the songlist.");
+            new AlertDialog.Builder().setTitle("HTML Generation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage("Unable to generate the songlist.").addOkButton().build().open();
         }
 
     }
@@ -88,14 +99,15 @@ public class HTMLGenerator {
     /**
      * Returns an HTML string  with the list of songs from a specified portion of the formal collection.The default Collection Manager is used.
      * This method is part of the DynamicSonglist plugin.
-     * @param startIndex formal collection first song index (inclusive)
-     * @param endIndex formal collection last song index (exclusive)
+     *
+     * @param startIndex    formal collection first song index (inclusive)
+     * @param endIndex      formal collection last song index (exclusive)
      * @param segmentNumber number of the part of the songlist
      * @return HTML string of a songlist part file of the specified number
      * @throws IOException
      */
     private String generateSonglistSegment(int startIndex, int endIndex, int segmentNumber) throws IOException {
-        if (startIndex < 0 || startIndex > Environment.getInstance().getCollectionManager().getDisplayCollection().size() || endIndex < 0 ||endIndex > Environment.getInstance().getCollectionManager().getDisplayCollection().size()) {
+        if (startIndex < 0 || startIndex > Environment.getInstance().getCollectionManager().getDisplayCollection().size() || endIndex < 0 || endIndex > Environment.getInstance().getCollectionManager().getDisplayCollection().size()) {
             throw new IllegalArgumentException();
         }
 
@@ -138,6 +150,7 @@ public class HTMLGenerator {
 
     /**
      * Returns the HTML string of the premade <head> element.
+     *
      * @return HTML <head> string
      * @throws IOException
      */
@@ -150,6 +163,7 @@ public class HTMLGenerator {
 
     /**
      * Returns an HTML string of a page of the songbook.
+     *
      * @param songOne first song on the page (on the left)
      * @param songTwo second song on the page (on the right)
      * @param manager the collection manager to use (default if null)
@@ -223,6 +237,7 @@ public class HTMLGenerator {
 
     /**
      * Generates an HTML file with a page of the songbook to the temp folder.
+     *
      * @param songOne first song on the page (on the left)
      * @param songTwo second song on the page (on the right)
      * @return path of the temp page file
@@ -234,14 +249,16 @@ public class HTMLGenerator {
             printWriter.close();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("HTML Generation Error", "Unable to generate current page file.");
+            new AlertDialog.Builder().setTitle("HTML Generation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage("Unable to generate current page file.").addOkButton().build().open();
         }
         return TEMP_PAGEVIEW_PATH;
     }
 
     /**
      * Generates a new song file from the template to the data folder.
-     * @param s target song
+     *
+     * @param s       target song
      * @param manager the collection manager to use (default if null)
      * @return true if the file has been created
      */
@@ -260,7 +277,8 @@ public class HTMLGenerator {
 
             File songTemplate = new File(Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH + "/song.html");
             if (!songFile.createNewFile() && songFile.length() != 0) {
-                Environment.showWarningMessage("Data Loss Prevented", "File exists but is not empty: " + songFile);
+                new AlertDialog.Builder().setTitle("Data Loss Prevented").setIcon(AlertDialog.Builder.Icon.ERROR)
+                        .setMessage("File already exists but is not empty.").addOkButton().build().open();
                 return false;
             }
             String songHTML = String.join("\n", Files.readAllLines(songTemplate.toPath()));
@@ -274,7 +292,8 @@ public class HTMLGenerator {
             printWriter.close();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("HTML Generation Error", "Unable to generate a song file.");
+            new AlertDialog.Builder().setTitle("HTML Generation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage("Unable to generate a song file.").addOkButton().build().open();
             return false;
         }
         return true;
@@ -282,6 +301,7 @@ public class HTMLGenerator {
 
     /**
      * Generates a new song file from the template to the data folder. Uses the default Collection Manager.
+     *
      * @param s target song
      * @return true if the file has been created
      */
@@ -292,6 +312,7 @@ public class HTMLGenerator {
     /**
      * Returns HTML string with the frontpage.
      * This method is part of the Frontpage plugin.
+     *
      * @return frontpage HTML string
      * @throws IOException
      */
@@ -320,21 +341,23 @@ public class HTMLGenerator {
             printWriter.close();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("HTML Generation Error", "Unable to generate the frontpage file.");
+            new AlertDialog.Builder().setTitle("HTML Generation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage("Unable to generate the frontpage file.").addOkButton().build().open();
         }
     }
 
     /**
      * Returns HTML string of a page of the songbook. Though similar to #generatePageFile(), it is suited for exporting as you can choose name of the output file.
+     *
      * @param songOne first song on the page (on the left)
      * @param songTwo second song on the page (on the right)
-     * @param number number of the segment (serves as file name)
+     * @param number  number of the segment (serves as file name)
      * @param manager the collection manager to use (default if null)
      * @return songbook page file HTML
      */
     public String generateSegmentFile(Song songOne, Song songTwo, int number, CollectionManager manager) {
         if (number != -1 && number < 0) {
-            throw  new IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
 
         String path;
@@ -348,8 +371,10 @@ public class HTMLGenerator {
             printWriter.write(generatePage(songOne, songTwo, manager));
             printWriter.close();
         } catch (Exception e) {
+            logger.error(String.format("song1: %s (%d) song2: %s (%d) segmentNumber: %d", songOne.name(), songOne.id(), songTwo.name(), songTwo.id(), number));
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("HTML Generation Error", "Unable to generate current segment file.");
+            new AlertDialog.Builder().setTitle("HTML Generation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage("Unable to generate current segment file.").addOkButton().build().open();
         }
         return path;
     }
@@ -357,9 +382,10 @@ public class HTMLGenerator {
     /**
      * Returns an HTML string of a page of the songbook. Though similar to #generatePageFile(), it is suited for exporting as you can choose
      * name of the output file. Uses the default Collection Manager.
+     *
      * @param songOne first song on the page (on the left)
      * @param songTwo second song on the page (on the right)
-     * @param number number of the segment (serves as file name)
+     * @param number  number of the segment (serves as file name)
      * @return songbook page file HTML
      */
     public String generateSegmentFile(Song songOne, Song songTwo, int number) {
@@ -368,12 +394,13 @@ public class HTMLGenerator {
 
     /**
      * Returns an HTML string of a standalone song file wrapped in the template.
-     * @param s target song
+     *
+     * @param s       target song
      * @param manager Collection Manager to use (default if null)
      * @return standalone song file HTML string
      * @throws IOException
      */
-    private String generatePrintableSong(Song s, CollectionManager manager) throws  IOException {
+    private String generatePrintableSong(Song s, CollectionManager manager) throws IOException {
         if (s == null) {
             throw new IllegalArgumentException();
         }
@@ -417,14 +444,15 @@ public class HTMLGenerator {
 
     /**
      * Generates a standalone HTML file from template for a target song to the temp folder.
-     * @param s target song
-     * @param number number of the song file (servers as a file name)
+     *
+     * @param s       target song
+     * @param number  number of the song file (servers as a file name)
      * @param manager the Collection Manager to use (default if null)
      * @return path to the file
      */
     public String generatePrintableSongFile(Song s, int number, CollectionManager manager) {
         if (number != -1 && number < 0) {
-            throw  new IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
 
         String path;
@@ -443,14 +471,16 @@ public class HTMLGenerator {
             printWriter.close();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("HTML Generation Error", "Unable to generate current segment file.");
+            new AlertDialog.Builder().setTitle("HTML Generation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage("Unable to generate printable song file").addOkButton().build().open();
         }
         return path;
     }
 
     /**
      * Generates a standalone HTML file from template for a target song to the temp folder. Uses default Collection Manager.
-     * @param s target song
+     *
+     * @param s      target song
      * @param number number of the song file (servers as a file name)
      * @return path to the file
      */

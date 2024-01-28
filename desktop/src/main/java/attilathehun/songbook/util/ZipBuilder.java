@@ -13,6 +13,7 @@ import java.util.zip.ZipOutputStream;
  */
 public class ZipBuilder implements AutoCloseable {
     private static final Logger logger = LogManager.getLogger(ZipBuilder.class);
+    private static final int BUFFER_SIZE = 4096;
     /**
      * When true, the zip file will contain a folder of the same name
      * as the target folder and all the content will be in this folder. When false, the target folder content
@@ -20,7 +21,6 @@ public class ZipBuilder implements AutoCloseable {
      */
     private static boolean INCLUDE_SOURCE_FOLDER = true;
     private String zipFilePath = "";
-    private static final int BUFFER_SIZE = 4096;
     private String sourceFolderName;
     private ZipOutputStream zos;
     private boolean initialized = false;
@@ -33,7 +33,8 @@ public class ZipBuilder implements AutoCloseable {
     }
 
     /**
-     *Automatically initialised constructor.
+     * Automatically initialised constructor.
+     *
      * @param outputPath
      * @throws FileNotFoundException
      */
@@ -43,7 +44,8 @@ public class ZipBuilder implements AutoCloseable {
 
     /**
      * Constructor that allows simple zip file creation by chaining with the {@link #close()} method. Behavior of this constructor can be changed by the {@link #INCLUDE_SOURCE_FOLDER} flag.
-     * @param target the folder/file to be zipped
+     *
+     * @param target     the folder/file to be zipped
      * @param outputPath path of the output archive
      * @throws FileNotFoundException
      * @throws IOException
@@ -67,7 +69,106 @@ public class ZipBuilder implements AutoCloseable {
     }
 
     /**
+     * Change the {@link #INCLUDE_SOURCE_FOLDER} flag.
+     *
+     * @param value desired value of the flag
+     */
+    public static void includeSourceFolder(boolean value) {
+        INCLUDE_SOURCE_FOLDER = value;
+    }
+
+    /**
+     * Returns the current value of the flag {@link #INCLUDE_SOURCE_FOLDER}.
+     *
+     * @return flag state
+     */
+    public static boolean includesSourceFolder() {
+        return INCLUDE_SOURCE_FOLDER;
+    }
+
+    /**
+     * No idea why I thought this would be useful. Its functionality is now replaced by {@link #ZipBuilder(String)}.
+     *
+     * @param path arbitrary String object
+     * @return null
+     */
+    @Deprecated
+    public static ZipBuilder fromPath(String path) {
+        return null;
+    }
+
+    /**
+     * Extracts a zip file specified by path to the directory of the same name as the zip file trimmed of its extension.
+     *
+     * @param zipFilePath
+     * @return the extraction directory path
+     * @throws IOException
+     */
+    public static String extract(String zipFilePath) throws IOException {
+        String dirName;
+        if (zipFilePath.endsWith(".zip")) {
+            dirName = zipFilePath.substring(0, zipFilePath.lastIndexOf(".zip"));
+        } else {
+            dirName = zipFilePath;
+        }
+        return extract(zipFilePath, dirName);
+    }
+
+    /**
+     * Extracts a zip file specified by the zipFilePath to a directory specified by
+     * destDirectory (will be created if it does not exist)
+     *
+     * @param zipFilePath
+     * @param destDirectory
+     * @return the extraction directory path
+     * @throws IOException
+     */
+    public static String extract(String zipFilePath, String destDirectory) throws IOException {
+        File destDir = new File(destDirectory);
+        if (!destDir.exists()) {
+            destDir.mkdirs();
+        }
+        ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath));
+        ZipEntry entry = zipIn.getNextEntry();
+        // iterates over entries in the zip file
+        while (entry != null) {
+            String filePath = destDirectory + File.separator + entry.getName();
+            if (!entry.isDirectory()) {
+                // if the entry is a file, extracts it
+                extractFile(zipIn, filePath);
+            } else {
+                // if the entry is a directory, make the directory
+                File dir = new File(filePath);
+                dir.mkdirs();
+            }
+            zipIn.closeEntry();
+            entry = zipIn.getNextEntry();
+        }
+        zipIn.close();
+        return destDirectory;
+    }
+
+    /**
+     * Extracts a zip entry (single file) from the zip file.
+     *
+     * @param zipIn    target zip input stream
+     * @param filePath where to extract the file to
+     * @throws IOException
+     */
+    private static void extractFile(ZipInputStream zipIn, String filePath) throws IOException {
+        new File(filePath).getParentFile().mkdirs();
+        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath, false));
+        byte[] bytesIn = new byte[BUFFER_SIZE];
+        int read = 0;
+        while ((read = zipIn.read(bytesIn)) != -1) {
+            bos.write(bytesIn, 0, read);
+        }
+        bos.close();
+    }
+
+    /**
      * Initialises the builder by creating the output stream. Every functional method relies on this stream and will throw {@link IllegalStateException} if the stream is null.
+     *
      * @param outputPath
      * @throws FileNotFoundException
      */
@@ -85,24 +186,13 @@ public class ZipBuilder implements AutoCloseable {
         initialized = true;
     }
 
-    /**
-     * Change the {@link #INCLUDE_SOURCE_FOLDER} flag.
-     * @param value desired value of the flag
-     */
-    public static void includeSourceFolder(boolean value) {
-        INCLUDE_SOURCE_FOLDER = value;
-    }
-
-    /**
-     * Returns the current value of the flag {@link #INCLUDE_SOURCE_FOLDER}.
-     * @return flag state
-     */
-    public static boolean includesSourceFolder() {
-        return INCLUDE_SOURCE_FOLDER;
+    public String getOutputPath() {
+        return zipFilePath;
     }
 
     /**
      * Set path for the output ZIP file.
+     *
      * @param targetPath zip file path
      * @return this
      */
@@ -111,12 +201,9 @@ public class ZipBuilder implements AutoCloseable {
         return this;
     }
 
-    public String getOutputPath() {
-        return zipFilePath;
-    }
-
     /**
      * Adds a file to the root of the ZIP file.
+     *
      * @param file the file to be added
      * @return this
      * @throws IOException
@@ -128,6 +215,7 @@ public class ZipBuilder implements AutoCloseable {
 
     /**
      * Adds a file to the specified path within the ZIP file.
+     *
      * @param file the file to be added
      * @return this
      * @throws IOException
@@ -139,6 +227,7 @@ public class ZipBuilder implements AutoCloseable {
 
     /**
      * Adds a file to the root of the ZIP file.
+     *
      * @param file the file to be added
      * @throws FileNotFoundException
      * @throws IOException
@@ -146,7 +235,7 @@ public class ZipBuilder implements AutoCloseable {
     private ZipBuilder addFileToArchive(File file)
             throws FileNotFoundException, IOException {
         if (zos == null) {
-            throw  new IllegalStateException();
+            throw new IllegalStateException();
         }
         if (file == null) {
             throw new IllegalArgumentException("file must not be null");
@@ -171,6 +260,7 @@ public class ZipBuilder implements AutoCloseable {
 
     /**
      * Adds a file to the specified path within the ZIP file.
+     *
      * @param file the file to be added
      * @throws FileNotFoundException
      * @throws IOException
@@ -178,7 +268,7 @@ public class ZipBuilder implements AutoCloseable {
     private ZipBuilder addFileToArchive(File file, String parentFolder)
             throws FileNotFoundException, IOException {
         if (zos == null) {
-            throw  new IllegalStateException();
+            throw new IllegalStateException();
         }
         if (file == null) {
             throw new IllegalArgumentException("file must not be null");
@@ -213,6 +303,7 @@ public class ZipBuilder implements AutoCloseable {
 
     /**
      * Adds a folder to the root of the ZIP file. The folder content will be inside a folder of the same name as source.
+     *
      * @param folder the folder to add
      * @return this
      * @throws IOException
@@ -223,6 +314,7 @@ public class ZipBuilder implements AutoCloseable {
 
     /**
      * Adds a folder to the ZIP file. The folder content will be inside written at the specified path within the file.
+     *
      * @param folder the folder to add
      * @return this
      * @throws IOException
@@ -234,6 +326,7 @@ public class ZipBuilder implements AutoCloseable {
 
     /**
      * Adds a directory to the ZIP file.
+     *
      * @param folder       the directory to be added
      * @param parentFolder the path of parent directory
      * @throws FileNotFoundException
@@ -241,7 +334,7 @@ public class ZipBuilder implements AutoCloseable {
      */
     private ZipBuilder addFolderToArchive(File folder, String parentFolder) throws FileNotFoundException, IOException {
         if (zos == null) {
-            throw  new IllegalStateException("The builder is not initialised");
+            throw new IllegalStateException("The builder is not initialised");
         }
         if (folder == null || parentFolder == null) {
             throw new IllegalArgumentException("Parameters must not be null");
@@ -274,6 +367,7 @@ public class ZipBuilder implements AutoCloseable {
 
     /**
      * Adds content of the folder to the root of the ZIP file.
+     *
      * @param folder the folder whose content is added
      * @return this
      * @throws IOException
@@ -285,7 +379,8 @@ public class ZipBuilder implements AutoCloseable {
     /**
      * Adds a folder to the ZIP file. The content of the folder will be written at the specified path within the file. Does the same thing as {@link #addFolder(File, String)}, but uses
      * different internal methods.
-     * @param folder the folder to be added
+     *
+     * @param folder       the folder to be added
      * @param parentFolder path within the ZIP file
      * @return this
      * @throws IOException
@@ -294,7 +389,6 @@ public class ZipBuilder implements AutoCloseable {
         init(null);
         return addFolderContentToArchive(folder, parentFolder);
     }
-
 
     /**
      * Adds the content of a directory to the ZIP file under a specific parent directory already present in the zip file.
@@ -306,7 +400,7 @@ public class ZipBuilder implements AutoCloseable {
      */
     private ZipBuilder addFolderContentToArchive(File folder, String parentFolder) throws FileNotFoundException, IOException {
         if (zos == null) {
-            throw  new IllegalStateException("The builder is not initialised");
+            throw new IllegalStateException("The builder is not initialised");
         }
         if (folder == null || parentFolder == null) {
             throw new IllegalArgumentException("Parameters must not be null");
@@ -342,9 +436,9 @@ public class ZipBuilder implements AutoCloseable {
         return this;
     }
 
-
     /**
      * Finalize the build by closing the streams.
+     *
      * @throws IOException in the case of I/O error
      */
     @Override
@@ -353,82 +447,6 @@ public class ZipBuilder implements AutoCloseable {
             zos.flush();
             zos.close();
         }
-    }
-
-    /**
-     * No idea why I thought this would be useful. Its functionality is now replaced by {@link #ZipBuilder(String)}.
-     * @param path arbitrary String object
-     * @return null
-     */
-    @Deprecated
-    public static ZipBuilder fromPath(String path) {
-        return null;
-    }
-
-    /**
-     * Extracts a zip file specified by path to the directory of the same name as the zip file trimmed of its extension.
-     * @param zipFilePath
-     * @throws IOException
-     * @return the extraction directory path
-     */
-    public static String extract(String zipFilePath) throws IOException {
-        String dirName;
-        if (zipFilePath.endsWith(".zip")) {
-            dirName = zipFilePath.substring(0, zipFilePath.lastIndexOf(".zip"));
-        } else {
-            dirName = zipFilePath;
-        }
-        return extract(zipFilePath, dirName);
-    }
-
-    /**
-     * Extracts a zip file specified by the zipFilePath to a directory specified by
-     * destDirectory (will be created if it does not exist)
-     * @param zipFilePath
-     * @param destDirectory
-     * @throws IOException
-     * @return the extraction directory path
-     */
-    public static String extract(String zipFilePath, String destDirectory) throws IOException {
-        File destDir = new File(destDirectory);
-        if (!destDir.exists()) {
-            destDir.mkdirs();
-        }
-        ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath));
-        ZipEntry entry = zipIn.getNextEntry();
-        // iterates over entries in the zip file
-        while (entry != null) {
-            String filePath = destDirectory + File.separator + entry.getName();
-            if (!entry.isDirectory()) {
-                // if the entry is a file, extracts it
-                extractFile(zipIn, filePath);
-            } else {
-                // if the entry is a directory, make the directory
-                File dir = new File(filePath);
-                dir.mkdirs();
-            }
-            zipIn.closeEntry();
-            entry = zipIn.getNextEntry();
-        }
-        zipIn.close();
-        return destDirectory;
-    }
-
-    /**
-     * Extracts a zip entry (single file) from the zip file.
-     * @param zipIn target zip input stream
-     * @param filePath where to extract the file to
-     * @throws IOException
-     */
-    private static void extractFile(ZipInputStream zipIn, String filePath) throws IOException {
-        new File(filePath).getParentFile().mkdirs();
-        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath, false));
-        byte[] bytesIn = new byte[BUFFER_SIZE];
-        int read = 0;
-        while ((read = zipIn.read(bytesIn)) != -1) {
-            bos.write(bytesIn, 0, read);
-        }
-        bos.close();
     }
 
 }

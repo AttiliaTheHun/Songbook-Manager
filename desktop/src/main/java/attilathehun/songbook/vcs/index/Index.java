@@ -20,10 +20,12 @@ public class Index implements Serializable {
     @SerializedName("version_timestamp")
     private long versionTimestamp;
 
-    public Index() {}
+    public Index() {
+    }
 
     /**
      * An absolutely pointless constructor, use the default one instead.
+     *
      * @param object null object
      */
     public Index(Object object) {
@@ -32,49 +34,9 @@ public class Index implements Serializable {
         }
     }
 
-    public void setData(Property data) {
-        this.data = data;
-    }
-
-    public void setCollections(Property collections) {
-        this.collections = collections;
-    }
-
-
-    public void setHashes(Property hashes) {
-        this.hashes = hashes;
-    }
-
-    public void setMetadata(Property metadata) {
-        this.metadata = metadata;
-    }
-
-    public Property getCollections() {
-        return collections;
-    }
-
-    public Property getData() {
-        return data;
-    }
-
-    public Property getHashes() {
-        return hashes;
-    }
-
-    public Property getMetadata() {
-        return metadata;
-    }
-
-    public long getVersionTimestamp() {
-        return versionTimestamp;
-    }
-
-    public void setVersionTimestamp(long versionTimestamp) {
-        this.versionTimestamp = versionTimestamp;
-    }
-
     /**
      * Creates an empty Index object that is fully compatible with the framework and contains no or default values.
+     *
      * @return well-formed empty Index object
      */
     public static Index empty() {
@@ -91,6 +53,46 @@ public class Index implements Serializable {
         index.getCollections().put(EasterCollectionManager.getInstance().getCollectionName(), "");
         index.setVersionTimestamp(-1);
         return index;
+    }
+
+    public Property getCollections() {
+        return collections;
+    }
+
+    public void setCollections(Property collections) {
+        this.collections = collections;
+    }
+
+    public Property getData() {
+        return data;
+    }
+
+    public void setData(Property data) {
+        this.data = data;
+    }
+
+    public Property getHashes() {
+        return hashes;
+    }
+
+    public void setHashes(Property hashes) {
+        this.hashes = hashes;
+    }
+
+    public Property getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Property metadata) {
+        this.metadata = metadata;
+    }
+
+    public long getVersionTimestamp() {
+        return versionTimestamp;
+    }
+
+    public void setVersionTimestamp(long versionTimestamp) {
+        this.versionTimestamp = versionTimestamp;
     }
 
 }

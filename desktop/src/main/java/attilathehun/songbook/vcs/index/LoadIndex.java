@@ -23,39 +23,6 @@ public class LoadIndex extends PartialIndex {
 
     }
 
-
-    public void setMissing(Property missing) {
-        this.missing = missing;
-    }
-
-    public void setOutdated(Property outdated) {
-        this.outdated = outdated;
-    }
-
-    public void setCollections(Collection<String> collections) {
-        this.collections = collections;
-    }
-
-    public void setVersionTimestamp(long versionTimestamp) {
-        this.versionTimestamp = versionTimestamp;
-    }
-
-    public Property getMissing() {
-        return missing;
-    }
-
-    public Property getOutdated() {
-        return outdated;
-    }
-
-    public Collection<String> getCollections() {
-        return collections;
-    }
-
-    public long getVersionTimestamp() {
-        return versionTimestamp;
-    }
-
     public static LoadIndex empty() {
         LoadIndex index = new LoadIndex();
         index.setMissing(new Property());
@@ -63,5 +30,37 @@ public class LoadIndex extends PartialIndex {
         index.setCollections(new ArrayList<>());
         index.versionTimestamp = -1;
         return index;
+    }
+
+    public Property getMissing() {
+        return missing;
+    }
+
+    public void setMissing(Property missing) {
+        this.missing = missing;
+    }
+
+    public Property getOutdated() {
+        return outdated;
+    }
+
+    public void setOutdated(Property outdated) {
+        this.outdated = outdated;
+    }
+
+    public Collection<String> getCollections() {
+        return collections;
+    }
+
+    public void setCollections(Collection<String> collections) {
+        this.collections = collections;
+    }
+
+    public long getVersionTimestamp() {
+        return versionTimestamp;
+    }
+
+    public void setVersionTimestamp(long versionTimestamp) {
+        this.versionTimestamp = versionTimestamp;
     }
 }

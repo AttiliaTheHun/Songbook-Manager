@@ -9,20 +9,20 @@ import attilathehun.songbook.environment.EnvironmentStateListener;
 import attilathehun.songbook.export.PDFGenerator;
 import attilathehun.songbook.plugin.Export;
 import attilathehun.songbook.util.HTMLGenerator;
-import javafx.event.EventHandler;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.web.WebView;
-import javafx.application.Platform;
-import javafx.scene.control.MenuItem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.controlsfx.control.ToggleSwitch;
@@ -43,6 +43,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     private static int SONG_ONE_INDEX;
     private static Song SONG_TWO;
     private static int SONG_TWO_INDEX;
+    private final HTMLGenerator generator = new HTMLGenerator();
     @FXML
     private WebView webview;
     @FXML
@@ -80,7 +81,13 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     @FXML
     private MenuItem printableSelection;
 
-    private final HTMLGenerator generator = new HTMLGenerator();
+    public static Song getSongOne() {
+        return SONG_ONE;
+    }
+
+    public static Song getSongTwo() {
+        return SONG_TWO;
+    }
 
     @FXML
     private void initialize() throws MalformedURLException {
@@ -96,6 +103,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     /**
      * Initializes the web view to the default position. Default position is start of the songbook, more practically speaking the beginning of the default collection manager's collection
      * substituted, if necessary, by shadow songs.
+     *
      * @throws MalformedURLException
      */
     private void initWebView() throws MalformedURLException {
@@ -140,7 +148,6 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
         songOneIdField.setText(SONG_ONE.getDisplayId());
         songTwoIdField.setText(SONG_TWO.getDisplayId());
-
 
 
         editCollectionButton.setOnAction(event -> {
@@ -244,7 +251,9 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
         editSongOneHTML.setOnAction(event -> {
             if (SONG_ONE.id() < 0) {
-                Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH);
+                new AlertDialog.Builder().setTitle("Message").setIcon(AlertDialog.Builder.Icon.INFO)
+                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH))
+                        .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
             CodeEditor.open(SONG_ONE, Environment.getInstance().getCollectionManager());
@@ -253,16 +262,19 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         // TODO when SML is enabled, change text to "Edit SML" and allow for "Edit HTML" with Shift-Click
         editSongTwoHTML.setOnAction(event -> {
             if (SONG_TWO.id() < 0) {
-                Environment.showMessage("Message", "This page is generated automatically. You can find the templates under " + Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH);
+                new AlertDialog.Builder().setTitle("Message").setIcon(AlertDialog.Builder.Icon.INFO)
+                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH))
+                        .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
             CodeEditor.open(SONG_TWO, Environment.getInstance().getCollectionManager());
         });
 
         exportButton.setOnAction(event -> {
-            System.out.println("exportButton.onAction");
             if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
-                Environment.showMessage("Exporting disabled", "It seems like exporting has been disabled in the settings. You can modify the settings and restart or read more in the documentation.");
+                new AlertDialog.Builder().setTitle("Exporting disabled").setIcon(AlertDialog.Builder.Icon.WARNING)
+                        .setMessage("It seems like the Export plugin is disabled. You can enabled it in settings.")
+                        .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
 
@@ -286,7 +298,9 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             try {
                 new PDFGenerator().generateSinglepage();
             } catch (Exception e) {
-                Environment.showErrorMessage("Error", e.getMessage());
+                new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                        .setMessage(e.getMessage())
+                        .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
             }
 
         });
@@ -295,7 +309,9 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             try {
                 new PDFGenerator().generateDefault();
             } catch (Exception e) {
-                Environment.showErrorMessage("Error", e.getMessage());
+                new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                        .setMessage(e.getMessage())
+                        .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
             }
         });
 
@@ -303,7 +319,10 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             try {
                 new PDFGenerator().generatePrintable();
             } catch (Exception e) {
-                Environment.showErrorMessage("Error", e.getMessage());
+
+                new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                        .setMessage(e.getMessage())
+                        .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
             }
         });
 
@@ -315,23 +334,22 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             easterSwitch.setVisible(false);
         }
 
-        easterSwitch.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean t1) {
-                if (easterSwitch.isSelected()) {
-                    Environment.getInstance().setCollectionManager(EasterCollectionManager.getInstance());
-                } else {
-                    Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
-                }
-                Environment.getInstance().refresh();
-                refreshWebView();
+        easterSwitch.selectedProperty().addListener((observableValue, aBoolean, t1) -> {
+            if (easterSwitch.isSelected()) {
+                Environment.getInstance().setCollectionManager(EasterCollectionManager.getInstance());
+            } else {
+                Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
             }
+            Environment.getInstance().refresh();
+            refreshWebView();
         });
 
         previewButton.setOnAction(event -> {
 
             if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
-                Environment.showMessage("Action aborted", "This feature is a part of the Export plugin. Enable it in settings first!");
+                new AlertDialog.Builder().setTitle("Action Aborted").setIcon(AlertDialog.Builder.Icon.WARNING)
+                        .setMessage("This feature is a part of the Export plugin. You can enable the plugin in the settings.")
+                        .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
 
@@ -340,7 +358,8 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
                 Desktop.getDesktop().open(new File(new PDFGenerator().generatePreview(SONG_ONE, SONG_TWO)));
             } catch (Exception ex) {
                 logger.error(ex.getMessage(), ex);
-                Environment.showErrorMessage("Error", ex.getMessage());
+                new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                        .setMessage(ex.getLocalizedMessage()).setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
             }
         });
 
@@ -388,26 +407,14 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         try {
             URL url = new File(new HTMLGenerator().generatePageFile(SONG_ONE, SONG_TWO)).toURI().toURL();
 
-            Platform.runLater(new Runnable() {
-                @Override
-                public void run() {
-                    webview.getEngine().load(url.toExternalForm());
-                }
-            });
+            Platform.runLater(() -> webview.getEngine().load(url.toExternalForm()));
         } catch (MalformedURLException e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("WebView configuration error", "Error when refreshing webview!");
+            new AlertDialog.Builder().setTitle("WebView Configuration Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage("Error refreshing webview.").setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
         }
         songOneIdField.setText(SONG_ONE.getDisplayId());
         songTwoIdField.setText(SONG_TWO.getDisplayId());
-    }
-
-    public static Song getSongOne() {
-        return SONG_ONE;
-    }
-
-    public static Song getSongTwo() {
-        return SONG_TWO;
     }
 
     @Override
@@ -436,7 +443,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
     @Override
     public void onPageTurnedBack() {
-                if ((SONG_ONE.name().equals("frontpage") || SONG_ONE.name().equals("songlist0") || SONG_ONE.equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(0))) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1) {
+        if ((SONG_ONE.name().equals("frontpage") || SONG_ONE.name().equals("songlist0") || SONG_ONE.equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(0))) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1) {
             return;
         } else {
             switchPage(false);
@@ -445,7 +452,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
     @Override
     public void onPageTurnedForward() {
-                if (SONG_TWO.name().equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(Environment.getInstance().getCollectionManager().getFormalCollection().size() - 1).name()) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1 || SONG_TWO.id() == CollectionManager.SHADOW_SONG_ID) {
+        if (SONG_TWO.name().equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(Environment.getInstance().getCollectionManager().getFormalCollection().size() - 1).name()) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1 || SONG_TWO.id() == CollectionManager.SHADOW_SONG_ID) {
             return;
         } else {
             switchPage(true);
@@ -490,5 +497,10 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onCollectionManagerChanged() {
+
     }
 }

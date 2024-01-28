@@ -21,26 +21,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class PDFGenerator {
 
-    private static final Logger logger = LogManager.getLogger(PDFGenerator.class);
-
-    private static final int EXPORT_OPTION_DEFAULT = 0;
-    private static final int EXPORT_OPTION_PRINTABLE = 1;
-    private static final int EXPORT_OPTION_SINGLEPAGE = 2;
-    private static final int EXPORT_OPTION_PREVIEW = 4;
-
-    public static Logger getLogger() {
-        return logger;
-    }
-
     public static final int PREVIEW_SEGMENT_NUMBER = -1;
-    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String) PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("defaultExportName")).toString();
-    private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String)PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("singlepageExportName")).toString();
-    private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String)PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("printableExportName")).toString();
     public static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment%d%s").toString();
     public static final String PREVIEW_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment_preview%s").toString();
     public static final String EXTENSION_HTML = ".html";
     public static final String EXTENSION_PDF = ".pdf";
-
+    private static final Logger logger = LogManager.getLogger(PDFGenerator.class);
+    private static final int EXPORT_OPTION_DEFAULT = 0;
+    private static final int EXPORT_OPTION_PRINTABLE = 1;
+    private static final int EXPORT_OPTION_SINGLEPAGE = 2;
+    private static final int EXPORT_OPTION_PREVIEW = 4;
+    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String) PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("defaultExportName")).toString();
+    private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String) PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("singlepageExportName")).toString();
+    private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String) PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("printableExportName")).toString();
     private CollectionManager manager;
 
     public PDFGenerator() {
@@ -60,6 +53,10 @@ public class PDFGenerator {
             Environment.showErrorMessage("PDF Generation Error", "Cannot initialize the output folder!", "");
             throw new RuntimeException(e);
         }
+    }
+
+    public static Logger getLogger() {
+        return logger;
     }
 
     public void generateDefault() throws Exception {
@@ -96,7 +93,7 @@ public class PDFGenerator {
 
     private Collection<SegmentDataModel> createDataCollection(int option) {
         if (option < EXPORT_OPTION_DEFAULT || option > EXPORT_OPTION_SINGLEPAGE) {
-            throw  new IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
         ArrayList<Song> collection = manager.getFormalCollection();
         if (collection.size() % 2 == 1) {
@@ -121,7 +118,7 @@ public class PDFGenerator {
                 output.add(new SegmentDataModel(i, collection.get(i), null));
             }
         }
-        return  output;
+        return output;
     }
 
     private void exec(Collection<SegmentDataModel> data, String outputFileName) throws Exception {
@@ -131,6 +128,7 @@ public class PDFGenerator {
 
     /**
      * Joins together segments of the PDF.
+     *
      * @param segmentCount number of the segments
      * @param documentName final file name
      * @throws IOException
@@ -159,6 +157,40 @@ public class PDFGenerator {
         private ExportWorker() throws IOException {
         }
 
+        private static void init(Collection<SegmentDataModel> contentData) {
+            activeThreads = new AtomicInteger(0);
+            segmentContent = new ConcurrentLinkedDeque<>(contentData);
+        }
+
+        /**
+         * A verification method to be called when the task execution is finished.
+         */
+        private static void postExecution() {
+            if (segmentContent.size() > 0) {
+                throw new IllegalStateException();
+            }
+            if (activeThreads.intValue() != 0) {
+                throw new IllegalStateException();
+            }
+        }
+
+        public static void performTask(Collection<SegmentDataModel> contentData) throws IOException {
+            init(contentData);
+            Thread[] threads = new Thread[((Double) PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("conversionThreadCount")).intValue()];
+            for (int i = 0; i < threads.length; i++) {
+                threads[i] = new Thread(new ExportWorker());
+                threads[i].start();
+            }
+            while (activeThreads.intValue() > 0) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            postExecution();
+        }
+
         @Override
         public void run() {
             activeThreads.incrementAndGet();
@@ -184,48 +216,13 @@ public class PDFGenerator {
                 throw new RuntimeException(e);
             }
         }
-
-        private static void init(Collection<SegmentDataModel> contentData) {
-            activeThreads = new AtomicInteger(0);
-            segmentContent = new ConcurrentLinkedDeque<>(contentData);
-        }
-
-        /**
-         * A verification method to be called when the task execution is finished.
-         */
-        private static void postExecution() {
-            if (segmentContent.size() > 0) {
-                throw  new IllegalStateException();
-            }
-            if (activeThreads.intValue() != 0) {
-                throw  new IllegalStateException();
-            }
-        }
-
-        public static void performTask(Collection<SegmentDataModel> contentData) throws IOException {
-            init(contentData);
-            Thread[] threads = new Thread[((Double)PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("conversionThreadCount")).intValue()];
-            for (int i = 0; i < threads.length; i++) {
-                threads[i] = new Thread(new ExportWorker());
-                threads[i].start();
-            }
-            while (activeThreads.intValue() > 0) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            postExecution();
-        }
     }
 
-    private record SegmentDataModel (int number, Song song1, Song song2) {
+    private record SegmentDataModel(int number, Song song1, Song song2) {
         public boolean isSinglepage() {
             return song2 == null;
         }
     }
-
 
 
 }

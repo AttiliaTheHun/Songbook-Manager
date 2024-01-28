@@ -1,23 +1,26 @@
 package attilathehun.songbook.environment;
 
-import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
-import attilathehun.songbook.collection.CollectionManager;
+import attilathehun.songbook.export.PDFGenerator;
+import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.vcs.VCSAdmin;
+import attilathehun.songbook.window.AlertDialog;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-
-import javafx.application.Platform;
-import javafx.scene.control.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-
-import attilathehun.songbook.vcs.VCSAdmin;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 import static javax.swing.JOptionPane.showMessageDialog;
 
@@ -25,12 +28,9 @@ public final class Environment {
 
     private static final Logger logger = LogManager.getLogger(Environment.class);
     private static final List<EnvironmentStateListener> listeners = new ArrayList<EnvironmentStateListener>();
-
-    public static boolean FLAG_IGNORE_SEGMENTS = false;
-
-    public final Settings settings = Settings.getSettings();
-
     private static final Environment instance = new Environment();
+    public static boolean FLAG_IGNORE_SEGMENTS = false;
+    public final Settings settings = Settings.getSettings();
     private final Map<String, CollectionManager> collectionManagers = new HashMap<>();
 
     private CollectionManager selectedCollectionManager;
@@ -45,26 +45,6 @@ public final class Environment {
     public static Environment getInstance() {
         return instance;
     }
-
-
-    public String acquireToken(VCSAdmin.Certificate certificate) {
-        if (tokenInMemory != null) {
-            return tokenInMemory;
-        }
-
-        if (Misc.fileExists(settings.user.getAuthFilePath(new Certificate()))) {
-            try {
-                return String.join("", Files.readAllLines(Path.of(settings.user.getAuthFilePath(new Certificate()))));
-            } catch (IOException e) {
-                logger.warn(e.getMessage(), e);
-                showWarningMessage("Error", "Error reading auth file, continuing with default token.");
-            }
-
-        }
-
-        return settings.user.getDefaultReadToken(new Certificate());
-    }
-
 
     @Deprecated
     public static void showErrorMessage(String title, String message) {
@@ -140,73 +120,6 @@ public final class Environment {
                 JOptionPane.WARNING_MESSAGE);
     }
 
-    public void refresh() {
-        try {
-            for (File f : new File(settings.environment.TEMP_FILE_PATH).listFiles()) {
-                if (FLAG_IGNORE_SEGMENTS && f.getName().startsWith("segment")) {
-                    continue;
-                }
-                if (!f.delete()) {
-                    showErrorMessage("Refreshing error", "Can not clean the temp folder!", true);
-                }
-            }
-            logger.debug("Environment refresh()");
-        } catch (NullPointerException npe) {
-            logger.error(npe.getMessage(), npe);
-        }
-        notifyOnRefresh();
-    }
-
-    /**
-     * Returns the default CollectionManager.
-     * @return default Collection Manager ({@link StandardCollectionManager} if null)
-     */
-    public CollectionManager getCollectionManager() {
-        if (selectedCollectionManager == null) {
-            return StandardCollectionManager.getInstance();
-        }
-        return selectedCollectionManager;
-    }
-
-    /**
-     * Sets the default CollectionManager.
-     * @param collectionManager the manager
-     */
-    public void setCollectionManager(final CollectionManager collectionManager) {
-        this.selectedCollectionManager = collectionManager;
-    }
-
-    public void registerCollectionManager(final CollectionManager collectionManager) {
-        if (collectionManager == null) {
-            throw new IllegalArgumentException("manager is null");
-        }
-        this.settings.collections.putIfAbsent(collectionManager.getCollectionName(), collectionManager.getSettings());
-        Settings.save(this.settings);
-        collectionManagers.put(collectionManager.getCollectionName(), collectionManager);
-    }
-
-    public void unregisterCollectionManager(final CollectionManager collectionManager) {
-        if (collectionManager == null) {
-            throw new IllegalArgumentException("manager is null");
-        }
-        this.settings.collections.remove(collectionManager.getCollectionName());
-        Settings.save(this.settings);
-        collectionManagers.remove(collectionManager.getCollectionName());
-    }
-
-    public Map<String, CollectionManager> getRegisteredManagers() {
-        return collectionManagers;
-    }
-
-    public void loadTokenToMemory(String token, VCSAdmin.Certificate certificate) {
-        tokenInMemory = token;
-    }
-
-    public void exit() {
-        Settings.save(settings);
-        Platform.exit();
-    }
-
     @Deprecated
     public static JDialog getAlwaysOnTopJDialog() {
         JDialog dialog = new JDialog();
@@ -219,6 +132,7 @@ public final class Environment {
     /**
      * Scrolls the songbook so that the requested song is visible in the web view as if the user navigated on it himself, which means that
      * the left/right position of the song will be preserved.
+     *
      * @param s the song to be displayed
      */
     public static void navigateWebViewToSong(Song s) {
@@ -248,6 +162,7 @@ public final class Environment {
 
     /**
      * Registers an {@link EnvironmentStateListener}, allowing it to receive Environment-related events.
+     *
      * @param listener the listener
      */
     public static void addListener(EnvironmentStateListener listener) {
@@ -291,11 +206,102 @@ public final class Environment {
         }
     }
 
-    public static class EnvironmentSettings implements Serializable {
-        private static final Logger logger = LogManager.getLogger(attilathehun.songbook.environment.Environment.EnvironmentSettings.class);
+    public String acquireToken(VCSAdmin.Certificate certificate) {
+        if (tokenInMemory != null) {
+            return tokenInMemory;
+        }
 
+        if (Misc.fileExists(settings.user.getAuthFilePath(new Certificate()))) {
+            try {
+                return String.join("", Files.readAllLines(Path.of(settings.user.getAuthFilePath(new Certificate()))));
+            } catch (IOException e) {
+                logger.warn(e.getMessage(), e);
+                showWarningMessage("Error", "Error reading auth file, continuing with default token.");
+            }
+
+        }
+
+        return settings.user.getDefaultReadToken(new Certificate());
+    }
+
+    public void refresh() {
+        try {
+            for (File f : new File(settings.environment.TEMP_FILE_PATH).listFiles()) {
+                if (FLAG_IGNORE_SEGMENTS && f.getName().startsWith("segment")) {
+                    continue;
+                }
+               /* if (f.getPath().equals(String.format(PDFGenerator.PREVIEW_SEGMENT_PATH, PDFGenerator.EXTENSION_PDF))) {
+                    continue;
+                }*/
+                if (!f.delete()) {
+                    new AlertDialog.Builder().setTitle("Refreshing error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                                    .setMessage("Cannot clean temp folder!").addOkButton().build().open();
+                    exit();
+                }
+            }
+            logger.debug("Environment refresh()");
+        } catch (NullPointerException npe) {
+            logger.error(npe.getMessage(), npe);
+        }
+        notifyOnRefresh();
+    }
+
+    /**
+     * Returns the default CollectionManager.
+     *
+     * @return default Collection Manager ({@link StandardCollectionManager} if null)
+     */
+    public CollectionManager getCollectionManager() {
+        if (selectedCollectionManager == null) {
+            return StandardCollectionManager.getInstance();
+        }
+        return selectedCollectionManager;
+    }
+
+    /**
+     * Sets the default CollectionManager.
+     *
+     * @param collectionManager the manager
+     */
+    public void setCollectionManager(final CollectionManager collectionManager) {
+        this.selectedCollectionManager = collectionManager;
+    }
+
+    public void registerCollectionManager(final CollectionManager collectionManager) {
+        if (collectionManager == null) {
+            throw new IllegalArgumentException("manager is null");
+        }
+        this.settings.collections.putIfAbsent(collectionManager.getCollectionName(), collectionManager.getSettings());
+        Settings.save(this.settings);
+        collectionManagers.put(collectionManager.getCollectionName(), collectionManager);
+    }
+
+    public void unregisterCollectionManager(final CollectionManager collectionManager) {
+        if (collectionManager == null) {
+            throw new IllegalArgumentException("manager is null");
+        }
+        this.settings.collections.remove(collectionManager.getCollectionName());
+        Settings.save(this.settings);
+        collectionManagers.remove(collectionManager.getCollectionName());
+    }
+
+    public Map<String, CollectionManager> getRegisteredManagers() {
+        return collectionManagers;
+    }
+
+    public void loadTokenToMemory(String token, VCSAdmin.Certificate certificate) {
+        tokenInMemory = token;
+    }
+
+    public void exit() {
+        Settings.save(settings);
+        Platform.exit();
+    }
+
+    public static class EnvironmentSettings implements Serializable {
         public static final String SETTINGS_FILE_PATH = "settings.json";
         public static final String EASTER_EXE_FILE_PATH = "easter.exe";
+        private static final Logger logger = LogManager.getLogger(attilathehun.songbook.environment.Environment.EnvironmentSettings.class);
         public final transient boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
         public final String RESOURCE_FILE_PATH;
         public final String CSS_RESOURCES_FILE_PATH;

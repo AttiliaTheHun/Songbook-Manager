@@ -1,12 +1,12 @@
 package attilathehun.songbook.collection;
 
-import attilathehun.songbook.window.SongbookApplication;
+import attilathehun.annotation.TODO;
 import attilathehun.songbook.environment.Environment;
-import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.environment.EnvironmentVerificator;
-import attilathehun.songbook.window.CodeEditorV1;
-import attilathehun.songbook.window.CollectionEditor;
 import attilathehun.songbook.util.HTMLGenerator;
+import attilathehun.songbook.window.AlertDialog;
+import attilathehun.songbook.window.CodeEditor;
+import attilathehun.songbook.window.SongbookApplication;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -18,7 +18,10 @@ import org.jsoup.nodes.Element;
 
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -30,23 +33,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 
 public class EasterCollectionManager extends CollectionManager {
 
+    public static final String EASTER_SONG_DATA_FILE_PATH = Paths.get(Environment.getInstance().settings.environment.DATA_FILE_PATH + "/songs/egg/").toString();
     private static final Logger logger = LogManager.getLogger(EasterCollectionManager.class);
     private static final List<CollectionListener> listeners = new ArrayList<>();
-
-    public static final String EASTER_SONG_DATA_FILE_PATH = Paths.get(Environment.getInstance().settings.environment.DATA_FILE_PATH + "/songs/egg/").toString();
     private static final EasterCollectionManager instance;
-
-    private final String collectionName = "easter";
 
     static {
         instance = new EasterCollectionManager();
         instance.init();
     }
 
+    private final String collectionName = "easter";
     private ArrayList<Song> collection;
 
     private EasterCollectionManager() {
@@ -83,9 +85,11 @@ public class EasterCollectionManager extends CollectionManager {
             collection = new Gson().fromJson(json, targetClassType);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Easter Collection Initialisation error", "Can not load the easter song collection!");
+            new AlertDialog.Builder().setTitle("Easter Collection Initialisation error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                            .setMessage("Can not load the easter song collection, for complete error message view the log file. If the problem persists, try reformatting or deleting the collection file.")
+                            .addOkButton().setParent(SongbookApplication.getMainWindow()).build().open();
         }
-        logger.info("EasterCollectionManager initialized");
+        logger.info("initialized");
     }
 
     @Override
@@ -107,7 +111,9 @@ public class EasterCollectionManager extends CollectionManager {
             writer.close();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showWarningMessage("Error", "Can not save the easter egg song collection!");
+            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage("Can not save the easter song collection, for complete error message view the log file.")
+                    .addOkButton().setParent(SongbookApplication.getMainWindow()).build().open();
         }
     }
 
@@ -119,11 +125,7 @@ public class EasterCollectionManager extends CollectionManager {
     @Override
     public ArrayList<Song> getSortedCollection() {
         ArrayList<Song> copy = new ArrayList<Song>(collection);
-        copy.sort(new Comparator<Song>() {
-            public int compare(Song s1, Song s2) {
-                return Collator.getInstance().compare(s1.name(), s2.name());
-            }
-        });
+        copy.sort((s1, s2) -> Collator.getInstance().compare(s1.name(), s2.name()));
         return copy;
     }
 
@@ -158,7 +160,7 @@ public class EasterCollectionManager extends CollectionManager {
 
         return formalList;
     }
-
+    // TODO implement collection events?
     @Override
     public Song addSong(Song s) {
         if (s == null) {
@@ -173,7 +175,8 @@ public class EasterCollectionManager extends CollectionManager {
         }
         collection.add(s);
         save();
-        CodeEditorV1.open(this, s);
+        onSongAdded(s);
+        CodeEditor.open(s, this);
         Environment.getInstance().refresh();
         if (Environment.getInstance().getCollectionManager().equals(getInstance())) {
             Environment.navigateWebViewToSong(collection.get(collection.size() - 1));
@@ -187,7 +190,9 @@ public class EasterCollectionManager extends CollectionManager {
         save();
         File songFile = new File(String.format(EASTER_SONG_DATA_FILE_PATH + "/%d.html", s.id()));
         if (songFile.delete()) {
-            Environment.showMessage("Success", String.format("Easter Egg Song '%s' id: %d deleted. Ave Caesar!", s.name(), s.id()));
+            new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO)
+                    .setMessage(String.format("Easter Egg Song '%s' id: %d deleted. Ave Caesar!", s.name(), s.id()))
+                    .addOkButton().build().open();
         }
         onSongRemoved(s);
         if (Environment.getInstance().getCollectionManager().equals(getInstance())) {
@@ -199,12 +204,14 @@ public class EasterCollectionManager extends CollectionManager {
     public void activateSong(Song s) {
         collection.get(getCollectionSongIndex(s)).setActive(true);
         save();
+        onSongUpdated(s);
     }
 
     @Override
     public void deactivateSong(Song s) {
         collection.get(getCollectionSongIndex(s)).setActive(false);
         save();
+        onSongUpdated(s);
     }
 
     @Override
@@ -217,8 +224,10 @@ public class EasterCollectionManager extends CollectionManager {
         }
 
         if (songIdMatches > 1) {
-            Environment.showWarningMessage("Warning", "A song with such Id already exists. Please, resolve this conflict manually on the other song before using this Id.");
-            return s;
+            new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING)
+                    .setMessage("Easter song under this Id already exists. Please resolve this conflict manually by changing the Id of the other song, or by choosing a different Id.")
+                    .addOkButton().build().open();
+           return s;
         }
 
         int index = getCollectionSongIndex(s);
@@ -243,9 +252,8 @@ public class EasterCollectionManager extends CollectionManager {
         }
 
         save();
-        //TODO refresh
-        //CollectionEditor.forceRefreshInstance();
-        return  song;
+        onSongUpdated(s);
+        return song;
     }
 
     @Override
@@ -255,11 +263,13 @@ public class EasterCollectionManager extends CollectionManager {
 
     @Override
     public void updateSongHTMLTitleFromRecord(Song s) {
-
+        // five lines above
     }
 
     @Override
+    @TODO
     public void updateSongHTMLFromRecord(Song s) {
+        // TODO remove binding titles?
         if (!Environment.getInstance().settings.songbook.BIND_SONG_TITLES) {
             return;
         }
@@ -279,7 +289,9 @@ public class EasterCollectionManager extends CollectionManager {
             save();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()));
+            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage(String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()))
+                    .addOkButton().build().open();
         }
     }
 
@@ -307,7 +319,7 @@ public class EasterCollectionManager extends CollectionManager {
 
     @Override
     public int getCollectionSongIndex(int songId) {
-        if (songId< 0) {
+        if (songId < 0) {
             throw new IllegalArgumentException();
         }
         int i = 0;
@@ -403,14 +415,13 @@ public class EasterCollectionManager extends CollectionManager {
 
     @Override
     public Song getPlaceholderSong() {
-        return new Song("Secret Song", -1);
-
+        return new Song("Secret Song", CollectionManager.INVALID_SONG_ID);
     }
 
     @Override
     public void addListener(CollectionListener listener) {
         if (listener == null) {
-        throw new IllegalArgumentException();
+            throw new IllegalArgumentException();
 
         }
         listeners.add(listener);
@@ -540,9 +551,21 @@ public class EasterCollectionManager extends CollectionManager {
         return null;
     }
 
+    private void onSongAdded(Song s) {
+        for (CollectionListener listener : listeners) {
+            listener.onSongAdded(s, this);
+        }
+    }
+
     private void onSongRemoved(Song s) {
         for (CollectionListener listener : listeners) {
             listener.onSongRemoved(s, this);
+        }
+    }
+
+    private void onSongUpdated(Song s) {
+        for (CollectionListener listener : listeners) {
+            listener.onSongUpdated(s, this);
         }
     }
 
@@ -562,10 +585,10 @@ public class EasterCollectionManager extends CollectionManager {
             element = document.select("meta[name=url]").first();
             String songURL = (element != null) ? element.attr("value") : "";
             element = document.select("meta[name=active]").first();
-            Boolean songActiveStatus = (element != null) ? Boolean.parseBoolean(element.attr("value")) : true;
+            boolean songActiveStatus = (element != null) ? Boolean.parseBoolean(element.attr("value")) : true;
 
             return new Song(songId, songName, songActiveStatus, songURL);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.info(String.format("Target song: %d %s", songId, songName));
             logger.error(e.getMessage(), e);
         }
@@ -574,39 +597,27 @@ public class EasterCollectionManager extends CollectionManager {
     }
 
     private void repairCollectionDialog() {
-        UIManager.put("OptionPane.yesButtonText", "Repair");
-        UIManager.put("OptionPane.noButtonText", "Create");
-
-        int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Repair easter egg collection", "No collection file was found but it seems you have saved songs in your easter egg data directory. Would you like to generate a collection file to repair the easter egg collection? Alternatively, you can create a new collection.", JOptionPane.YES_NO_OPTION);
-
-        if (resultCode == JOptionPane.YES_OPTION) {
-            repairMissingCollectionFile();
-        } else if (resultCode == JOptionPane.NO_OPTION) {
-            createNewCollection();
-        } else if (resultCode == JOptionPane.CLOSED_OPTION) {
-
-        }
-
-        UIManager.put("OptionPane.yesButtonText", "Yes");
-        UIManager.put("OptionPane.noButtonText", "No");
+        CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Repair easter egg collection").setIcon(AlertDialog.Builder.Icon.CONFIRM)
+                .setMessage("No collection file was found but it seems there are songs saved in your easter egg data directory. Would you like to generate a collection file to repair the easter egg collection? Alternatively, you can create a new collection.")
+                .addOkButton("Repair").addCloseButton("Create").setParent(SongbookApplication.getMainWindow()).setCancelable(false).build().awaitResult();
+        result.thenAccept(dialogResult -> {
+            if (dialogResult == AlertDialog.RESULT_OK) {
+                repairMissingCollectionFile();
+            } else if (dialogResult == AlertDialog.RESULT_CLOSE) {
+                createNewCollection();
+            }
+        });
     }
 
     private void createCollectionDialog() {
-        UIManager.put("OptionPane.okButtonText", "Create");
-        UIManager.put("OptionPane.cancelButtonText", "Cancel");
-
-        int resultCode = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Create an easter egg collection", "Do you want to create an easter egg collection?", JOptionPane.OK_CANCEL_OPTION);
-
-        if (resultCode == JOptionPane.OK_OPTION) {
-            createNewCollection();
-        } else if (resultCode == JOptionPane.CANCEL_OPTION) {
-
-        } else if (resultCode == JOptionPane.CLOSED_OPTION) {
-
-        }
-
-        UIManager.put("OptionPane.okButtonText", "Yes");
-        UIManager.put("OptionPane.cancelButtonText", "No");
+        CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Create an easter egg collection").setIcon(AlertDialog.Builder.Icon.CONFIRM)
+                .setMessage("Do you want to create an easter egg collection? For more information visit the wiki.")
+                .addOkButton("Create").addCloseButton("Cancel").build().awaitResult();
+        result.thenAccept(dialogResult -> {
+            if (dialogResult == AlertDialog.RESULT_OK) {
+                createNewCollection();
+            }
+        });
     }
 
     private void repairMissingCollectionFile() {
@@ -645,20 +656,19 @@ public class EasterCollectionManager extends CollectionManager {
             printWriter.close();
             EnvironmentVerificator.SUPPRESS_WARNINGS = true;
 
-            UIManager.put("OptionPane.okButtonText", "Add");
-            UIManager.put("OptionPane.cancelButtonText", "Cancel");
-
-            int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), "Do you want to add your first easter song?", "Add Easter Song?", JOptionPane.OK_CANCEL_OPTION);
-
-            if (option == JOptionPane.OK_OPTION) {
-                addSongDialog();
-            }
+            CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Add Easter Song?").setMessage("Do you want to create your first easter song?").setIcon(AlertDialog.Builder.Icon.CONFIRM)
+                    .addOkButton("Create").addCloseButton("Cancel").build().awaitResult();
+            result.thenAccept(dialogResult -> {
+               if (dialogResult == AlertDialog.RESULT_OK) {
+                   addSongDialog();
+               }
+            });
 
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Could not create a new easter song!");
+            new AlertDialog.Builder().setTitle("Error").setMessage("Could not create a new easter song!").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .addOkButton().build().open();
         }
     }
-
 
 }

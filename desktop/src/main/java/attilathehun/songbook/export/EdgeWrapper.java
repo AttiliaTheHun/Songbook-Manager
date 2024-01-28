@@ -13,19 +13,15 @@ import java.util.stream.Stream;
 
 import static attilathehun.songbook.export.BrowserPathResolver.SHELL_LOCATION_LINUX;
 import static attilathehun.songbook.export.BrowserPathResolver.SHELL_LOCATION_WINDOWS;
-import static attilathehun.songbook.export.EdgePathResolver.EXECUTABLE_NAME_WINDOWS;
-import static attilathehun.songbook.export.EdgePathResolver.EXECUTABLE_NAME_LINUX;
-import static attilathehun.songbook.export.EdgePathResolver.EDGE_PATH_VARIABLE;
+import static attilathehun.songbook.export.EdgePathResolver.*;
 
 public class EdgeWrapper extends BrowserWrapper {
     private static final Logger logger = LogManager.getLogger(EdgeWrapper.class);
     private static final Preferences preferences = Preferences.userRoot().node(BrowserWrapper.class.getName());
-    private boolean closed = false;
-
     private final String[] PRINT_COMMAND;
-
     BufferedWriter stdin;
     Scanner stderr;
+    private boolean closed = false;
 
     public EdgeWrapper() throws IOException {
         final String shell = (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) ? SHELL_LOCATION_WINDOWS : SHELL_LOCATION_LINUX;
@@ -58,7 +54,7 @@ public class EdgeWrapper extends BrowserWrapper {
     }
 
     @Override
-    public void close() throws IOException{
+    public void close() throws IOException {
         if (closed) {
             throw new IllegalStateException("Wrapper already closed");
         }

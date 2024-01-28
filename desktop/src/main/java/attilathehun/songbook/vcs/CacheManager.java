@@ -1,7 +1,5 @@
 package attilathehun.songbook.vcs;
 
-import attilathehun.songbook.collection.EasterCollectionManager;
-import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.vcs.index.Index;
 import com.google.gson.Gson;
@@ -26,7 +24,8 @@ public class CacheManager {
 
     private static final CacheManager instance = new CacheManager();
 
-    private CacheManager() {}
+    private CacheManager() {
+    }
 
     public static CacheManager getInstance() {
         return instance;
@@ -47,6 +46,7 @@ public class CacheManager {
 
     /**
      * Get cached index or null if there is none.
+     *
      * @return cached Index or null
      */
     public Index getCachedIndex() {
@@ -72,6 +72,7 @@ public class CacheManager {
 
     /**
      * Save an index to the vcs cache folder.
+     *
      * @param index the index to save
      */
     void cacheIndex(Index index) {
@@ -104,6 +105,7 @@ public class CacheManager {
     public File getCachedSongbookVersionTimestampFile() {
         return new File(Environment.getInstance().settings.vcs.VERSION_TIMESTAMP_FILE_PATH);
     }
+
     void cacheSongbookVersionTimestamp(long versionTimestamp) {
         if (versionTimestamp < 0) {
             throw new IllegalArgumentException();
@@ -149,7 +151,6 @@ public class CacheManager {
 
         cacheSongbookVersionTimestamp(timestamp);
     }
-
 
 
 }

@@ -80,14 +80,15 @@ public class Song implements Serializable {
         this.formerId = formerId;
     }
 
-    public void setManager(CollectionManager manager) {
-        this.manager = manager;
-    }
-
     public CollectionManager getManager() {
         return manager;
     }
 
+    public void setManager(CollectionManager manager) {
+        this.manager = manager;
+    }
+
+    // possibly a standard song could be matched to its corresponding easter song, TODO add manager comparison (when manager not null ofc)
     @Override
     public boolean equals(Object o) {
         if (o == null || !o.getClass().equals(Song.class)) {

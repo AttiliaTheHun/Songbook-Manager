@@ -5,18 +5,16 @@ import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.export.PDFGenerator;
-import attilathehun.songbook.plugin.Export;
 import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.plugin.Export;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Orientation;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -27,12 +25,11 @@ import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @TODO(priority = true)
 public class CollectionEditor extends Stage implements CollectionListener {
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
-
+    private static final CollectionEditor instance = new CollectionEditor();
     @FXML
     public Button editSongHTMLButton;
     @FXML
@@ -47,11 +44,35 @@ public class CollectionEditor extends Stage implements CollectionListener {
     public Button addSongButton;
     @FXML
     public TabPane tabbedPane;
-
-    private static final CollectionEditor instance = new CollectionEditor();
-
     private Song selectedSong = null;
     private CollectionManager selectedManager = null;
+
+    private CollectionEditor() {
+        this.setTitle("Collection Editor");
+        this.setResizable(false);
+    }
+
+    public static void open() {
+        if (instance == null) {
+            throw new IllegalStateException();
+        }
+        if (instance.isShowing()) {
+            instance.toFront();
+        } else {
+            instance.show();
+        }
+    }
+
+    public static CollectionEditor getInstance() {
+        return instance;
+    }
+
+    public static void shut() {
+        if (instance == null) {
+            throw new IllegalStateException();
+        }
+        instance.hide();
+    }
 
     @FXML
     private void initialize() {
@@ -64,30 +85,6 @@ public class CollectionEditor extends Stage implements CollectionListener {
 
     public void postInit() {
         initKeyboardShortcuts();
-    }
-
-    private CollectionEditor(){
-        this.setTitle("Collection Editor");
-        this.setResizable(false);
-    }
-
-    public static void open() {
-        if (instance == null) {
-            throw  new IllegalStateException();
-        }
-        instance.show();
-        instance.toFront();
-    }
-
-    public static CollectionEditor getInstance() {
-        return instance;
-    }
-
-    public static void shut() {
-        if (instance == null) {
-            throw  new IllegalStateException();
-        }
-        instance.hide();
     }
 
     private void initTabbedPane() {
@@ -200,7 +197,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
                         selectedManager.removeSong(selectedSong);
                     }
                 });
-             }
+            }
         });
     }
 
@@ -217,7 +214,9 @@ public class CollectionEditor extends Stage implements CollectionListener {
                         refreshCurrentList();
                     }
                 }
-                case ESCAPE -> shut();
+                case ESCAPE -> {
+                    shut();
+                }
             }
         });
     }
@@ -319,7 +318,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
         private class SongEntry extends HBox {
             private SongEntry(Song s) {
                 if (s == null || s.getManager() == null) {
-                    throw  new IllegalArgumentException();
+                    throw new IllegalArgumentException();
                 }
                 int index = s.getManager().getSortedCollectionSongIndex(s);
                 Label nLabel = new Label(String.valueOf(index));
@@ -328,7 +327,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
                 Label nameLabel = new Label(s.name());
                 nameLabel.setPrefWidth(260);
                 this.getChildren().add(nameLabel);
-                Label IDLabel = new Label (String.valueOf(s.id()));
+                Label IDLabel = new Label(String.valueOf(s.id()));
                 IDLabel.setPrefWidth(30);
                 this.getChildren().add(IDLabel);
                 Label URLLabel = new Label(s.getUrl());

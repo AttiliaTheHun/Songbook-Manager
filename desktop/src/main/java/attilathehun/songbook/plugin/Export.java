@@ -17,6 +17,10 @@ public class Export extends Plugin {
         PluginManager.registerPlugin(this);
     }
 
+    public static Plugin getInstance() {
+        return instance;
+    }
+
     @Override
     public String getName() {
         return Export.class.getSimpleName();
@@ -37,10 +41,6 @@ public class Export extends Plugin {
         settings.put("singlepageExportName", SINGLEPAGE_EXPORT_NAME);
         settings.put("printableExportName", PRINTABLE_EXPORT_NAME);
         return settings;
-    }
-
-    public static Plugin getInstance() {
-        return instance;
     }
 
 }

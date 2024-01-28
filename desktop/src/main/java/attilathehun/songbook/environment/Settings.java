@@ -1,8 +1,8 @@
 package attilathehun.songbook.environment;
 
 import attilathehun.songbook.collection.CollectionManager;
-import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.vcs.VCSAdmin;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -82,12 +82,11 @@ public final class Settings implements Serializable {
     }
 
 
-
     public static class UserSettings implements Serializable {
         private static final Logger logger = LogManager.getLogger(UserSettings.class);
-        private final String AUTH_FILE_PATH;
         public final boolean AUTO_LOAD_DATA;
         public final AuthType AUTH_TYPE;
+        private final String AUTH_FILE_PATH;
         private final String DEFAULT_READ_TOKEN;
 
 

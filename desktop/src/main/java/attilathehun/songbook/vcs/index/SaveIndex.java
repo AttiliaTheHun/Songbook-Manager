@@ -24,42 +24,6 @@ public class SaveIndex extends PartialIndex {
         this.versionTimestamp = versionTimestamp;
     }
 
-    public void setAdditions(Property additions) {
-        this.additions = additions;
-    }
-
-    public void setDeletions(Property deletions) {
-        this.deletions = deletions;
-    }
-
-    public void setChanges(Property changes) {
-        this.changes = changes;
-    }
-
-    public void setCollections(Collection<String> collections) {
-        this.collections = collections;
-    }
-
-    public Property getAdditions() {
-        return additions;
-    }
-
-    public Property getDeletions() {
-        return deletions;
-    }
-
-    public Property getChanges() {
-        return changes;
-    }
-
-    public Collection<String> getCollections() {
-        return collections;
-    }
-
-    public long getVersionTimestamp() {
-        return versionTimestamp;
-    }
-
     public static SaveIndex empty() {
         SaveIndex index = new SaveIndex(-1);
         index.setAdditions(new Property());
@@ -67,5 +31,41 @@ public class SaveIndex extends PartialIndex {
         index.setChanges(new Property());
         index.setDeletions(new Property());
         return index;
+    }
+
+    public Property getAdditions() {
+        return additions;
+    }
+
+    public void setAdditions(Property additions) {
+        this.additions = additions;
+    }
+
+    public Property getDeletions() {
+        return deletions;
+    }
+
+    public void setDeletions(Property deletions) {
+        this.deletions = deletions;
+    }
+
+    public Property getChanges() {
+        return changes;
+    }
+
+    public void setChanges(Property changes) {
+        this.changes = changes;
+    }
+
+    public Collection<String> getCollections() {
+        return collections;
+    }
+
+    public void setCollections(Collection<String> collections) {
+        this.collections = collections;
+    }
+
+    public long getVersionTimestamp() {
+        return versionTimestamp;
     }
 }

@@ -1,12 +1,11 @@
 package attilathehun.songbook.environment;
 
 import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.window.AlertDialog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.File;
 
 /**
  * This class performs a verification check of the environment, eventually notifying the user what is wrong.
@@ -16,8 +15,6 @@ public class EnvironmentVerificator {
     private static final Logger logger = LogManager.getLogger(EnvironmentVerificator.class);
 
     public static boolean SUPPRESS_WARNINGS = false;
-
-    private static boolean FATAL_FAIL = false;
 
     private boolean automated = false;
 
@@ -50,13 +47,14 @@ public class EnvironmentVerificator {
     }
 
     private static void verificationFail(String message) {
-        Environment.showErrorMessage("Environment verification failed", message, FATAL_FAIL);
+        new AlertDialog.Builder().setTitle("Environment Verification Failed").setIcon(AlertDialog.Builder.Icon.ERROR)
+                .setMessage(message).addOkButton().build().open();
+        Environment.getInstance().exit();
     }
 
     public boolean verifyData() {
         if (!(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()).exists() && new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()).isDirectory())) {
             if (automated) {
-                FATAL_FAIL = true;
                 verificationFail("No song data folder found!");
             }
             return false;
@@ -67,7 +65,6 @@ public class EnvironmentVerificator {
     public boolean verifyCollection() {
         if (!new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()).exists()) {
             if (automated) {
-                FATAL_FAIL = true;
                 verificationFail("No song collection found!");
             }
             return false;
@@ -78,7 +75,6 @@ public class EnvironmentVerificator {
     public boolean verifyResources() {
         if (!(new File(Environment.getInstance().settings.environment.RESOURCE_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.RESOURCE_FILE_PATH).isDirectory())) {
             if (automated) {
-                FATAL_FAIL = true;
                 verificationFail("No resource folder found!");
             }
             return false;
@@ -100,7 +96,6 @@ public class EnvironmentVerificator {
     public boolean verifyTemplates() {
         if (!(new File(Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH).isDirectory())) {
             if (automated) {
-                FATAL_FAIL = true;
                 verificationFail("No HTML template folder found!");
             }
             return false;
@@ -111,7 +106,8 @@ public class EnvironmentVerificator {
     public boolean verifyScripts() {
         if (!(new File(Environment.getInstance().settings.environment.SCRIPTS_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.SCRIPTS_FILE_PATH).isDirectory())) {
             if (automated) {
-                Environment.showWarningMessage("Warning", "No scripts folder found. Some features might not work!");
+                new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING)
+                        .setMessage("Scripts folder not found. Some features might not work!").addOkButton().build().open();
             }
             return false;
         }
@@ -119,11 +115,10 @@ public class EnvironmentVerificator {
     }
 
     public void verifyTemp() {
-
         if (!(new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).isDirectory())) {
             new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).mkdirs();
         } else {
-                Environment.getInstance().refresh();
+            Environment.getInstance().refresh();
         }
     }
 

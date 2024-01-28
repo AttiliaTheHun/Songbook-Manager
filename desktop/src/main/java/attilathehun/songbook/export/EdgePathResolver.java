@@ -14,19 +14,17 @@ import java.util.prefs.Preferences;
 
 @TODO(description = "Replace hardcoded paths with win path variables like %ProgramFile(x86)%")
 public class EdgePathResolver extends BrowserPathResolver {
-    private static final Logger logger = LogManager.getLogger(EdgePathResolver.class);
-
+    public static final String EDGE_PATH_VARIABLE = "export.browser.edge.path";
     //Windows
     static final String EXECUTABLE_NAME_WINDOWS = "msedge.exe";
-    public static final String EDGE_PATH_VARIABLE = "export.browser.edge.path";
+    static final String EXECUTABLE_NAME_LINUX = "microsoft-edge";
+    private static final Logger logger = LogManager.getLogger(EdgePathResolver.class);
     private static final String[] WHERE_COMMAND = {"where", EXECUTABLE_NAME_WINDOWS};
     private static final String[] READ_REGISTRY_COMMAND = {"reg", "query", "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\", "/s", "/f", "\\msedge.exe", "|", "findstr", "Default"};
     private static final String DEFAULT_PATH_WIN10 = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application";
-    private static final String DEFAULT_PATH_WIN10_2 = "C:\\Program Files\\Microsoft\\Edge\\Application";
 
     // Linux
-
-   static final String EXECUTABLE_NAME_LINUX = "microsoft-edge";
+    private static final String DEFAULT_PATH_WIN10_2 = "C:\\Program Files\\Microsoft\\Edge\\Application";
     private static final String DEFAULT_PATH_UBUNTU = "/usr/bin/microsoft-edge-stable";
     private static final String DEFAULT_PATH_UBUNTU_2 = "/usr/bin/microsoft-edge";
     private static final String[] WHEREIS_COMMAND = {"whereis", EXECUTABLE_NAME_LINUX};

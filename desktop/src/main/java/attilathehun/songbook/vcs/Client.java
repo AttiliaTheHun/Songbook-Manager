@@ -15,12 +15,10 @@ import java.nio.file.Paths;
 
 class Client {
 
-    private static final Logger logger = LogManager.getLogger(Client.class);
-    private Status status = null;
-
     public static final String METHOD_POST = "POST";
     public static final String METHOD_GET = "GET";
-
+    private static final Logger logger = LogManager.getLogger(Client.class);
+    private Status status = null;
 
     public void postRequestFile(String targetUrl, String requestFileUrl, String authToken) throws IOException {
         URL url = new URL(targetUrl);

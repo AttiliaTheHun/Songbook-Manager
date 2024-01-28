@@ -14,15 +14,19 @@ import java.util.HashMap;
  * SML into HTML and vice versa utilising the Songbook Manager resource templates.
  */
 public class SML extends Plugin {
+    protected static final String STRING_PLACEHOLDER = "%s";
     private static final Logger logger = LogManager.getLogger(SML.class);
     private static final SML instance = new SML();
-
     private final String name = SML.class.getSimpleName();
-    protected static final String STRING_PLACEHOLDER = "%s";
 
     private SML() {
         PluginManager.registerPlugin(this);
     }
+
+    public static Plugin getInstance() {
+        return instance;
+    }
+
     @Override
     public String getName() {
         return name;
@@ -65,15 +69,9 @@ public class SML extends Plugin {
         return settings;
     }
 
-    public static Plugin getInstance() {
-        return instance;
-    }
-
     public static abstract class SMLEngine {
-        private static final Logger logger = LogManager.getLogger(SMLEngine.class);
         protected static final String[] languageTokens = {"#song", "#name", "#author", "#active", "#url", "#endheader", "#column", "#line", "#chords", "#lyrics", "#emptyline"};
         protected static final String[] marginClasses = {"ultra-small-br", "very-small-br", "small-br", "smaller-br", "little-bigger-br", "bigger-br", "big-br", "very-big-br", "ultra-big-br"};
-        protected static String[] fontSizes = {"default", "small", "very-small", "ultra-small"};
         protected static final String[] specialTokens = {"#style"};
         protected static final String[] types = {"div", "h1", "h4", "meta", "meta", "div", "pre", "span", "span", "span", "br"};
         protected static final String[][] defaultClasses = {{"song"}, {"song-title"}, {"song-author"}, null, null, {"song-text-wrapper", "short-song"}, {"song-text"}, {"line"}, null, {"lyrics"}, null};
@@ -81,9 +79,11 @@ public class SML extends Plugin {
         protected static final String LONG_SONG_CLASS = "long-song";
         protected static final HashMap<String, String> templates = getTemplates();
         protected static final HashMap<String, Pair<String, String>> fontSizeClasses = getFontSizeClasses();
+        private static final Logger logger = LogManager.getLogger(SMLEngine.class);
+        protected static String[] fontSizes = {"default", "small", "very-small", "ultra-small"};
 
         static {
-            if (!(languageTokens.length  == types.length && types.length == defaultClasses.length && defaultClasses.length == defaultAttributes.length)) {
+            if (!(languageTokens.length == types.length && types.length == defaultClasses.length && defaultClasses.length == defaultAttributes.length)) {
                 PluginManager.getInstance().getSettings().get(SML.getInstance().getName()).put("enabled", Boolean.FALSE);
                 logger.error("SML Plugin disabled because of interpreter engine misconfiguration");
                 throw new IllegalStateException("The SML plugin is broken: Cannot load the engine!");
@@ -116,6 +116,7 @@ public class SML extends Plugin {
 
 
         public abstract String interpret(String s) throws ParseException;
+
         public abstract String getName();
     }
 
@@ -154,7 +155,7 @@ public class SML extends Plugin {
                                 case 0 -> root = node;
                                 case 6 -> {
                                     isColumn = true;
-                                   // parent = null;
+                                    // parent = null;
                                 }
                                 case 7 -> isLine = true;
                             }
@@ -229,12 +230,12 @@ public class SML extends Plugin {
                 }
             }
 
-            public void setParent(Element e) {
-                this.parent = e;
-            }
-
             public Element getParent() {
                 return parent;
+            }
+
+            public void setParent(Element e) {
+                this.parent = e;
             }
 
             @Override

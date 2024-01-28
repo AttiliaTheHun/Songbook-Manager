@@ -7,18 +7,20 @@ import org.apache.logging.log4j.Logger;
 
 public class DynamicSonglist extends Plugin {
 
-    private static final Logger logger = LogManager.getLogger(DynamicSonglist.class);
-
     //TODO move MAX_SONG_PER_COLUMN to settings?
     public static final int MAX_SONG_PER_COLUMN = 38;
     public static final int MAX_SONG_PER_PAGE = 2 * MAX_SONG_PER_COLUMN;
-
+    private static final Logger logger = LogManager.getLogger(DynamicSonglist.class);
     private static final DynamicSonglist instance = new DynamicSonglist();
 
     private final String name = DynamicSonglist.class.getSimpleName();
 
     private DynamicSonglist() {
         PluginManager.registerPlugin(this);
+    }
+
+    public static Plugin getInstance() {
+        return instance;
     }
 
     @Override
@@ -36,10 +38,6 @@ public class DynamicSonglist extends Plugin {
         Plugin.PluginSettings settings = new Plugin.PluginSettings();
         settings.put("enabled", Boolean.TRUE);
         return settings;
-    }
-
-    public static Plugin getInstance() {
-        return instance;
     }
 
     private int generateSonglist() {

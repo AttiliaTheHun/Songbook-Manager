@@ -8,31 +8,15 @@ import java.util.Locale;
 import java.util.prefs.Preferences;
 
 public abstract class BrowserWrapper implements AutoCloseable {
-    private static final Logger logger = LogManager.getLogger(BrowserWrapper.class);
-
     public static final String OS_WINDOWS = "Windows";
     public static final String OS_LINUX = "Linux";
-    protected final String[] DEFAULT_PRINT_ARGS = {"--headless", "--print-to-pdf=\"%s\"", "--no-pdf-header-footer", "%s"};
+    private static final Logger logger = LogManager.getLogger(BrowserWrapper.class);
     private static final String DEFAULT_OPTION = "export.browser.default";
     private static final String OPTION_CHROME = "export.browser.chrome";
     private static final String OPTION_EDGE = "export.browser.edge";
     private static final String OPTION_CHROMIUM = "export.browser.chromium";
     private static final String OPTION_PUPPETEER = "export.browser.puppeteer";
-
     private static final Preferences preferences = Preferences.userRoot().node(BrowserWrapper.class.getName());
-
-    /**
-     * Converts target file to PDF using the corresponding browser.
-     * @param inputPath full path to target HTML file
-     * @param outputPath full path to the output PDF file
-     */
-    public abstract void print(String inputPath, String outputPath) throws IOException;
-
-    /**
-     * Frees up the resources in use by this particular wrapper. Using the wrapper after calling {@link BrowserWrapper#close()} will throw exceptions.
-     */
-    @Override
-    public abstract void close() throws IOException;
 
     static {
         try {
@@ -43,8 +27,11 @@ public abstract class BrowserWrapper implements AutoCloseable {
         }
     }
 
+    protected final String[] DEFAULT_PRINT_ARGS = {"--headless", "--print-to-pdf=\"%s\"", "--no-pdf-header-footer", "--scale=0.3", "%s"};
+
     /**
      * Attempts to find one of the supported browser and if successful, saves it as the default option.
+     *
      * @throws IOException when one of the path resolutions fails really miserably
      */
     private static void init() throws IOException, InterruptedException {
@@ -106,6 +93,7 @@ public abstract class BrowserWrapper implements AutoCloseable {
      * Returns an instance of the {@link BrowserWrapper} subclass corresponding to the default browser for exporting. The default browser
      * is determined automatically by the {@link BrowserWrapper#init()} method. You can change it by locating the Java preferences API storage
      * and manually changing the value.
+     *
      * @return a {@link BrowserWrapper} subclass or null
      */
     public static BrowserWrapper getInstance() throws IOException {
@@ -129,6 +117,7 @@ public abstract class BrowserWrapper implements AutoCloseable {
 
     /**
      * Determines whether the host operating system is Windows or something else (most probably Linux of some kind).
+     *
      * @return {@link BrowserWrapper#OS_WINDOWS} if Windows-based, {@link BrowserWrapper#OS_LINUX} otherwise
      */
     public static String getOS() {
@@ -138,4 +127,18 @@ public abstract class BrowserWrapper implements AutoCloseable {
         }
         return OS_LINUX;
     }
+
+    /**
+     * Converts target file to PDF using the corresponding browser.
+     *
+     * @param inputPath  full path to target HTML file
+     * @param outputPath full path to the output PDF file
+     */
+    public abstract void print(String inputPath, String outputPath) throws IOException;
+
+    /**
+     * Frees up the resources in use by this particular wrapper. Using the wrapper after calling {@link BrowserWrapper#close()} will throw exceptions.
+     */
+    @Override
+    public abstract void close() throws IOException;
 }

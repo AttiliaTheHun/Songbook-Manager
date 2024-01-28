@@ -4,80 +4,92 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-
-<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1">
-   <children>
-      <BorderPane prefHeight="600.0" prefWidth="800.0">
-         <top>
-            <HBox prefHeight="20.0" prefWidth="800.0" BorderPane.alignment="CENTER">
-               <children>
-                  <Label prefWidth="38.0" text="n">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                     <HBox.margin>
-                        <Insets />
-                     </HBox.margin>
-                     <padding>
-                        <Insets left="8.0" />
-                     </padding></Label>
-                  <Label prefWidth="268.0" text="Name">
-                      <font>
-                          <Font name="System Bold" size="12.0" />
-                      </font>
-                     <HBox.margin>
-                        <Insets />
-                     </HBox.margin>
-                     <padding>
-                        <Insets left="8.0" />
-                     </padding></Label>
-                  <Label prefWidth="38.0" text="ID">
-                      <font>
-                          <Font name="System Bold" size="12.0" />
-                      </font>
-                     <HBox.margin>
-                        <Insets />
-                     </HBox.margin>
-                     <padding>
-                        <Insets left="8.0" />
-                     </padding></Label>
-                  <Label alignment="CENTER" prefWidth="450.0" text="URL">
-                      <font>
-                          <Font name="System Bold" size="12.0" />
-                      </font></Label>
-                   <Label alignment="CENTER" prefWidth="60" text="Active">
-                       <font>
-                           <Font name="System Bold" size="12.0" />
-                       </font></Label>
-               </children>
-            </HBox>
-         </top>
-         <bottom>
-            <GridPane fx:id="bottomToolbar" prefHeight="25.0" prefWidth="800.0" BorderPane.alignment="CENTER">
-              <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-              </columnConstraints>
-              <rowConstraints>
-                <RowConstraints minHeight="25.0" prefHeight="25.0" vgrow="SOMETIMES" />
-              </rowConstraints>
-               <children>
-                  <Button fx:id="editSongRecordButton" mnemonicParsing="false" prefWidth="140" text="Edit Song Record" GridPane.columnIndex="0" />
-                  <Button fx:id="editSongHTMLButton" mnemonicParsing="false" prefWidth="140" text="Edit Song HTML" GridPane.columnIndex="1" />
-                  <Button fx:id="viewSongButton" mnemonicParsing="false" prefWidth="140" text="View Song" GridPane.columnIndex="2" />
-                  <Button fx:id="previewPDFButton" mnemonicParsing="false" prefWidth="140" text="Preview PDF" GridPane.columnIndex="3" />
-                  <Button fx:id="deleteSongButton" mnemonicParsing="false" prefWidth="140" text="Delete Song" GridPane.columnIndex="4" />
-                  <Button fx:id="addSongButton" mnemonicParsing="false" prefWidth="140" text="Add New Song" GridPane.columnIndex="5" />
-               </children>
-            </GridPane>
-         </bottom>
-         <center>
-            <TabPane fx:id="tabbedPane" maxHeight="1.7976931348623157E308" prefHeight="400.0" prefWidth="800.0" side="BOTTOM" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER" />
-         </center>
-      </BorderPane>
-   </children>
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" prefHeight="600.0" prefWidth="800.0"
+            xmlns="http://javafx.com/javafx/17.0.2-ea">
+    <children>
+        <BorderPane prefHeight="600.0" prefWidth="800.0">
+            <top>
+                <HBox prefHeight="20.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+                    <children>
+                        <Label prefWidth="38.0" text="n">
+                            <font>
+                                <Font name="System Bold" size="12.0"/>
+                            </font>
+                            <HBox.margin>
+                                <Insets/>
+                            </HBox.margin>
+                            <padding>
+                                <Insets left="8.0"/>
+                            </padding>
+                        </Label>
+                        <Label prefWidth="268.0" text="Name">
+                            <font>
+                                <Font name="System Bold" size="12.0"/>
+                            </font>
+                            <HBox.margin>
+                                <Insets/>
+                            </HBox.margin>
+                            <padding>
+                                <Insets left="8.0"/>
+                            </padding>
+                        </Label>
+                        <Label prefWidth="38.0" text="ID">
+                            <font>
+                                <Font name="System Bold" size="12.0"/>
+                            </font>
+                            <HBox.margin>
+                                <Insets/>
+                            </HBox.margin>
+                            <padding>
+                                <Insets left="8.0"/>
+                            </padding>
+                        </Label>
+                        <Label alignment="CENTER" prefWidth="450.0" text="URL">
+                            <font>
+                                <Font name="System Bold" size="12.0"/>
+                            </font>
+                        </Label>
+                        <Label alignment="CENTER" prefWidth="60" text="Active">
+                            <font>
+                                <Font name="System Bold" size="12.0"/>
+                            </font>
+                        </Label>
+                    </children>
+                </HBox>
+            </top>
+            <bottom>
+                <GridPane fx:id="bottomToolbar" prefHeight="25.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints minHeight="25.0" prefHeight="25.0" vgrow="SOMETIMES"/>
+                    </rowConstraints>
+                    <children>
+                        <Button fx:id="editSongRecordButton" mnemonicParsing="false" prefWidth="140"
+                                text="Edit Song Record" GridPane.columnIndex="0"/>
+                        <Button fx:id="editSongHTMLButton" mnemonicParsing="false" prefWidth="140" text="Edit Song HTML"
+                                GridPane.columnIndex="1"/>
+                        <Button fx:id="viewSongButton" mnemonicParsing="false" prefWidth="140" text="View Song"
+                                GridPane.columnIndex="2"/>
+                        <Button fx:id="previewPDFButton" mnemonicParsing="false" prefWidth="140" text="Preview PDF"
+                                GridPane.columnIndex="3"/>
+                        <Button fx:id="deleteSongButton" mnemonicParsing="false" prefWidth="140" text="Delete Song"
+                                GridPane.columnIndex="4"/>
+                        <Button fx:id="addSongButton" mnemonicParsing="false" prefWidth="140" text="Add New Song"
+                                GridPane.columnIndex="5"/>
+                    </children>
+                </GridPane>
+            </bottom>
+            <center>
+                <TabPane fx:id="tabbedPane" maxHeight="1.7976931348623157E308" prefHeight="400.0" prefWidth="800.0"
+                         side="BOTTOM" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER"/>
+            </center>
+        </BorderPane>
+    </children>
 </AnchorPane>

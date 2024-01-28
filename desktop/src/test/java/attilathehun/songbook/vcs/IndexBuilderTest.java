@@ -11,7 +11,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class IndexBuilderTest {
 
@@ -60,15 +61,15 @@ class IndexBuilderTest {
         Index remote = createTestRemoteIndex(27);
         LoadIndex index = builder.createLoadIndex(local, remote);
 
-        assertEquals(((ArrayList<String>)index.getMissing().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 0);
-        assertEquals(((ArrayList<String>)index.getMissing().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>)index.getMissing().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song3");
-        assertEquals(((ArrayList<String>)index.getOutdated().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>)index.getOutdated().get(StandardCollectionManager.getInstance().getCollectionName())).get(0), "song2");
-        assertEquals(((ArrayList<String>)index.getOutdated().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>)index.getOutdated().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song1");
+        assertEquals(((ArrayList<String>) index.getMissing().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 0);
+        assertEquals(((ArrayList<String>) index.getMissing().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
+        assertEquals(((ArrayList<String>) index.getMissing().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song3");
+        assertEquals(((ArrayList<String>) index.getOutdated().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 1);
+        assertEquals(((ArrayList<String>) index.getOutdated().get(StandardCollectionManager.getInstance().getCollectionName())).get(0), "song2");
+        assertEquals(((ArrayList<String>) index.getOutdated().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
+        assertEquals(((ArrayList<String>) index.getOutdated().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song1");
         assertEquals(index.getCollections().size(), 1);
-        assertEquals(((ArrayList<String>)index.getCollections()).get(0), EasterCollectionManager.getInstance().getCollectionName());
+        assertEquals(((ArrayList<String>) index.getCollections()).get(0), EasterCollectionManager.getInstance().getCollectionName());
 
     }
 
@@ -78,18 +79,18 @@ class IndexBuilderTest {
         Index local = createTestLocalIndex(27);
         Index remote = createTestRemoteIndex(12);
         SaveIndex index = builder.createSaveIndex(local, remote);
-        assertEquals(((ArrayList<String>)index.getAdditions().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>)index.getAdditions().get(StandardCollectionManager.getInstance().getCollectionName())).get(0), "song3");
-        assertEquals(((ArrayList<String>)index.getAdditions().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 0);
-        assertEquals(((ArrayList<String>)index.getDeletions().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 0);
-        assertEquals(((ArrayList<String>)index.getDeletions().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>)index.getDeletions().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song3");
-        assertEquals(((ArrayList<String>)index.getChanges().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>)index.getChanges().get(StandardCollectionManager.getInstance().getCollectionName())).get(0), "song2");
-        assertEquals(((ArrayList<String>)index.getChanges().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>)index.getChanges().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song1");
+        assertEquals(((ArrayList<String>) index.getAdditions().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 1);
+        assertEquals(((ArrayList<String>) index.getAdditions().get(StandardCollectionManager.getInstance().getCollectionName())).get(0), "song3");
+        assertEquals(((ArrayList<String>) index.getAdditions().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 0);
+        assertEquals(((ArrayList<String>) index.getDeletions().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 0);
+        assertEquals(((ArrayList<String>) index.getDeletions().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
+        assertEquals(((ArrayList<String>) index.getDeletions().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song3");
+        assertEquals(((ArrayList<String>) index.getChanges().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 1);
+        assertEquals(((ArrayList<String>) index.getChanges().get(StandardCollectionManager.getInstance().getCollectionName())).get(0), "song2");
+        assertEquals(((ArrayList<String>) index.getChanges().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
+        assertEquals(((ArrayList<String>) index.getChanges().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song1");
         assertEquals(index.getCollections().size(), 1);
-        assertEquals(((ArrayList<String>)index.getCollections()).get(0), EasterCollectionManager.getInstance().getCollectionName());
+        assertEquals(((ArrayList<String>) index.getCollections()).get(0), EasterCollectionManager.getInstance().getCollectionName());
         assertTrue(index.getVersionTimestamp() > -1);
     }
 

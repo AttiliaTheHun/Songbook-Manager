@@ -10,11 +10,14 @@ public class Frontpage extends Plugin {
         PluginManager.registerPlugin(this);
     }
 
+    public static Plugin getInstance() {
+        return instance;
+    }
+
     @Override
     public String getName() {
         return name;
     }
-
 
     @Override
     public int execute() {
@@ -26,10 +29,6 @@ public class Frontpage extends Plugin {
         PluginSettings settings = new PluginSettings();
         settings.put("enabled", Boolean.TRUE);
         return settings;
-    }
-
-    public static Plugin getInstance() {
-        return instance;
     }
 
 }

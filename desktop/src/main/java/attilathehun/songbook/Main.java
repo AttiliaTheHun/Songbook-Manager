@@ -1,8 +1,5 @@
 package attilathehun.songbook;
 
-import attilathehun.songbook.plugin.PluginManager;
-import attilathehun.songbook.window.SongbookApplication;
-
 public class Main {
 
     public static void main(String[] args) {
