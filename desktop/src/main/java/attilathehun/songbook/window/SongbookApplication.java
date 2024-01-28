@@ -26,6 +26,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import com.github.kwhat.jnativehook.GlobalScreen;
 import javafx.stage.WindowEvent;
@@ -56,9 +57,9 @@ public class SongbookApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-       CodeEditor.open((Song)((ArrayList) StandardCollectionManager.getInstance().getCollection()).get(0), StandardCollectionManager.getInstance());
 
-        stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+
+        /*stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent t) {
                 CodeEditorV1.setApplicationClosed();
@@ -69,7 +70,7 @@ public class SongbookApplication extends Application {
 
             }
         });
-
+*/
 
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("songbook-view.fxml"));
         AnchorPane root = fxmlLoader.load();
@@ -82,6 +83,14 @@ public class SongbookApplication extends Application {
         stage.setScene(scene);
         initKeyboardShortcuts(stage);
         stage.show();
+
+        AlertDialog alert = new AlertDialog.Builder().setIcon(AlertDialog.Builder.Icon.INFO).setTitle("Warning").setMessage("The changes you have made in this session will be discarded. Do you want to proceed?hjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj").addOkButton("Discard").addCloseButton("Cancel").build();
+        CompletableFuture<Integer> result = alert.awaitResult();
+        result.thenAccept(dialogResult -> {
+            System.out.println(dialogResult);
+        });
+
+
     }
 
     private static void registerNativeHook(Stage stage) {
