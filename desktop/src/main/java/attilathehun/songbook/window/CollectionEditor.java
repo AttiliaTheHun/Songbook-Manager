@@ -119,7 +119,8 @@ public class CollectionEditor extends Stage {
         editSongHTMLButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                Environment.showMessage("Songbook Manager Collection Editor", "Select a song first!", null);
+                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
+                //Environment.showMessage("SongbookManager Collection Editor", "Select a song first!", null);
                 return;
             }
             if (selectedManager == null) {
@@ -130,7 +131,7 @@ public class CollectionEditor extends Stage {
         editSongRecordButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                Environment.showMessage("Songbook Manager Collection Editor", "Select a song first!", null);
+                Environment.showMessage("SongbookManager Collection Editor", "Select a song first!", null);
                 return;
             }
 

@@ -6,6 +6,8 @@ import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.collection.CollectionManager;
 
 import javax.swing.*;
+
+import javafx.application.Platform;
 import javafx.scene.control.*;
 import java.io.*;
 import java.nio.file.Files;
@@ -29,7 +31,7 @@ public final class Environment {
     public final Settings settings = Settings.getSettings();
 
     private static final Environment instance = new Environment();
-    private Map<String, CollectionManager> collectionManagers = new HashMap<>();
+    private final Map<String, CollectionManager> collectionManagers = new HashMap<>();
 
     private CollectionManager selectedCollectionManager;
 
@@ -85,6 +87,7 @@ public final class Environment {
 
     }
 
+    @Deprecated
     public static void showMessage(String title, String header, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
@@ -93,6 +96,7 @@ public final class Environment {
         alert.show();
     }
 
+    @Deprecated
     public static void showErrorMessage(String title, String header, String message, boolean fatal) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
@@ -104,10 +108,12 @@ public final class Environment {
         }
     }
 
+    @Deprecated
     public static void showErrorMessage(String title, String header, String message) {
         showErrorMessage(title, header, message, false);
     }
 
+    @Deprecated
     public static void showWarningMessage(String title, String header, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
@@ -116,6 +122,7 @@ public final class Environment {
         alert.show();
     }
 
+    @Deprecated
     public static boolean showConfirmMessage(String title, String header, String message) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setHeaderText(header);
@@ -151,8 +158,8 @@ public final class Environment {
     }
 
     /**
-     * Returns the default Collection Manager.
-     * @return default Collection Manager (Standard Collection Manager if null)
+     * Returns the default CollectionManager.
+     * @return default Collection Manager ({@link StandardCollectionManager} if null)
      */
     public CollectionManager getCollectionManager() {
         if (selectedCollectionManager == null) {
@@ -161,17 +168,27 @@ public final class Environment {
         return selectedCollectionManager;
     }
 
-    public void setCollectionManager(CollectionManager collectionManager) {
+    /**
+     * Sets the default CollectionManager.
+     * @param collectionManager the manager
+     */
+    public void setCollectionManager(final CollectionManager collectionManager) {
         this.selectedCollectionManager = collectionManager;
     }
 
-    public void registerCollectionManager(CollectionManager collectionManager) {
+    public void registerCollectionManager(final CollectionManager collectionManager) {
+        if (collectionManager == null) {
+            throw new IllegalArgumentException("manager is null");
+        }
         this.settings.collections.putIfAbsent(collectionManager.getCollectionName(), collectionManager.getSettings());
         Settings.save(this.settings);
         collectionManagers.put(collectionManager.getCollectionName(), collectionManager);
     }
 
-    public void unregisterCollectionManager(CollectionManager collectionManager) {
+    public void unregisterCollectionManager(final CollectionManager collectionManager) {
+        if (collectionManager == null) {
+            throw new IllegalArgumentException("manager is null");
+        }
         this.settings.collections.remove(collectionManager.getCollectionName());
         Settings.save(this.settings);
         collectionManagers.remove(collectionManager.getCollectionName());
@@ -187,7 +204,7 @@ public final class Environment {
 
     public void exit() {
         Settings.save(settings);
-        System.exit(0);
+        Platform.exit();
     }
 
     @Deprecated
@@ -229,7 +246,14 @@ public final class Environment {
         }
     }
 
+    /**
+     * Registers an {@link EnvironmentStateListener}, allowing it to receive Environment-related events.
+     * @param listener the listener
+     */
     public static void addListener(EnvironmentStateListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("listener is null");
+        }
         listeners.add(listener);
     }
 

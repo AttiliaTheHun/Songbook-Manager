@@ -84,11 +84,11 @@ public class SongbookApplication extends Application {
         initKeyboardShortcuts(stage);
         stage.show();
 
-        AlertDialog alert = new AlertDialog.Builder().setIcon(AlertDialog.Builder.Icon.INFO).setTitle("Warning").setMessage("The changes you have made in this session will be discarded. Do you want to proceed?hjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj").addOkButton("Discard").addCloseButton("Cancel").build();
+        /*AlertDialog alert = new AlertDialog.Builder().setIcon(AlertDialog.Builder.Icon.INFO).setTitle("Warning").setMessage("The changes you have made in this session will be discarded. Do you want to proceed?hjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj").addOkButton("Discard").addCloseButton("Cancel").build();
         CompletableFuture<Integer> result = alert.awaitResult();
         result.thenAccept(dialogResult -> {
             System.out.println(dialogResult);
-        });
+        });*/
 
 
     }

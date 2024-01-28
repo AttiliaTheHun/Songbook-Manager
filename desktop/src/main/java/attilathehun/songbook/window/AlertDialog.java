@@ -32,6 +32,9 @@ public class AlertDialog extends Stage {
     private Button closeButton;
     private Button extraButton;
     private boolean FLAG_AUTO_CANCEL = true;
+    private Builder.Action okButtonAction = null;
+    private Builder.Action closeButtonAction = null;
+    private Builder.Action extraButtonAction = null;
 
     /**
      * Creates an unresizable decorated stage with the given title.
@@ -62,17 +65,31 @@ public class AlertDialog extends Stage {
         CompletableFuture<Integer> result = new CompletableFuture<>();
         if (okButton != null) {
             okButton.setOnAction((event) -> {
-                result.complete(RESULT_OK);
+                if (okButtonAction == null) {
+                    result.complete(RESULT_OK);
+                    close();
+                } else {
+                    okButtonAction.perform();
+                }
             });
         }
        if (closeButton != null) {
            closeButton.setOnAction((event) -> {
-               result.complete(RESULT_CLOSE);
+               if (closeButtonAction == null) {
+                   result.complete(RESULT_CLOSE);
+                   close();
+               } else {
+                   closeButtonAction.perform();
+               }
            });
        }
        if (extraButton != null) {
            extraButton.setOnAction((event) -> {
-               result.complete(RESULT_EXTRA);
+               if (extraButtonAction == null) {
+                   result.complete(RESULT_EXTRA);
+               } else {
+                   extraButtonAction.perform();
+               }
            });
        }
        setOnCloseRequest((event) -> {
@@ -81,8 +98,44 @@ public class AlertDialog extends Stage {
                event.consume();
            }
        });
-
         return result;
+   }
+
+    /**
+     * Shows the dialog without returning any result. By default, the Ok, Close and Cancel buttons close the dialog.
+     */
+   public void open() {
+       show();
+       if (okButton != null) {
+           okButton.setOnAction((event) -> {
+               if (okButtonAction == null) {
+                   close();
+               } else {
+                   okButtonAction.perform();
+               }
+           });
+       }
+       if (closeButton != null) {
+           closeButton.setOnAction((event) -> {
+               if (closeButtonAction == null) {
+                   close();
+               } else {
+                   closeButtonAction.perform();
+               }
+           });
+       }
+       if (extraButton != null) {
+           extraButton.setOnAction((event) -> {
+               if (extraButtonAction != null) {
+                   extraButtonAction.perform();
+               }
+           });
+       }
+       setOnCloseRequest((event) -> {
+           if (!FLAG_AUTO_CANCEL) {
+               event.consume();
+           }
+       });
    }
 
     /**
@@ -93,7 +146,11 @@ public class AlertDialog extends Stage {
      * @param extraButtonText text on the rightmost button
      * @param icon dialog icon (see {@link Builder.Icon})
      */
-    private void createScene(final String message, final String okButtonText, final String closeButtonText, final String extraButtonText, final String icon) {
+    private void createScene(final String message, final String okButtonText, final String closeButtonText, final String extraButtonText, final String icon,
+                             final Builder.Action okButtonAction, final Builder.Action closeButtonAction, final Builder.Action extraButtonAction) {
+        this.okButtonAction = okButtonAction;
+        this.closeButtonAction = closeButtonAction;
+        this.extraButtonAction = extraButtonAction;
         BorderPane root = new BorderPane();
         messageField = new Label(message);
         messageField.setWrapText(true);
@@ -120,16 +177,16 @@ public class AlertDialog extends Stage {
         // we want to add only the buttons that are desired (their text is not empty)
         ArrayList<Button> buttons = new ArrayList<>();
         if (okButtonText != null && okButtonText.length() != 0) {
-            okButton = new Button(okButtonText);
-            buttons.add(okButton);
+                okButton = new Button(okButtonText);
+                buttons.add(okButton);
         }
         if (closeButtonText != null && closeButtonText.length() != 0) {
-            closeButton = new Button(closeButtonText);
-            buttons.add(closeButton);
+                closeButton = new Button(closeButtonText);
+                buttons.add(closeButton);
         }
         if (extraButtonText != null && extraButtonText.length() != 0) {
-            extraButton = new Button(extraButtonText);
-            buttons.add(extraButton);
+                extraButton = new Button(extraButtonText);
+                buttons.add(extraButton);
         }
 
         // make the width distribution even for each column
@@ -167,8 +224,11 @@ public class AlertDialog extends Stage {
         private String title = "";
         private String message = "";
         private String okButtonText = "";
+        private Action okButtonAction = null;
         private String closeButtonText = "";
+        private Action closeButtonAction = null;
         private String extraButtonText = "";
+        private Action extraButtonAction = null;
         private String icon = "";
         private Window parent;
         private boolean cancelable = true;
@@ -224,6 +284,22 @@ public class AlertDialog extends Stage {
         }
 
         /**
+         * Adds another button to the dialog with a custom button text and a custom action to be performed when the button is clicked. This button will then
+         * as a result return {@link AlertDialog#RESULT_OK}. Calling this method multiple times will override the button.
+         * @param buttonText text to appear on the button
+         * @param a the callback action
+         * @return this
+         */
+        public Builder addOkButton(final String buttonText, final Action a) {
+            okButtonAction = a;
+            if (buttonText == null) {
+                return addOkButton();
+            }
+            okButtonText = buttonText;
+            return this;
+        }
+
+        /**
          * Adds another button to the dialog with default button text. This button will then as a result return {@link AlertDialog#RESULT_CLOSE}.
          * Calling this method multiple times will not create any additional buttons.
          * @return this
@@ -248,6 +324,22 @@ public class AlertDialog extends Stage {
         }
 
         /**
+         * Adds another button to the dialog with a custom button text and a custom action to be performed when the button is clicked. This button will then
+         * as a result return {@link AlertDialog#RESULT_CLOSE}. Calling this method multiple times will override the button.
+         * @param buttonText text to appear on the button
+         * @param a the callback action
+         * @return this
+         */
+        public Builder addCloseButton(final String buttonText, final Action a) {
+            closeButtonAction = a;
+            if (buttonText == null) {
+                return addCloseButton();
+            }
+            closeButtonText = buttonText;
+            return this;
+        }
+
+        /**
          * Adds another button to the dialog with default button text. This button will then as a result return {@link AlertDialog#RESULT_EXTRA}.
          * Calling this method multiple times will not create any additional buttons.
          * @return this
@@ -264,6 +356,22 @@ public class AlertDialog extends Stage {
          * @return this
          */
         public Builder addExtraButton(final String buttonText) {
+            if (buttonText == null) {
+                return addExtraButton();
+            }
+            extraButtonText = buttonText;
+            return this;
+        }
+
+        /**
+         * Adds another button to the dialog with a custom button text and a custom action to be performed when the button is clicked. This button will then
+         * as a result return {@link AlertDialog#RESULT_EXTRA}. Calling this method multiple times will override the button.
+         * @param buttonText text to appear on the button
+         * @param a the callback action
+         * @return this
+         */
+        public Builder addExtraButton(final String buttonText, final Action a) {
+            extraButtonAction = a;
             if (buttonText == null) {
                 return addExtraButton();
             }
@@ -309,7 +417,7 @@ public class AlertDialog extends Stage {
          */
         public AlertDialog build() {
             AlertDialog target = new AlertDialog(title);
-            target.createScene(message, okButtonText, closeButtonText, extraButtonText, icon);
+            target.createScene(message, okButtonText, closeButtonText, extraButtonText, icon, okButtonAction, closeButtonAction, extraButtonAction);
             if (parent != null) {
                 target.initOwner(parent);
                 target.initModality(Modality.WINDOW_MODAL);
@@ -320,10 +428,10 @@ public class AlertDialog extends Stage {
 
 
         /**
-         * This class represent the only available options as an AlertDialog icon. The AlertDialog class uses the original icons from JavaFX.
+         * This class represent the only available options for an AlertDialog icon. The AlertDialog class uses the original icons from JavaFX.
          */
-        public static enum Icon {
-            // if you ask where I got these paths, I asked ChatGPT lol
+        public enum Icon {
+            // if you ask me where I got these paths, I asked ChatGPT lol
             INFO("/com/sun/javafx/scene/control/skin/caspian/dialog-information.png"),
             WARNING("/com/sun/javafx/scene/control/skin/caspian/dialog-warning.png"),
             ERROR("/com/sun/javafx/scene/control/skin/caspian/dialog-error.png");
@@ -340,6 +448,10 @@ public class AlertDialog extends Stage {
             public String toFile() {
                 return file;
             }
+        }
+
+        public interface Action {
+            void perform();
         }
     }
 }
