@@ -100,23 +100,5 @@
     "name": "Bilbova ukolébavka",
     "active": false,
     "url": ""
-  },
-  {
-    "id": 17,
-    "name": "New Song 1",
-    "active": true,
-    "url": ""
-  },
-  {
-    "id": 18,
-    "name": "Hahajo",
-    "active": true,
-    "url": ""
-  },
-  {
-    "id": 19,
-    "name": "New Song 3",
-    "active": true,
-    "url": ""
   }
 ]

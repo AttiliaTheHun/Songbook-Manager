@@ -9,9 +9,6 @@ import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -21,15 +18,9 @@ import javafx.stage.Stage;
 
 import java.awt.*;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import com.github.kwhat.jnativehook.GlobalScreen;
-import javafx.stage.WindowEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -77,7 +68,7 @@ public class SongbookApplication extends Application {
         stage.setMaximized(true);
         Scene scene = new Scene(root, 1000, 800);
 
-        registerNativeHook(stage);
+        registerNativeHook();
 
         stage.setTitle("Songbook Manager");
         stage.setScene(scene);
@@ -93,7 +84,7 @@ public class SongbookApplication extends Application {
 
     }
 
-    private static void registerNativeHook(Stage stage) {
+    private static void registerNativeHook() {
         try {
             GlobalScreen.registerNativeHook();
             GlobalScreen.addNativeKeyListener(new NativeKeyListener() {
@@ -124,47 +115,44 @@ public class SongbookApplication extends Application {
     }
 
     private void initKeyboardShortcuts(Stage stage) {
-        stage.getScene().setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                switch (keyEvent.getCode()) {
-                    case LEFT, PAGE_DOWN -> {
-                        Environment.notifyOnPageTurnedBack();
+        stage.getScene().setOnKeyPressed(keyEvent -> {
+            switch (keyEvent.getCode()) {
+                case LEFT, PAGE_DOWN -> {
+                    Environment.notifyOnPageTurnedBack();
 
+                }
+                case RIGHT, PAGE_UP -> {
+                    Environment.notifyOnPageTurnedForward();
+                }
+                case R -> { //refresh
+                    if (keyEvent.isControlDown()) {
+                        Environment.getInstance().getCollectionManager().init();
+                        Environment.getInstance().refresh();
+                        EnvironmentVerificator.automated();
                     }
-                    case RIGHT, PAGE_UP -> {
-                        Environment.notifyOnPageTurnedForward();
+                }
+                case S -> { //save
+                    if (keyEvent.isControlDown()) {
+                        new EnvironmentManager().save();
                     }
-                    case R -> { //refresh
-                        if (keyEvent.isControlDown()) {
-                            Environment.getInstance().getCollectionManager().init();
-                            Environment.getInstance().refresh();
-                            EnvironmentVerificator.automated();
+                }
+                case L -> { //load
+                    if (keyEvent.isControlDown()) {
+                        new EnvironmentManager().load();
+                    }
+                }
+                case H -> { //help
+                    if (keyEvent.isControlDown()) {
+                        try {
+                            Desktop.getDesktop().browse(new URL("https://github.com/AttiliaTheHun/Songbook-Manager/wiki/English").toURI());
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
-                    case S -> { //save
-                        if (keyEvent.isControlDown()) {
-                            new EnvironmentManager().save();
-                        }
-                    }
-                    case L -> { //load
-                        if (keyEvent.isControlDown()) {
-                            new EnvironmentManager().load();
-                        }
-                    }
-                    case H -> { //help
-                        if (keyEvent.isControlDown()) {
-                            try {
-                                Desktop.getDesktop().browse(new URL("https://github.com/AttiliaTheHun/Songbook-Manager/wiki/English").toURI());
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                    case O -> { //open song link
-                        if (keyEvent.isControlDown()) {
-                           openAssociatedLink();
-                        }
+                }
+                case O -> { //open song link
+                    if (keyEvent.isControlDown()) {
+                       openAssociatedLink();
                     }
                 }
             }

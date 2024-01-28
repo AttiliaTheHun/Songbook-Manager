@@ -1,10 +1,7 @@
 package attilathehun.songbook.window;
 
 import attilathehun.annotation.TODO;
-import attilathehun.songbook.collection.CollectionManager;
-import attilathehun.songbook.collection.EasterCollectionManager;
-import attilathehun.songbook.collection.Song;
-import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.export.PDFGenerator;
@@ -29,9 +26,11 @@ import org.apache.logging.log4j.Logger;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @TODO(priority = true)
-public class CollectionEditor extends Stage {
+public class CollectionEditor extends Stage implements CollectionListener {
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
 
     @FXML
@@ -77,6 +76,7 @@ public class CollectionEditor extends Stage {
             throw  new IllegalStateException();
         }
         instance.show();
+        instance.toFront();
     }
 
     public static CollectionEditor getInstance() {
@@ -119,8 +119,7 @@ public class CollectionEditor extends Stage {
         editSongHTMLButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
-                //Environment.showMessage("SongbookManager Collection Editor", "Select a song first!", null);
+                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setParent(this).setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 return;
             }
             if (selectedManager == null) {
@@ -131,7 +130,7 @@ public class CollectionEditor extends Stage {
         editSongRecordButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                Environment.showMessage("SongbookManager Collection Editor", "Select a song first!", null);
+                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setParent(this).setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 return;
             }
 
@@ -150,7 +149,8 @@ public class CollectionEditor extends Stage {
         viewSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                Environment.showMessage("Songbook Manager Collection Editor", "Select a song first!", null);
+                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setParent(this)
+                        .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 return;
             }
             Environment.navigateWebViewToSong(selectedSong);
@@ -158,27 +158,26 @@ public class CollectionEditor extends Stage {
         previewPDFButton.setOnAction(actionEvent -> {
 
             if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
-                Environment.showMessage("Action aborted", "This feature is a part of the Export plugin. Enable it in settings first!");
+                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor")
+                        .setMessage("This feature is part of the Export plugin. You can enable the export plugin in settings.")
+                        .setParent(this).setIcon(AlertDialog.Builder.Icon.WARNING).addOkButton().build().open();
                 return;
             }
 
             refreshStoredSelection();
 
             if (selectedSong == null) {
-                Environment.showMessage("Songbook Manager Collection Editor", "Select a song first!", null);
+                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setParent(this)
+                        .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 return;
             }
 
-            Platform.runLater(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-
-                        Desktop.getDesktop().open(new File(new PDFGenerator(selectedManager).generatePreview(selectedSong)));
-                    } catch (Exception ex) {
-                        logger.error(ex.getMessage(), ex);
-                        Environment.showErrorMessage("Error", ex.getMessage(), null);
-                    }
+            Platform.runLater(() -> {
+                try {
+                    Desktop.getDesktop().open(new File(new PDFGenerator(selectedManager).generatePreview(selectedSong)));
+                } catch (Exception ex) {
+                    logger.error(ex.getMessage(), ex);
+                    new AlertDialog.Builder().setTitle("Error").setMessage(ex.getLocalizedMessage()).setParent(this).setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 }
             });
 
@@ -186,57 +185,39 @@ public class CollectionEditor extends Stage {
         deleteSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                Environment.showMessage("Songbook Manager Collection Editor", "Select a song first!", null);
+                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setParent(this).setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 return;
             }
 
-            boolean confirmed = false;
             if (SongbookApplication.isShiftPressed()) {
-                confirmed = true;
-            } else {
-                String message = "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?";
-                confirmed = Environment.showConfirmMessage("Songbook Manager Collection Editor", String.format("Delete song '%s' id:%s?", selectedSong.name(), selectedSong.id()), message);
-            }
-            if (confirmed) {
                 selectedManager.removeSong(selectedSong);
-                //TODO refresh list
-                selectedSong = null;
-            }
-
+            } else {
+                CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle(String.format("Delete song '%s' id:%s?", selectedSong.name(), selectedSong.id()))
+                        .setMessage("Deleting a song is not reversible. Alternatively, you can hide it by deactivating it. Are you sure you want to proceed?")
+                        .setParent(this).setIcon(AlertDialog.Builder.Icon.WARNING).addOkButton("Delete").addCloseButton("Cancel").build().awaitResult();
+                result.thenAccept(dialogResult -> {
+                    if (dialogResult == AlertDialog.RESULT_OK) {
+                        selectedManager.removeSong(selectedSong);
+                    }
+                });
+             }
         });
     }
 
-    //TODO
     public void initKeyboardShortcuts() {
 
-        this.getScene().setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                switch (keyEvent.getCode()) {
-                    case DELETE -> {
+        this.getScene().setOnKeyPressed(keyEvent -> {
+            switch (keyEvent.getCode()) {
+                case DELETE -> {
+                    deleteSongButton.fire();
+                }
+                case R -> {
+                    if (keyEvent.isControlDown()) {
                         refreshStoredSelection();
-                        boolean confirmed = false;
-                        if (keyEvent.isShiftDown()) {
-                            confirmed = true;
-                        } else {
-                            String message = "Deleting a song is permanent - irreversible. If you only want to hide it from the songbook, try deactivating it. Are you sure you want to proceed?";
-                            confirmed = Environment.showConfirmMessage("Delete song", String.format("Delete song '%s' id:%s ?", selectedSong.name(), selectedSong.id()), message);
-                        }
-                        if (confirmed) {
-                            selectedManager.removeSong(selectedSong);
-                            //TODO refresh list
-                            selectedSong = null;
-                        }
-                    }
-                    case R -> {
-                        if (keyEvent.isControlDown()) {
-                            refreshStoredSelection();
-                            //TODO refresh list
-                        }
+                        refreshCurrentList();
                     }
                 }
-
-
+                case ESCAPE -> shut();
             }
         });
     }
@@ -246,15 +227,45 @@ public class CollectionEditor extends Stage {
         selectedManager = ((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).getManager();
     }
 
-    public class CollectionPanel extends Tab {
+    private void refreshCurrentList() {
+        ((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).refresh();
+    }
+
+    @Override
+    public void onSongRemoved(Song s, CollectionManager m) {
+        for (Tab panel : tabbedPane.getTabs()) {
+            if (((CollectionPanel) panel).getManager().equals(m)) {
+                ((CollectionPanel) panel).refresh();
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void onSongUpdated(Song s, CollectionManager m) {
+        for (Tab panel : tabbedPane.getTabs()) {
+            if (((CollectionPanel) panel).getManager().equals(m)) {
+                ((CollectionPanel) panel).refresh();
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void onSongAdded(Song s, CollectionManager m) {
+        for (Tab panel : tabbedPane.getTabs()) {
+            if (((CollectionPanel) panel).getManager().equals(m)) {
+                ((CollectionPanel) panel).refresh();
+                break;
+            }
+        }
+    }
+
+    public static class CollectionPanel extends Tab {
         private static final Logger logger = LogManager.getLogger(CollectionPanel.class);
 
         private CollectionManager manager;
         private ListView<Song> list;
-
-        private CollectionPanel() {
-            throw new RuntimeException("Constructor not allowed!");
-        }
 
         private CollectionPanel(CollectionManager manager) {
             if (manager == null) {
