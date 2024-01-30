@@ -13,7 +13,7 @@ public class DynamicSonglist extends Plugin {
     private static final Logger logger = LogManager.getLogger(DynamicSonglist.class);
     private static final DynamicSonglist instance = new DynamicSonglist();
 
-    private final String name = DynamicSonglist.class.getSimpleName();
+    private PluginSettings settings = null;
 
     private DynamicSonglist() {
         PluginManager.registerPlugin(this);
@@ -25,19 +25,37 @@ public class DynamicSonglist extends Plugin {
 
     @Override
     public String getName() {
-        return name;
+        return DynamicSonglist.class.getSimpleName();
     }
 
     @Override
-    public int execute() {
+    public Object execute() {
         return generateSonglist();
     }
 
     @Override
-    public Plugin.PluginSettings defaultSettings() {
+    public void register() {
+
+    }
+
+    @Override
+    public Plugin.PluginSettings getDefaultSettings() {
         Plugin.PluginSettings settings = new Plugin.PluginSettings();
         settings.put("enabled", Boolean.TRUE);
         return settings;
+    }
+
+    @Override
+    public PluginSettings getSettings() {
+        return (settings == null) ? getDefaultSettings() : settings;
+    }
+
+    @Override
+    public void setSettings(final PluginSettings p) {
+        if (p == null) {
+            throw new IllegalArgumentException("plugin settings cannot be null");
+        }
+        settings = p;
     }
 
     private int generateSonglist() {

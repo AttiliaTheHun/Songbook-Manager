@@ -10,11 +10,11 @@ public class Export extends Plugin {
     private static final String DEFAULT_EXPORT_NAME = "DefaultExport.pdf";
     private static final String SINGLEPAGE_EXPORT_NAME = "SinglepageExport.pdf";
     private static final String PRINTABLE_EXPORT_NAME = "PrintableExport.pdf";
-
     private static final Export instance = new Export();
+    private PluginSettings settings = null;
 
     private Export() {
-        PluginManager.registerPlugin(this);
+
     }
 
     public static Plugin getInstance() {
@@ -27,13 +27,17 @@ public class Export extends Plugin {
     }
 
     @Override
-    public int execute() {
-
-        return 0;
+    public Object execute() {
+        return null;
     }
 
     @Override
-    public PluginSettings defaultSettings() {
+    public void register() {
+        PluginManager.registerPlugin(this);
+    }
+
+    @Override
+    public PluginSettings getDefaultSettings() {
         PluginSettings settings = new PluginSettings();
         settings.put("enabled", Boolean.TRUE);
         settings.put("conversionThreadCount", 20d);
@@ -42,5 +46,19 @@ public class Export extends Plugin {
         settings.put("printableExportName", PRINTABLE_EXPORT_NAME);
         return settings;
     }
+
+    @Override
+    public PluginSettings getSettings() {
+        return (settings == null) ? getDefaultSettings() : settings;
+    }
+
+    @Override
+    public void setSettings(final PluginSettings p) {
+        if (p == null) {
+            throw new IllegalArgumentException("plugin settings cannot be null");
+        }
+        settings = p;
+    }
+
 
 }

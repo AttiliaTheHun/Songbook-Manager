@@ -7,10 +7,15 @@ import com.google.gson.GsonBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.FileWriter;
+import java.io.File;
 import java.io.Serializable;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Misc {
     private static final Logger logger = LogManager.getLogger(Misc.class);
@@ -43,6 +48,26 @@ public class Misc {
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.WARNING)
                     .setMessage("Cannot save object to file!").addOkButton().build().open();
         }
+    }
+
+    public static Set<Class> findAllClassesUsingClassLoader(String packageName) {
+        InputStream stream = ClassLoader.getSystemClassLoader()
+                .getResourceAsStream(packageName.replaceAll("[.]", "/"));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        return reader.lines()
+                .filter(line -> line.endsWith(".class"))
+                .map(line -> getClass(line, packageName))
+                .collect(Collectors.toSet());
+    }
+
+    private static Class getClass(String className, String packageName) {
+        try {
+            return Class.forName(packageName + "."
+                    + className.substring(0, className.lastIndexOf('.')));
+        } catch (ClassNotFoundException e) {
+            // handle the exception
+        }
+        return null;
     }
 
 }

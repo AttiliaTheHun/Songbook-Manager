@@ -27,7 +27,7 @@ public abstract class BrowserWrapper implements AutoCloseable {
         }
     }
 
-    protected final String[] DEFAULT_PRINT_ARGS = {"--headless", "--print-to-pdf=\"%s\"", "--no-pdf-header-footer", "--scale=0.3", "%s"};
+    protected final String[] DEFAULT_PRINT_ARGS = {"--headless", "--print-to-pdf=\"%s\"", "--no-pdf-header-footer", "%s"};
 
     /**
      * Attempts to find one of the supported browser and if successful, saves it as the default option.

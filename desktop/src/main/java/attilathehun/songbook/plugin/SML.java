@@ -10,17 +10,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Songbook Manager Song Mark-up Language utility provider. Provides a simple API to convert
- * SML into HTML and vice versa utilising the Songbook Manager resource templates.
+ * SongbookManager Song Mark-up Language utility provider. Provides a simple API to convert
+ * SML into HTML and vice versa utilising the Songbook Manager resource templates. This plugin
+ * will probably not work if you alter the default resources or use custom ones.
  */
 public class SML extends Plugin {
     protected static final String STRING_PLACEHOLDER = "%s";
     private static final Logger logger = LogManager.getLogger(SML.class);
     private static final SML instance = new SML();
-    private final String name = SML.class.getSimpleName();
+    private PluginSettings settings = null;
 
     private SML() {
-        PluginManager.registerPlugin(this);
     }
 
     public static Plugin getInstance() {
@@ -29,12 +29,17 @@ public class SML extends Plugin {
 
     @Override
     public String getName() {
-        return name;
+        return SML.class.getSimpleName();
     }
 
     @Override
-    public int execute() {
-        return 0;
+    public Object execute() {
+        return null;
+    }
+
+    @Override
+    public void register() {
+        PluginManager.registerPlugin(this);
     }
 
     //TODO
@@ -62,11 +67,24 @@ public class SML extends Plugin {
     }
 
     @Override
-    public PluginSettings defaultSettings() {
+    public PluginSettings getDefaultSettings() {
         PluginSettings settings = new PluginSettings();
         settings.put("enabled", Boolean.TRUE);
         settings.put("engine", new StreamLooper().getName());
         return settings;
+    }
+
+    @Override
+    public PluginSettings getSettings() {
+        return (settings == null) ? getDefaultSettings() : settings;
+    }
+
+    @Override
+    public void setSettings(final PluginSettings p) {
+        if (p == null) {
+            throw new IllegalArgumentException("plugin settings cannot be null");
+        }
+        settings = p;
     }
 
     public static abstract class SMLEngine {
@@ -84,7 +102,6 @@ public class SML extends Plugin {
 
         static {
             if (!(languageTokens.length == types.length && types.length == defaultClasses.length && defaultClasses.length == defaultAttributes.length)) {
-                PluginManager.getInstance().getSettings().get(SML.getInstance().getName()).put("enabled", Boolean.FALSE);
                 logger.error("SML Plugin disabled because of interpreter engine misconfiguration");
                 throw new IllegalStateException("The SML plugin is broken: Cannot load the engine!");
             }
