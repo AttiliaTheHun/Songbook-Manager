@@ -46,7 +46,7 @@ public class Misc {
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.WARNING)
-                    .setMessage("Cannot save object to file!").addOkButton().build().open();
+                    .setMessage(String.format("Cannot save object to file: ", e.getLocalizedMessage())).addOkButton().build().open();
         }
     }
 

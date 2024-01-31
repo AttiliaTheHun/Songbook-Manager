@@ -22,8 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class PDFGenerator {
 
     public static final int PREVIEW_SEGMENT_NUMBER = -1;
-    public static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment%d%s").toString();
-    public static final String PREVIEW_SEGMENT_PATH = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH + "/segment_preview%s").toString();
+    public static final String DEFAULT_SEGMENT_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMP_FILE_PATH") + "/segment%d%s").toString();
+    public static final String PREVIEW_SEGMENT_PATH = Paths.get(Environment.getInstance().getDefaultSettings().get("TEMP_FILE_PATH") + "/segment_preview%s").toString();
     public static final String EXTENSION_HTML = ".html";
     public static final String EXTENSION_PDF = ".pdf";
     private static final Logger logger = LogManager.getLogger(PDFGenerator.class);
@@ -31,9 +31,9 @@ public class PDFGenerator {
     private static final int EXPORT_OPTION_PRINTABLE = 1;
     private static final int EXPORT_OPTION_SINGLEPAGE = 2;
     private static final int EXPORT_OPTION_PREVIEW = 4;
-    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String) PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("defaultExportName")).toString();
-    private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String) PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("singlepageExportName")).toString();
-    private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH, (String) PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("printableExportName")).toString();
+    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get((String) Environment.getInstance().getDefaultSettings().get("OUTPUT_FILE_PATH"), (String) Export.getInstance().getSettings().get("defaultExportName")).toString();
+    private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get((String) Environment.getInstance().getDefaultSettings().get("OUTPUT_FILE_PATH"), (String) Export.getInstance().getSettings().get("singlepageExportName")).toString();
+    private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get((String) Environment.getInstance().getDefaultSettings().get("OUTPUT_FILE_PATH"), (String) Export.getInstance().getSettings().get("printableExportName")).toString();
     private CollectionManager manager;
 
     public PDFGenerator() {
@@ -47,7 +47,7 @@ public class PDFGenerator {
             this.manager = manager.copy();
         }
         try {
-            new File(Environment.getInstance().settings.environment.OUTPUT_FILE_PATH).mkdirs();
+            new File((String) Environment.getInstance().getSettings().get("OUTPUT_FILE_PATH")).mkdirs();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             Environment.showErrorMessage("PDF Generation Error", "Cannot initialize the output folder!", "");
@@ -139,7 +139,7 @@ public class PDFGenerator {
             ut.addSource(String.format(DEFAULT_SEGMENT_PATH, i, EXTENSION_PDF));
         }
         ut.setDestinationFileName(documentName);
-        MemoryUsageSetting settings = MemoryUsageSetting.setupMainMemoryOnly().setTempDir(new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH));
+        MemoryUsageSetting settings = MemoryUsageSetting.setupMainMemoryOnly().setTempDir(new File((String) Environment.getInstance().getSettings().get("TEMP_FILE_PATH")));
         ut.mergeDocuments(settings);
     }
 
@@ -176,7 +176,7 @@ public class PDFGenerator {
 
         public static void performTask(Collection<SegmentDataModel> contentData) throws IOException {
             init(contentData);
-            Thread[] threads = new Thread[((Double) PluginManager.getInstance().getSettings().get(Export.getInstance().getName()).get("conversionThreadCount")).intValue()];
+            Thread[] threads = new Thread[((Double) Export.getInstance().getSettings().get("conversionThreadCount")).intValue()];
             for (int i = 0; i < threads.length; i++) {
                 threads[i] = new Thread(new ExportWorker());
                 threads[i].start();

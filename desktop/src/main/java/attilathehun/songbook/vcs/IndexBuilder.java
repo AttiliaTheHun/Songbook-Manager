@@ -105,13 +105,13 @@ public class IndexBuilder {
 
         Map<String, String> collectionSongs;
         String collectionHash;
-        for (String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
-            BuildWorker.spamCPUAndMemoryWithThreads(listFiles(Environment.getInstance().settings.collections.get(collection).getSongDataFilePath()));
+        for (CollectionManager collectionManager : Environment.getInstance().getRegisteredManagers().values()) {
+            BuildWorker.spamCPUAndMemoryWithThreads(listFiles(collectionManager.getSettings().getSongDataFilePath()));
             collectionSongs = BuildWorker.map;
-            collectionHash = hashGenerator.getHash(new File(Environment.getInstance().settings.collections.get(collection).getCollectionFilePath()));
-            index.getData().put(collection, collectionSongs.keySet());
-            index.getHashes().put(collection, collectionSongs.values());
-            index.getCollections().put(collection, collectionHash);
+            collectionHash = hashGenerator.getHash(new File(collectionManager.getSettings().getCollectionFilePath()));
+            index.getData().put(collectionManager.getCollectionName(), collectionSongs.keySet());
+            index.getHashes().put(collectionManager.getCollectionName(), collectionSongs.values());
+            index.getCollections().put(collectionManager.getCollectionName(), collectionHash);
         }
 
         index.setVersionTimestamp(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
@@ -272,7 +272,7 @@ public class IndexBuilder {
          */
         private static void spamCPUAndMemoryWithThreads(Collection<File> collection) {
             init(collection);
-            Thread[] threads = new Thread[Environment.getInstance().settings.vcs.VCS_THREAD_COUNT];
+            Thread[] threads = new Thread[(int) VCSAdmin.getInstance().getSettings().get("VCS_THREAD_COUNT")];
             for (int i = 0; i < threads.length; i++) {
                 threads[i] = new Thread(new BuildWorker());
                 threads[i].start();

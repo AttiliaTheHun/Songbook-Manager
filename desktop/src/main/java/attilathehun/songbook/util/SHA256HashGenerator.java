@@ -41,7 +41,7 @@ public class SHA256HashGenerator {
         return bytesToHex(encodedhash);
     }
 
-    public String getHash(File file) throws IOException, NoSuchAlgorithmException {
+    public String getHash(File file) throws IOException {
         return getHash(String.join("\n", Files.readAllLines(file.toPath())));
     }
 

@@ -54,7 +54,7 @@ class Client {
 
         conn.connect();
         if (conn.getResponseCode() == 400) {
-            Path outputPath = Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH, "response.zip");
+            Path outputPath = Paths.get((String) Environment.getInstance().getSettings().get("TEMP_FILE_PATH"), "response.zip");
             String fileContent = String.join("\n", Files.readAllLines(Paths.get(indexFileUrl)));
             OutputStream outputStream = conn.getOutputStream();
             outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));

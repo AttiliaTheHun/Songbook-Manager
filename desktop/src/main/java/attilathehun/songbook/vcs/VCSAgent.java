@@ -32,7 +32,7 @@ public class VCSAgent {
                 CacheManager.getInstance().cacheSongbookVersionTimestamp();
             }
             Client client = new Client();
-            String resp = client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_VERSION_TIMESTAMP_URL);
+            String resp = client.httpGet((String) VCSAdmin.getInstance().getSettings().get("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
 
             if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
                 logger.info("Running diagnostics - Invalid server response value");
@@ -63,7 +63,7 @@ public class VCSAgent {
     public int compare() {
         try {
             Client client = new Client();
-            String resp = client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_VERSION_TIMESTAMP_URL);
+            String resp = client.httpGet((String) VCSAdmin.getInstance().getSettings().get("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
 
             if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
                 logger.info(String.join(resp));
@@ -95,7 +95,7 @@ public class VCSAgent {
     public boolean verifyRemoteChanges() throws Exception {
         try {
             Client client = new Client();
-            String resp = client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_VERSION_TIMESTAMP_URL);
+            String resp = client.httpGet((String) VCSAdmin.getInstance().getDefaultSettings().get("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
 
             if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
                 logger.info("Running diagnostics - Invalid server response value");
@@ -121,7 +121,7 @@ public class VCSAgent {
     public boolean verifyLocalChanges() throws Exception {
         try {
             Client client = new Client();
-            String resp = client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_VERSION_TIMESTAMP_URL);
+            String resp = client.httpGet((String) VCSAdmin.getInstance().getSettings().get("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
 
             if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
                 logger.info("Running diagnostics - Invalid server response value");
@@ -153,7 +153,7 @@ public class VCSAgent {
         Client client = new Client();
         Type targetClassType = new TypeToken<Index>() {
         }.getType();
-        String resp = client.httpGet(Environment.getInstance().settings.vcs.REMOTE_DATA_INDEX_URL, token);
+        String resp = client.httpGet((String) VCSAdmin.getInstance().getSettings().get("REMOTE_DATA_INDEX_URL"), token);
         if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
             return null;
         }

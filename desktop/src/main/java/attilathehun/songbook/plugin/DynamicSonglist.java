@@ -13,10 +13,10 @@ public class DynamicSonglist extends Plugin {
     private static final Logger logger = LogManager.getLogger(DynamicSonglist.class);
     private static final DynamicSonglist instance = new DynamicSonglist();
 
-    private PluginSettings settings = null;
+    private PluginSettings settings = getDefaultSettings();
 
     private DynamicSonglist() {
-        PluginManager.registerPlugin(this);
+        PluginManager.getInstance().registerPlugin(this);
     }
 
     public static Plugin getInstance() {
@@ -47,7 +47,7 @@ public class DynamicSonglist extends Plugin {
 
     @Override
     public PluginSettings getSettings() {
-        return (settings == null) ? getDefaultSettings() : settings;
+        return settings;
     }
 
     @Override

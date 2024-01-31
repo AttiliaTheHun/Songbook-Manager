@@ -11,7 +11,7 @@ public class Export extends Plugin {
     private static final String SINGLEPAGE_EXPORT_NAME = "SinglepageExport.pdf";
     private static final String PRINTABLE_EXPORT_NAME = "PrintableExport.pdf";
     private static final Export instance = new Export();
-    private PluginSettings settings = null;
+    private PluginSettings settings = getDefaultSettings();
 
     private Export() {
 
@@ -33,7 +33,7 @@ public class Export extends Plugin {
 
     @Override
     public void register() {
-        PluginManager.registerPlugin(this);
+        PluginManager.getInstance().registerPlugin(this);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class Export extends Plugin {
 
     @Override
     public PluginSettings getSettings() {
-        return (settings == null) ? getDefaultSettings() : settings;
+        return settings;
     }
 
     @Override

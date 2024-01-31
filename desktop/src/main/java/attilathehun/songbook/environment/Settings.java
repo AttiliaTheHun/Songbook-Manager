@@ -2,6 +2,7 @@ package attilathehun.songbook.environment;
 
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.plugin.Plugin;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.vcs.VCSAdmin;
 import com.google.gson.Gson;
@@ -25,116 +26,11 @@ public final class Settings implements Serializable {
 
     private static final Logger logger = LogManager.getLogger(Settings.class);
 
-    public final Environment.EnvironmentSettings environment;
-    public final HashMap<String, CollectionManager.CollectionSettings> collections;
-    public final UserSettings user;
-    public final SongbookSettings songbook;
-    public final PluginManager.Settings plugins;
-    public final VCSAdmin.VCSSettings vcs;
-
-
-    private Settings() {
-        environment = new Environment.EnvironmentSettings();
-        collections = new HashMap<>();
-        user = new UserSettings();
-        songbook = new SongbookSettings();
-        plugins = PluginManager.getInstance().getSettings();
-        vcs = new VCSAdmin.VCSSettings();
-    }
-
-    static Settings getSettings() {
-        try {
-            Path path = Paths.get(Environment.EnvironmentSettings.SETTINGS_FILE_PATH);
-
-            String json = String.join("\n", Files.readAllLines(path));
-
-            Type targetClassType = new TypeToken<Settings>() {
-            }.getType();
-            Settings settings = new Gson().fromJson(json, targetClassType);
-            PluginManager.getInstance().setSettings(settings.plugins);
-            logger.info("Loaded local environment settings");
-            return settings;
-        } catch (NoSuchFileException nsf) {
-
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-        Settings settings = new Settings();
-        if (!Misc.fileExists(Environment.EnvironmentSettings.SETTINGS_FILE_PATH)) {
-            save(settings);
-        }
-
-        return settings;
-    }
-
-    public static boolean save(Settings settings) {
-        try {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(Environment.EnvironmentSettings.SETTINGS_FILE_PATH, false);
-            gson.toJson(settings, writer);
-            writer.close();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Can not export the settings!");
-            return false;
-        }
-        return true;
-    }
-
-
-    public static class UserSettings implements Serializable {
-        private static final Logger logger = LogManager.getLogger(UserSettings.class);
-        public final boolean AUTO_LOAD_DATA;
-        public final AuthType AUTH_TYPE;
-        private final String AUTH_FILE_PATH;
-        private final String DEFAULT_READ_TOKEN;
-
-
-        public UserSettings() {
-            AUTO_LOAD_DATA = false;
-            DEFAULT_READ_TOKEN = "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h";
-            AUTH_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/.auth").toString();
-            AUTH_TYPE = AuthType.TOKEN;
-        }
-
-        public String getDefaultReadToken(Environment.Certificate certificate) {
-            return DEFAULT_READ_TOKEN;
-        }
-
-        public String getAuthFilePath(Environment.Certificate certificate) {
-            return AUTH_FILE_PATH;
-        }
-
-        public enum AuthType implements Serializable {
-            TOKEN {
-                @Override
-                public String toString() {
-                    return "TOKEN";
-                }
-            },
-            PHRASE {
-                @Override
-                public String toString() {
-                    return "PHRASE";
-                }
-            }
-        }
-
-
-    }
-
-    public static class SongbookSettings implements Serializable {
-        private static final Logger logger = LogManager.getLogger(SongbookSettings.class);
-        public final boolean BIND_SONG_TITLES;
-
-        public final Locale language;
-
-        public SongbookSettings() {
-            BIND_SONG_TITLES = true;
-            language = Locale.ENGLISH;
-        }
-
-        //TODO: make another title-author display options
-    }
+    public Environment.EnvironmentSettings environment;
+    public HashMap<String, CollectionManager.CollectionSettings> collections;
+    public UserSettings user;
+    public SongbookSettings songbook;
+    public HashMap<String, Plugin.PluginSettings> plugins;
+    public VCSAdmin.VCSSettings vcs;
 
 }

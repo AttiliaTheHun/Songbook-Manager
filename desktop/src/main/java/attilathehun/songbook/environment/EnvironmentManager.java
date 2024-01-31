@@ -4,6 +4,7 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.plugin.Plugin;
 import attilathehun.songbook.util.ZipBuilder;
 import attilathehun.songbook.vcs.VCSAdmin;
 import attilathehun.songbook.window.AlertDialog;
@@ -16,16 +17,70 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.text.NumberFormat;
+import java.util.Locale;
 
 public class EnvironmentManager {
 
     private static final Logger logger = LogManager.getLogger(EnvironmentManager.class);
 
+    private static final EnvironmentManager INSTANCE = new EnvironmentManager();
+
+    private SongbookSettings songbookSettings = getDefaultSongbookSettings();
+    private UserSettings userSettings = getDefaultUserSettings();
+
+    private EnvironmentManager() {}
+
+    public static EnvironmentManager getInstance() {
+        return INSTANCE;
+    }
+
     @Deprecated
     private static final int ACTION_EDIT = 0;
     @Deprecated
     private static final int ACTION_ADD = 1;
+
+    public SongbookSettings getDefaultSongbookSettings() {
+        SongbookSettings settings = new SongbookSettings();
+        settings.put("BIND_SONG_TITLE", Boolean.TRUE);
+        settings.put("LANGUAGE", Locale.ENGLISH);
+        return settings;
+    }
+
+
+    public SongbookSettings getSongbookSettings() {
+        return songbookSettings;
+    }
+
+
+    public void setSongbookSettings(final SongbookSettings p) {
+        if (p == null) {
+            return;
+        }
+        songbookSettings = p;
+    }
+
+    public UserSettings getDefaultUserSettings() {
+        UserSettings settings = new UserSettings();
+        settings.put("AUTO_LOAD_DATA", Boolean.FALSE);
+        settings.put("DEFAULT_READ_TOKEN", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h");
+        settings.put("AUTH_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/.auth").toString());
+        return settings;
+    }
+
+    public UserSettings getUserSettings() {
+        return userSettings;
+    }
+
+    public void setUserSettings(final UserSettings u) {
+        if (u == null) {
+            return;
+        }
+        userSettings = u;
+    }
+
+
 
     @Deprecated
     public static Song addSongDialog(CollectionManager manager) {
@@ -251,12 +306,12 @@ public class EnvironmentManager {
     }
 
     public void load() {
-        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
+        if ((Boolean) VCSAdmin.getInstance().getSettings().get("REMOTE_SAVE_LOAD_ENABLED")) {
             VCSAdmin.getInstance().pull();
             return;
         }
         logger.info("Importing a local data zip file...");
-        if (!new File(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH).exists()) {
+        if (!new File((String) Environment.getInstance().getSettings().get("DATA_ZIP_FILE_PATH")).exists()) {
             logger.info("Import aborted: file not found!");
             new AlertDialog.Builder().setTitle("Error").setMessage("Could not find a local data zip file. Make sure it is in the same directory as the program.")
             .setIcon(AlertDialog.Builder.Icon.WARNING).addOkButton().build().open();
@@ -275,7 +330,7 @@ public class EnvironmentManager {
 
     private boolean extractLocalDataFile() {
         try {
-            ZipBuilder.extract(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH, Environment.getInstance().settings.environment.DATA_FILE_PATH);
+            ZipBuilder.extract((String) Environment.getInstance().getSettings().get("DATA_ZIP_FILE_PATH"), (String) Environment.getInstance().getDefaultSettings().get("DATA_FILE_PATH"));
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setMessage("Could not extract the data. For complete error message view the log file.")
@@ -286,7 +341,7 @@ public class EnvironmentManager {
     }
 
     public void save() {
-        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
+        if ((Boolean) VCSAdmin.getInstance().getSettings().get("REMOTE_SAVE_LOAD_ENABLED")) {
             VCSAdmin.getInstance().push();
             return;
         }
@@ -304,8 +359,8 @@ public class EnvironmentManager {
 
     private boolean archiveDataToLocalFile() {
         try (ZipBuilder builder = new ZipBuilder()) {
-            builder.setOutputPath(Environment.getInstance().settings.environment.DATA_ZIP_FILE_PATH);
-            builder.addFolderContent(new File(Environment.getInstance().settings.environment.DATA_FILE_PATH), "");
+            builder.setOutputPath((String) Environment.getInstance().getSettings().get("DATA_ZIP_FILE_PATH"));
+            builder.addFolderContent(new File((String) Environment.getInstance().getSettings().get("DATA_FILE_PATH"), ""));
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setMessage("Could not archive the data.")
@@ -318,9 +373,9 @@ public class EnvironmentManager {
     @Deprecated
     public void createNewSongbook() {
         try {
-            File songDataFolder = new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath());
+            File songDataFolder = new File(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath());
             songDataFolder.mkdirs();
-            File collectionJSONFile = new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath());
+            File collectionJSONFile = new File(StandardCollectionManager.getInstance().getSettings().getCollectionFilePath());
             collectionJSONFile.createNewFile();
             PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
             printWriter.write("[]");
@@ -338,13 +393,13 @@ public class EnvironmentManager {
 
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("Error", "Could not create a new songbook!", true);
+            Environment.showErrorMessage("Error", "Could not create a new songbook!");
         }
     }
 
     @Deprecated
     public void loadSongbook() {
-        if (Environment.getInstance().settings.vcs.REMOTE_SAVE_LOAD_ENABLED) {
+        if ((Boolean) VCSAdmin.getInstance().getSettings().get("REMOTE_SAVE_LOAD_ENABLED")) {
             VCSAdmin.getInstance().pull();
             return;
         }
@@ -356,7 +411,7 @@ public class EnvironmentManager {
     }
 
     public void autoLoad() {
-        if (Environment.getInstance().settings.user.AUTO_LOAD_DATA) {
+        if ((Boolean) userSettings.get("AUTO_LOAD_DATA")) {
             load();
         }
     }

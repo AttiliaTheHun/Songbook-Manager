@@ -18,7 +18,7 @@ public class SML extends Plugin {
     protected static final String STRING_PLACEHOLDER = "%s";
     private static final Logger logger = LogManager.getLogger(SML.class);
     private static final SML instance = new SML();
-    private PluginSettings settings = null;
+    private PluginSettings settings = getDefaultSettings();
 
     private SML() {
     }
@@ -39,7 +39,7 @@ public class SML extends Plugin {
 
     @Override
     public void register() {
-        PluginManager.registerPlugin(this);
+        PluginManager.getInstance().registerPlugin(this);
     }
 
     //TODO
@@ -76,7 +76,7 @@ public class SML extends Plugin {
 
     @Override
     public PluginSettings getSettings() {
-        return (settings == null) ? getDefaultSettings() : settings;
+        return settings;
     }
 
     @Override

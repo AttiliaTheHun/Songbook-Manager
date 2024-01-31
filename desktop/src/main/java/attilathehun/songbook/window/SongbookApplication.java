@@ -2,10 +2,7 @@ package attilathehun.songbook.window;
 
 import attilathehun.songbook.Main;
 import attilathehun.songbook.collection.StandardCollectionManager;
-import attilathehun.songbook.environment.Environment;
-import attilathehun.songbook.environment.EnvironmentManager;
-import attilathehun.songbook.environment.EnvironmentVerificator;
-import attilathehun.songbook.environment.Installer;
+import attilathehun.songbook.environment.*;
 import attilathehun.songbook.plugin.PluginManager;
 import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
@@ -37,9 +34,10 @@ public class SongbookApplication extends Application {
 
     public static void main(String[] args) {
         System.setProperty("log4j.configurationFile", Main.class.getResource("log4j2.yaml").toString());
-        PluginManager.loadPlugins();
+        PluginManager.getInstance().init();
+        SettingsManager.init();
         Installer.runDiagnostics();
-        new EnvironmentManager().autoLoad();
+        EnvironmentManager.getInstance().autoLoad();
         Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
         EnvironmentVerificator.automated();
         launch(args);
@@ -139,12 +137,12 @@ public class SongbookApplication extends Application {
                 }
                 case S -> { // save
                     if (keyEvent.isControlDown()) {
-                        new EnvironmentManager().save();
+                        EnvironmentManager.getInstance().save();
                     }
                 }
                 case L -> { // load
                     if (keyEvent.isControlDown()) {
-                        new EnvironmentManager().load();
+                        EnvironmentManager.getInstance().load();
                     }
                 }
                 case H -> { // help

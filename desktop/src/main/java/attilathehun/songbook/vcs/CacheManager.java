@@ -1,5 +1,6 @@
 package attilathehun.songbook.vcs;
 
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.vcs.index.Index;
 import com.google.gson.Gson;
@@ -20,7 +21,7 @@ import java.util.stream.Stream;
 public class CacheManager {
     private static final Logger logger = LogManager.getLogger(CacheManager.class);
 
-    private static final String CACHED_INDEX_FILE_PATH = Paths.get(Environment.getInstance().settings.vcs.VCS_CACHE_FILE_PATH, "index.json").toString();
+    private static final String CACHED_INDEX_FILE_PATH = Paths.get((String) VCSAdmin.getInstance().getSettings().get("VCS_CACHE_FILE_PATH"), "index.json").toString();
 
     private static final CacheManager instance = new CacheManager();
 
@@ -36,7 +37,7 @@ public class CacheManager {
      */
     public void clearCache() {
         try {
-            for (File f : new File(Environment.getInstance().settings.vcs.VCS_CACHE_FILE_PATH).listFiles()) {
+            for (File f : new File((String) VCSAdmin.getInstance().getSettings().get("VCS_CACHE_FILE_PATH")).listFiles()) {
                 f.delete();
             }
         } catch (NullPointerException npe) {
@@ -103,7 +104,7 @@ public class CacheManager {
     }
 
     public File getCachedSongbookVersionTimestampFile() {
-        return new File(Environment.getInstance().settings.vcs.VERSION_TIMESTAMP_FILE_PATH);
+        return new File((String) VCSAdmin.getInstance().getSettings().get("VERSION_TIMESTAMP_FILE_PATH"));
     }
 
     void cacheSongbookVersionTimestamp(long versionTimestamp) {
@@ -111,8 +112,8 @@ public class CacheManager {
             throw new IllegalArgumentException();
         }
         try {
-            new File(Environment.getInstance().settings.vcs.VCS_CACHE_FILE_PATH).mkdir();
-            PrintWriter printWriter = new PrintWriter(new FileWriter((Environment.getInstance().settings.vcs.VERSION_TIMESTAMP_FILE_PATH), false));
+            new File((String) VCSAdmin.getInstance().getSettings().get("VCS_CACHE_FILE_PATH")).mkdir();
+            PrintWriter printWriter = new PrintWriter(new FileWriter((String) VCSAdmin.getInstance().getSettings().get("VERSION_TIMESTAMP_FILE_PATH"), false));
             printWriter.write(String.valueOf(versionTimestamp));
             printWriter.close();
         } catch (IOException e) {
@@ -128,8 +129,8 @@ public class CacheManager {
         long timestamp = -1;
         long tempStamp;
 
-        for (String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
-            for (File file : Stream.of(new File(Environment.getInstance().settings.collections.get(collection).getSongDataFilePath()).listFiles())
+        for (CollectionManager collectionManager : Environment.getInstance().getRegisteredManagers().values()) {
+            for (File file : Stream.of(new File(collectionManager.getSettings().getSongDataFilePath()).listFiles())
                     .filter(file -> !file.isDirectory())
                     .toList()) {
                 tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();
@@ -139,7 +140,7 @@ public class CacheManager {
             }
         }
 
-        for (File file : Stream.of(new File(Environment.getInstance().settings.environment.DATA_FILE_PATH).listFiles())
+        for (File file : Stream.of(new File((String) Environment.getInstance().getSettings().get("DATA_FILE_PATH")).listFiles())
                 .filter(file -> !file.isDirectory())
                 .filter(file -> file.getName().endsWith(".json"))
                 .toList()) {

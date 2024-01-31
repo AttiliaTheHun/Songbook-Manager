@@ -92,7 +92,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
             throw new IllegalStateException();
         }
         tabbedPane.getTabs().add(new CollectionPanel(StandardCollectionManager.getInstance()));
-        if (Environment.getInstance().settings.environment.IS_IT_EASTER_ALREADY && EasterCollectionManager.getInstance().getCollection() != null) {
+        if (Environment.EnvironmentSettings.IS_IT_EASTER_ALREADY && EasterCollectionManager.getInstance().getCollection() != null) {
             tabbedPane.getTabs().add(new CollectionPanel(EasterCollectionManager.getInstance()));
         }
 
@@ -154,7 +154,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
         });
         previewPDFButton.setOnAction(actionEvent -> {
 
-            if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
+            if (!Export.getInstance().getSettings().getEnabled()) {
                 new AlertDialog.Builder().setTitle("SongbookManager Collection Editor")
                         .setMessage("This feature is part of the Export plugin. You can enable the export plugin in settings.")
                         .setParent(this).setIcon(AlertDialog.Builder.Icon.WARNING).addOkButton().build().open();

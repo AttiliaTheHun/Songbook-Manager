@@ -3,7 +3,7 @@ package attilathehun.songbook.plugin;
 public class Frontpage extends Plugin {
 
     private static final Frontpage instance = new Frontpage();
-    private PluginSettings settings = null;
+    private PluginSettings settings = getDefaultSettings();
 
     private Frontpage() {
 
@@ -25,7 +25,7 @@ public class Frontpage extends Plugin {
 
     @Override
     public void register() {
-        PluginManager.registerPlugin(this);
+        PluginManager.getInstance().registerPlugin(this);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class Frontpage extends Plugin {
 
     @Override
     public PluginSettings getSettings() {
-        return (settings == null) ? getDefaultSettings() : settings;
+        return settings;
     }
 
     @Override

@@ -3,6 +3,7 @@ package attilathehun.songbook.collection;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 /**
  * Base class every collection manager should implement. Moreover, every collection manager should follow the singleton pattern for compatibility,
@@ -268,13 +269,6 @@ public abstract class CollectionManager {
     public abstract void addListener(CollectionListener listener);
 
     /**
-     * Returns CollectionSettings for the collection manager
-     *
-     * @return the collection manager collection settings
-     */
-    public abstract CollectionSettings getSettings();
-
-    /**
      * Opens a GUI dialog to initiate the addition (creation) of a new song to the target collection. Returns a {@link Song} object of the data
      * the user filled in the dialog.
      *
@@ -291,17 +285,22 @@ public abstract class CollectionManager {
      */
     public abstract Song editSongDialog(Song s);
 
+    public abstract CollectionSettings getDefaultSettings();
+
+    /**
+     * Returns CollectionSettings for the collection manager
+     *
+     * @return the collection manager collection settings
+     */
+    public abstract CollectionSettings getSettings();
+
+    public abstract void setSettings(final CollectionSettings c);
+
+
     /**
      * Represents settings for a single collection such as file paths.
      */
-    public static class CollectionSettings implements Serializable {
-        private final String COLLECTION_FILE_PATH;
-        private final String SONG_DATA_FILE_PATH;
-
-        public CollectionSettings(String collectionPath, String songsPath) {
-            COLLECTION_FILE_PATH = collectionPath;
-            SONG_DATA_FILE_PATH = songsPath;
-        }
+    public static class CollectionSettings extends HashMap<String, Object> implements Serializable {
 
         /**
          * Returns path to the collection's .json file.
@@ -309,7 +308,7 @@ public abstract class CollectionManager {
          * @return collection file path
          */
         public String getCollectionFilePath() {
-            return COLLECTION_FILE_PATH;
+            return (String) get("COLLECTION_FILE_PATH");
         }
 
         /**
@@ -318,7 +317,7 @@ public abstract class CollectionManager {
          * @return collection song data file path
          */
         public String getSongDataFilePath() {
-            return SONG_DATA_FILE_PATH;
+            return (String) get("SONG_DATA_FILE_PATH");
         }
     }
 

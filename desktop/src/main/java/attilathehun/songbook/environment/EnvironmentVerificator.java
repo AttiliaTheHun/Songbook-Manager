@@ -53,7 +53,7 @@ public class EnvironmentVerificator {
     }
 
     public boolean verifyData() {
-        if (!(new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()).exists() && new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()).isDirectory())) {
+        if (!(new File(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath()).exists() && new File(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath()).isDirectory())) {
             if (automated) {
                 verificationFail("No song data folder found!");
             }
@@ -63,7 +63,7 @@ public class EnvironmentVerificator {
     }
 
     public boolean verifyCollection() {
-        if (!new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath()).exists()) {
+        if (!new File(StandardCollectionManager.getInstance().getSettings().getCollectionFilePath()).exists()) {
             if (automated) {
                 verificationFail("No song collection found!");
             }
@@ -73,7 +73,7 @@ public class EnvironmentVerificator {
     }
 
     public boolean verifyResources() {
-        if (!(new File(Environment.getInstance().settings.environment.RESOURCE_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.RESOURCE_FILE_PATH).isDirectory())) {
+        if (!(new File((String) Environment.getInstance().getSettings().get("RESOURCES_FILE_PATH")).exists() && new File((String) Environment.getInstance().getSettings().get("RESOURCES_FILE_PATH")).isDirectory())) {
             if (automated) {
                 verificationFail("No resource folder found!");
             }
@@ -83,7 +83,7 @@ public class EnvironmentVerificator {
     }
 
     public boolean verifyCSS() {
-        if (!(new File(Environment.getInstance().settings.environment.CSS_RESOURCES_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.CSS_RESOURCES_FILE_PATH).isDirectory())) {
+        if (!(new File((String) Environment.getInstance().getSettings().get("CSS_RESOURCES_FILE_PATH")).exists() && new File((String) Environment.getInstance().getSettings().get("CSS_RESOURCES_FILE_PATH")).isDirectory())) {
             verificationFail("No CSS resource folder found!");
             if (automated) {
                 verificationFail("No CSS resource folder found!");
@@ -94,7 +94,7 @@ public class EnvironmentVerificator {
     }
 
     public boolean verifyTemplates() {
-        if (!(new File(Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH).isDirectory())) {
+        if (!(new File((String) Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH")).exists() && new File((String) Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH")).isDirectory())) {
             if (automated) {
                 verificationFail("No HTML template folder found!");
             }
@@ -104,7 +104,7 @@ public class EnvironmentVerificator {
     }
 
     public boolean verifyScripts() {
-        if (!(new File(Environment.getInstance().settings.environment.SCRIPTS_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.SCRIPTS_FILE_PATH).isDirectory())) {
+        if (!(new File((String) Environment.getInstance().getSettings().get("SCRIPTS_FILE_PATH")).exists() && new File((String) Environment.getInstance().getSettings().get("SCRIPTS_FILE_PATH")).isDirectory())) {
             if (automated) {
                 new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING)
                         .setMessage("Scripts folder not found. Some features might not work!").addOkButton().build().open();
@@ -115,8 +115,8 @@ public class EnvironmentVerificator {
     }
 
     public void verifyTemp() {
-        if (!(new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).exists() && new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).isDirectory())) {
-            new File(Environment.getInstance().settings.environment.TEMP_FILE_PATH).mkdirs();
+        if (!(new File((String) Environment.getInstance().getSettings().get("TEMP_FILE_PATH")).exists() && new File((String) Environment.getInstance().getSettings().get("TEMP_FILE_PATH")).isDirectory())) {
+            new File((String) Environment.getInstance().getSettings().get("TEMP_FILE_PATH")).mkdirs();
         } else {
             Environment.getInstance().refresh();
         }

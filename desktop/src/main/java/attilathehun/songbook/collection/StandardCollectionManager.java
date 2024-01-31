@@ -43,12 +43,9 @@ public class StandardCollectionManager extends CollectionManager {
     private static final Logger logger = LogManager.getLogger(StandardCollectionManager.class);
 
     private static final List<CollectionListener> listeners = new ArrayList<>();
-    private static final StandardCollectionManager instance;
-
-    static {
-        instance = new StandardCollectionManager();
-        instance.init();
-    }
+    private static final StandardCollectionManager INSTANCE = new StandardCollectionManager();
+    
+    private CollectionSettings settings = getDefaultSettings();
 
     private final String collectionName = "standard";
     private ArrayList<Song> collection;
@@ -61,16 +58,16 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     public static StandardCollectionManager getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     @Override
     public void init() {
         Environment.getInstance().registerCollectionManager(this);
         try {
-            File collectionJSONFile = new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath());
+            File collectionJSONFile = new File(settings.getCollectionFilePath());
             if (!collectionJSONFile.exists()) {
-                File songDataFolder = new File(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath());
+                File songDataFolder = new File(settings.getSongDataFilePath());
                 if (songDataFolder.exists() && songDataFolder.isDirectory()) {
                     repairSongbookDialog();
                 } else {
@@ -110,7 +107,7 @@ public class StandardCollectionManager extends CollectionManager {
     public void save() {
         try {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getCollectionFilePath());
+            FileWriter writer = new FileWriter(settings.getCollectionFilePath());
             gson.toJson(collection, writer);
             writer.close();
         } catch (IOException e) {
@@ -142,11 +139,11 @@ public class StandardCollectionManager extends CollectionManager {
     @Override
     public ArrayList<Song> getFormalCollection() {
         ArrayList<Song> formalList = new ArrayList<Song>();
-        if (PluginManager.getInstance().getSettings().getEnabled(Frontpage.class.getSimpleName())) {
+        if (Frontpage.getInstance().getSettings().getEnabled()) {
             formalList.add(CollectionManager.getFrontpageSong());
         }
-        if (PluginManager.getInstance().getSettings().getEnabled(DynamicSonglist.class.getSimpleName())) {
-            for (int i = 0; i < PluginManager.getInstance().getPlugin(DynamicSonglist.class.getSimpleName()).execute(); i++) {
+        if (DynamicSonglist.getInstance().getSettings().getEnabled()) {
+            for (int i = 0; i < (Integer) PluginManager.getInstance().getPlugin(DynamicSonglist.getInstance().getName()).execute(); i++) {
                 formalList.add(CollectionManager.getSonglistSong(i));
             }
 
@@ -184,7 +181,7 @@ public class StandardCollectionManager extends CollectionManager {
         }
         collection.remove(getCollectionSongIndex(s));
         save();
-        File songFile = new File(String.format(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath() + "/%d.html", s.id()));
+        File songFile = new File(String.format("%s/%d.html",settings.getSongDataFilePath(), s.id()));
 
 
         if (songFile.delete()) {
@@ -228,7 +225,7 @@ public class StandardCollectionManager extends CollectionManager {
 
     @Override
     public void updateSongRecordTitleFromHTML(Song s) {
-        if (!Environment.getInstance().settings.songbook.BIND_SONG_TITLES) {
+        if (!(Boolean) EnvironmentManager.getInstance().getSongbookSettings().get("BIND_SONG_TITLES")) {
             return;
         } // TODO do not forget to emit the songUpdated event
         if (s == null || s.id() < 0) {
@@ -255,7 +252,7 @@ public class StandardCollectionManager extends CollectionManager {
 
     @Override
     public void updateSongHTMLTitleFromRecord(Song s) {
-        if (!Environment.getInstance().settings.songbook.BIND_SONG_TITLES) {
+        if (!(Boolean) EnvironmentManager.getInstance().getSongbookSettings().get("BIND_SONG_TITLES")) {
             return;
         }
         if (s == null || s.id() < 0) {
@@ -281,7 +278,7 @@ public class StandardCollectionManager extends CollectionManager {
 
     @Override
     public void updateSongHTMLFromRecord(Song s) {
-        if (!Environment.getInstance().settings.songbook.BIND_SONG_TITLES) {
+        if (!(Boolean) EnvironmentManager.getInstance().getSongbookSettings().get("BIND_SONG_TITLES")) {
             return;
         }
         try {
@@ -310,7 +307,7 @@ public class StandardCollectionManager extends CollectionManager {
 
     @Override
     public String getSongFilePath(int id) {
-        return Paths.get(String.format("%s/%d.html", Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), id)).toString();
+        return Paths.get(String.format("%s/%d.html", settings.getSongDataFilePath(), id)).toString();
     }
 
     @Override
@@ -460,8 +457,24 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
+    public CollectionSettings getDefaultSettings() {
+        CollectionSettings settings = new CollectionSettings();
+        settings.put("COLLECTION_FILE_PATH", Environment.getInstance().getSettings().get("DATA_FILE_PATH") + "/collection.json".toString());
+        settings.put("SONG_DATA_FILE_PATH", Environment.getInstance().getSettings().get("DATA_FILE_PATH") + "/songs/html/".toString());
+        return settings;
+    }
+
+    @Override
     public CollectionSettings getSettings() {
-        return new CollectionSettings(Paths.get(new Environment.EnvironmentSettings().DATA_FILE_PATH + "/collection.json").toString(), Paths.get(new Environment.EnvironmentSettings().DATA_FILE_PATH + "/songs/html/").toString());
+        return settings;
+    }
+
+    @Override
+    public void setSettings(final CollectionSettings c) {
+        if (c == null) {
+            return;
+        }
+        settings = c;
     }
 
     @Override
@@ -594,7 +607,7 @@ public class StandardCollectionManager extends CollectionManager {
         }
         String songName = null;
         try {
-            String songHTML = String.join("\n", Files.readAllLines(Paths.get(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath() + String.format("/%d.html", songId))));
+            String songHTML = String.join("\n", Files.readAllLines(Paths.get(settings.getSongDataFilePath() + String.format("/%d.html", songId))));
             Document document = Jsoup.parse(songHTML);
             Element element = document.select(".song-title").first();
             songName = element.text();
@@ -620,9 +633,9 @@ public class StandardCollectionManager extends CollectionManager {
             if (dialogResult == AlertDialog.RESULT_OK) {
                 repairMissingCollectionFile();
             } else if (dialogResult == AlertDialog.RESULT_CLOSE) {
-                new EnvironmentManager().createNewSongbook();
+                EnvironmentManager.getInstance().createNewSongbook();
             } else if (dialogResult == AlertDialog.RESULT_EXTRA) {
-                new EnvironmentManager().loadSongbook();
+                EnvironmentManager.getInstance().loadSongbook();
             }
         });
     }
@@ -633,9 +646,9 @@ public class StandardCollectionManager extends CollectionManager {
                 .addOkButton("Create").addCloseButton("Load").setCancelable(false).build().awaitResult();
         result.thenAccept(dialogResult -> {
             if (dialogResult == AlertDialog.RESULT_OK) {
-                new EnvironmentManager().createNewSongbook();
+                EnvironmentManager.getInstance().createNewSongbook();
             } else if (dialogResult == AlertDialog.RESULT_CLOSE) {
-                new EnvironmentManager().loadSongbook();
+                EnvironmentManager.getInstance().loadSongbook();
             }
         });
     }
@@ -643,7 +656,7 @@ public class StandardCollectionManager extends CollectionManager {
     private void repairMissingCollectionFile() {
         logger.info("Repairing standard collection");
         collection = new ArrayList<Song>();
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath()))) {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(settings.getSongDataFilePath()))) {
             for (Path path : stream) {
 
                 if (!Files.isDirectory(path) && path.toString().trim().endsWith(".html")) {

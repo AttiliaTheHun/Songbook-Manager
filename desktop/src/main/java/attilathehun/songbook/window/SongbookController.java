@@ -155,11 +155,11 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         });
 
         loadDataButton.setOnAction(event -> {
-            new EnvironmentManager().load();
+            EnvironmentManager.getInstance().load();
         });
 
         saveDataButton.setOnAction(event -> {
-            new EnvironmentManager().save();
+            EnvironmentManager.getInstance().save();
         });
 
         songOneIdField.setOnKeyPressed(keyEvent -> {
@@ -252,7 +252,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         editSongOneHTML.setOnAction(event -> {
             if (SONG_ONE.id() < 0) {
                 new AlertDialog.Builder().setTitle("Message").setIcon(AlertDialog.Builder.Icon.INFO)
-                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH))
+                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH")))
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
@@ -263,7 +263,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         editSongTwoHTML.setOnAction(event -> {
             if (SONG_TWO.id() < 0) {
                 new AlertDialog.Builder().setTitle("Message").setIcon(AlertDialog.Builder.Icon.INFO)
-                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", Environment.getInstance().settings.environment.TEMPLATE_RESOURCES_FILE_PATH))
+                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH")))
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
@@ -271,7 +271,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         });
 
         exportButton.setOnAction(event -> {
-            if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
+            if (!Export.getInstance().getSettings().getEnabled()) {
                 new AlertDialog.Builder().setTitle("Exporting disabled").setIcon(AlertDialog.Builder.Icon.WARNING)
                         .setMessage("It seems like the Export plugin is disabled. You can enabled it in settings.")
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
@@ -288,7 +288,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         });
 
 
-        if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
+        if (!Export.getInstance().getSettings().getEnabled()) {
             singlepageSelection.setVisible(false);
             defaultSelection.setVisible(false);
             printableSelection.setVisible(false);
@@ -326,7 +326,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
         });
 
-        if (Environment.getInstance().settings.environment.IS_IT_EASTER_ALREADY) {
+        if (Environment.EnvironmentSettings.IS_IT_EASTER_ALREADY) {
             easterSwitch.setManaged(true);
             easterSwitch.setVisible(true);
         } else {
@@ -346,7 +346,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
         previewButton.setOnAction(event -> {
 
-            if (!Environment.getInstance().settings.plugins.getEnabled(Export.getInstance().getName())) {
+            if (!Export.getInstance().getSettings().getEnabled()) {
                 new AlertDialog.Builder().setTitle("Action Aborted").setIcon(AlertDialog.Builder.Icon.WARNING)
                         .setMessage("This feature is a part of the Export plugin. You can enable the plugin in the settings.")
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();

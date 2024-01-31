@@ -1,5 +1,6 @@
 package attilathehun.songbook.vcs;
 
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
@@ -66,29 +67,29 @@ public class RequestFileAssembler {
         if (index == null) {
             throw new IllegalArgumentException();
         }
-        outputFilePath = Environment.getInstance().settings.vcs.REQUEST_ZIP_TEMP_FILE_PATH;
+        outputFilePath = (String) VCSAdmin.getInstance().getSettings().get("REQUEST_ZIP_TEMP_FILE_PATH");
         try (ZipBuilder builder = new ZipBuilder()
                 .setOutputPath(outputFilePath)) {
 
             for (Object s : (Collection) index.getAdditions().get(StandardCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/html");
+                builder.addFile(new File(Paths.get(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), "/data/songs/html");
             }
             for (Object s : (Collection) index.getAdditions().get(EasterCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/egg");
+                builder.addFile(new File(Paths.get(EasterCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), "/data/songs/egg");
             }
 
             for (Object s : (Collection) index.getChanges().get(StandardCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/html");
+                builder.addFile(new File(Paths.get(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), "/data/songs/html");
             }
             for (Object s : (Collection) index.getChanges().get(EasterCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(Environment.getInstance().settings.collections.get(EasterCollectionManager.getInstance().getCollectionName()).getSongDataFilePath(), (String) s).toUri()), "/data/songs/egg");
+                builder.addFile(new File(Paths.get(EasterCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), "/data/songs/egg");
             }
             for (String collection : collections) {
-                builder.addFile(new File(Environment.getInstance().settings.collections.get(collection).getCollectionFilePath()), "/data");
+                builder.addFile(new File(Environment.getInstance().getRegisteredManagers().get(collection).getSettings().getCollectionFilePath()), "/data");
             }
 
-            builder.addFile(new File(Environment.getInstance().settings.vcs.CHANGE_LOG_FILE_PATH), "");
-            File saveIndexTemp = new File(Paths.get(Environment.getInstance().settings.environment.TEMP_FILE_PATH, "index.json").toString());
+            builder.addFile(new File((String) VCSAdmin.getInstance().getSettings().get("CHANGE_LOG_FILE_PATH")), "");
+            File saveIndexTemp = new File(Paths.get((String) Environment.getInstance().getSettings().get("TEMP_FILE_PATH"), "index.json").toString());
             Misc.saveObjectToFileInJSON(index, saveIndexTemp);
             builder.addFile(saveIndexTemp, "");
         }

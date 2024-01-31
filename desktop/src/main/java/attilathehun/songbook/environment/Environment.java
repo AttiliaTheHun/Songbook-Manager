@@ -28,9 +28,9 @@ public final class Environment {
 
     private static final Logger logger = LogManager.getLogger(Environment.class);
     private static final List<EnvironmentStateListener> listeners = new ArrayList<EnvironmentStateListener>();
-    private static final Environment instance = new Environment();
+    private static final Environment INSTANCE = new Environment();
     public static boolean FLAG_IGNORE_SEGMENTS = false;
-    public final Settings settings = Settings.getSettings();
+    private EnvironmentSettings settings = getDefaultSettings();
     private final Map<String, CollectionManager> collectionManagers = new HashMap<>();
 
     private CollectionManager selectedCollectionManager;
@@ -38,26 +38,15 @@ public final class Environment {
     private String tokenInMemory = null;
 
     private Environment() {
-        refresh();
-        logger.debug("Environment instantiated");
     }
 
     public static Environment getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     @Deprecated
     public static void showErrorMessage(String title, String message) {
-        showErrorMessage(title, message, false);
-    }
-
-    @Deprecated
-    public static void showErrorMessage(String title, String message, boolean fatal) {
-        showMessageDialog(getAlwaysOnTopJDialog(), message, title,
-                JOptionPane.ERROR_MESSAGE);
-        if (fatal) {
-            getInstance().exit();
-        }
+        showErrorMessage(title, message);
     }
 
     @Deprecated
@@ -100,18 +89,6 @@ public final class Environment {
         alert.setHeaderText(header);
         alert.setContentText(message);
         alert.show();
-    }
-
-    @Deprecated
-    public static boolean showConfirmMessage(String title, String header, String message) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setHeaderText(header);
-        alert.setTitle(title);
-        alert.setContentText(message);
-
-        Optional<ButtonType> result = alert.showAndWait();
-
-        return ((result.isPresent()) && (result.get() == ButtonType.OK));
     }
 
     @Deprecated
@@ -206,27 +183,19 @@ public final class Environment {
         }
     }
 
-    public String acquireToken(VCSAdmin.Certificate certificate) {
+    public String acquireToken() {
         if (tokenInMemory != null) {
             return tokenInMemory;
         }
 
-        if (Misc.fileExists(settings.user.getAuthFilePath(new Certificate()))) {
-            try {
-                return String.join("", Files.readAllLines(Path.of(settings.user.getAuthFilePath(new Certificate()))));
-            } catch (IOException e) {
-                logger.warn(e.getMessage(), e);
-                showWarningMessage("Error", "Error reading auth file, continuing with default token.");
-            }
+        // TODO
 
-        }
-
-        return settings.user.getDefaultReadToken(new Certificate());
+       return null;
     }
 
     public void refresh() {
         try {
-            for (File f : new File(settings.environment.TEMP_FILE_PATH).listFiles()) {
+            for (File f : new File((String) settings.get("TEMP_FILE_PATH")).listFiles()) {
                 if (FLAG_IGNORE_SEGMENTS && f.getName().startsWith("segment")) {
                     continue;
                 }
@@ -271,72 +240,70 @@ public final class Environment {
         if (collectionManager == null) {
             throw new IllegalArgumentException("manager is null");
         }
-        this.settings.collections.putIfAbsent(collectionManager.getCollectionName(), collectionManager.getSettings());
-        Settings.save(this.settings);
+        //this.settings.collections.putIfAbsent(collectionManager.getCollectionName(), collectionManager.getSettings());
         collectionManagers.put(collectionManager.getCollectionName(), collectionManager);
+        SettingsManager.getInstance().save();
     }
 
     public void unregisterCollectionManager(final CollectionManager collectionManager) {
         if (collectionManager == null) {
             throw new IllegalArgumentException("manager is null");
         }
-        this.settings.collections.remove(collectionManager.getCollectionName());
-        Settings.save(this.settings);
+        //this.settings.collections.remove(collectionManager.getCollectionName());
         collectionManagers.remove(collectionManager.getCollectionName());
+        SettingsManager.getInstance().save();
     }
 
     public Map<String, CollectionManager> getRegisteredManagers() {
         return collectionManagers;
     }
 
-    public void loadTokenToMemory(String token, VCSAdmin.Certificate certificate) {
+    public void loadTokenToMemory(final String token) {
+        if (token == null || token.length() == 0) {
+            return;
+        }
         tokenInMemory = token;
     }
 
     public void exit() {
-        Settings.save(settings);
+        SettingsManager.getInstance().save();
         Platform.exit();
     }
 
-    public static class EnvironmentSettings implements Serializable {
-        public static final String SETTINGS_FILE_PATH = "settings.json";
-        public static final String EASTER_EXE_FILE_PATH = "easter.exe";
+    public EnvironmentSettings getDefaultSettings() {
+        EnvironmentSettings settings = new EnvironmentSettings();
+        settings.put("DATA_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/data/").toString());
+        settings.put("RESOURCES_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/resources/").toString());
+        settings.put("CSS_RESOURCES_FILE_PATH", Paths.get(settings.get("RESOURCES_FILE_PATH") + "/css/").toString());
+        settings.put("TEMPLATE_RESOURCES_FILE_PATH", Paths.get(settings.get("RESOURCES_FILE_PATH") + "/templates/").toString());
+        settings.put("DATA_ZIP_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/data.zip").toString());
+        settings.put("TEMP_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/temp/").toString());
+        settings.put("TEMP_TIMESTAMP_FILE_PATH", Paths.get(settings.get("TEMP_FILE_PATH") + "/session_timestamp.txt").toString());
+        settings.put("ASSETS_RESOURCES_FILE_PATH", Paths.get(settings.get("RESOURCES_FILE_PATH") + "/assets/").toString());
+        settings.put("OUTPUT_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/pdf/").toString());
+        settings.put("LOG_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/log.txt").toString());
+        settings.put("SCRIPTS_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/scripts/").toString());
+        return settings;
+    }
+
+    public EnvironmentSettings getSettings() {
+        return settings;
+    }
+
+    public void setSettings(final EnvironmentSettings s) {
+        if (s == null) {
+            return;
+        }
+        settings = s;
+    }
+
+    public static class EnvironmentSettings extends HashMap<String, Object> implements Serializable {
         private static final Logger logger = LogManager.getLogger(attilathehun.songbook.environment.Environment.EnvironmentSettings.class);
-        public final transient boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
-        public final String RESOURCE_FILE_PATH;
-        public final String CSS_RESOURCES_FILE_PATH;
-        public final String TEMPLATE_RESOURCES_FILE_PATH;
-        public final String DATA_ZIP_FILE_PATH;
-        public final String TEMP_FILE_PATH;
-        public final String ASSETS_RESOURCES_FILE_PATH;
-        public final String OUTPUT_FILE_PATH;
-        public final String DATA_FILE_PATH;
-        public final String TEMP_TIMESTAMP_FILE_PATH;
-        public final String LOG_FILE_PATH;
-        public final String SCRIPTS_FILE_PATH;
-
-
-        public EnvironmentSettings() {
-            DATA_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/data/").toString();
-            RESOURCE_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/resources/").toString();
-            CSS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/css/").toString();
-            TEMPLATE_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/templates/").toString();
-            DATA_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/data.zip").toString();
-            TEMP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/temp/").toString();
-            TEMP_TIMESTAMP_FILE_PATH = Paths.get(TEMP_FILE_PATH + "/session_timestamp.txt").toString();
-            ASSETS_RESOURCES_FILE_PATH = Paths.get(RESOURCE_FILE_PATH + "/assets/").toString();
-            OUTPUT_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/pdf/").toString();
-            LOG_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/log.txt").toString();
-            SCRIPTS_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/scripts/").toString();
-        }
-
+        public static final String SETTINGS_FILE_PATH = "settings.json";
+        private static final String EASTER_EXE_FILE_PATH = "easter.exe";
+        public static final boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
 
     }
 
-    public static final class Certificate {
-        private Certificate() {
-
-        }
-    }
 
 }

@@ -15,10 +15,14 @@ public final class PluginManager {
 
     private static final PluginManager instance = new PluginManager();
 
-    private static final Map<String, Plugin> plugins = new HashMap<>();
+    private final Map<String, Plugin> plugins = new HashMap<>();
 
 
     private PluginManager() {
+
+    }
+
+    public void init() {
         autoRegisterPlugins();
     }
 
@@ -29,7 +33,7 @@ public final class PluginManager {
     private void autoRegisterPlugins() {
         Set<Class> pluginClasses = Misc.findAllClassesUsingClassLoader(this.getClass().getPackageName());
         for (Class c : pluginClasses) {
-            if (c.getSuperclass().equals(Plugin.class) && c.isAnnotationPresent(AutoRegister.class)) {
+            if ((c.getSuperclass() != null && c.getSuperclass().equals(Plugin.class)) && c.isAnnotationPresent(AutoRegister.class)) {
                 try {
                     ((Plugin) c.getMethod("getInstance").invoke(null)).register();
                 } catch (Exception e) {
@@ -59,7 +63,7 @@ public final class PluginManager {
      *
      * @param plugin the wannabe registered plugin
      */
-    public static void registerPlugin(final Plugin plugin) {
+    public void registerPlugin(final Plugin plugin) {
         plugins.put(plugin.getName(), plugin);
         logger.info("Plugin registered: " + plugin.getName());
     }
@@ -95,7 +99,7 @@ public final class PluginManager {
      */
     public void loadPluginSettings(final HashMap<String, Plugin.PluginSettings> settingsMap) {
         if (settingsMap == null) {
-            throw new IllegalArgumentException("plugin settings must never be null");
+            throw new IllegalArgumentException("plugin settings map must never be null");
         }
         for (Plugin p : plugins.values()) {
             if (settingsMap.get(p.getName()) != null) {

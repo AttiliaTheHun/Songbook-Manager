@@ -163,7 +163,7 @@ public class AlertDialog extends Stage {
             ImageView image = new ImageView(icon);
             HBox centerContainer = new HBox();
             centerContainer.setAlignment(Pos.CENTER_LEFT);
-            centerContainer.setPadding(new Insets(0, 0, 0, 8)); // top, right, bottom, left
+            centerContainer.setPadding(new Insets(2, 0, 2, 8)); // top, right, bottom, left
 
             centerContainer.getChildren().add(image);
 
