@@ -1,4 +1,6 @@
 package attilathehun.songbook.window;
 
-public class PluginEditor {
+import javafx.stage.Stage;
+
+public class PluginEditor extends Stage {
 }

@@ -11,12 +11,15 @@ import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import java.awt.Desktop;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
@@ -116,6 +119,7 @@ public class SongbookApplication extends Application {
         stage.show();
         // beware of caching and garbage collection
         mainWindow = stage;
+
     }
 
     private void initKeyboardShortcuts(Stage stage) {
