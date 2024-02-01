@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Base class every collection manager should implement. Moreover, every collection manager should follow the singleton pattern for compatibility,
@@ -274,7 +275,7 @@ public abstract class CollectionManager {
      *
      * @return data of the to-be-created song
      */
-    public abstract Song addSongDialog();
+    public abstract CompletableFuture<Song> addSongDialog();
 
     /**
      * Opens a GUI dialog to initiate the edit action of a song of the target collection. Returns a {@link Song} object with the data the user filled in the dialog.
@@ -283,7 +284,7 @@ public abstract class CollectionManager {
      * @param s the song to be edited
      * @return data of the to-be-edited song
      */
-    public abstract Song editSongDialog(Song s);
+    public abstract CompletableFuture<Song> editSongDialog(Song s);
 
     public abstract CollectionSettings getDefaultSettings();
 

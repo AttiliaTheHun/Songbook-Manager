@@ -282,6 +282,8 @@ public class AlertDialog extends Stage {
                     root.setCenter(box);
                 }
             }
+        } else {
+            root.setCenter(customContentContainer);
         }
 
 

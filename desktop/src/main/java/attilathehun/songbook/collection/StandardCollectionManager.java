@@ -12,6 +12,11 @@ import attilathehun.songbook.window.SongbookApplication;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -32,9 +37,9 @@ import java.nio.file.Paths;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 
@@ -478,96 +483,64 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public Song addSongDialog() {
-        UIManager.put("OptionPane.okButtonText", "Add");
-        UIManager.put("OptionPane.cancelButtonText", "Cancel");
-
-        JTextField songNameField = new JTextField();
-        songNameField.setToolTipText("Name of the song. For example 'I Will Always Return'.");
-        JTextField songAuthorField = new JTextField();
-        songAuthorField.setToolTipText("Author or interpret of the song. For example 'Leonard Cohen'.");
-        JTextField songURLField = new JTextField();
-        songURLField.setToolTipText("Link to a video performance of the song.");
-        JCheckBox songActiveSwitch = new JCheckBox("Active");
-        songActiveSwitch.setToolTipText("When disabled, the song will not be included in the songbook.");
-
+    public CompletableFuture<Song> addSongDialog() {
         Song s = getPlaceholderSong();
-        songNameField.setText(s.name());
-        songAuthorField.setText(s.getAuthor());
-        songURLField.setText(s.getUrl());
-        songActiveSwitch.setSelected(true);
+        CompletableFuture<Song> output = new CompletableFuture<>();
+        CheckBox songActiveSwitch = new CheckBox("Active");
+        songActiveSwitch.setSelected(s.isActive());
+        songActiveSwitch.setTooltip(new Tooltip("When disabled, the song will not be included in the songbook."));
+        CompletableFuture<Pair<Integer, ArrayList<Node>>> dialogResult = new AlertDialog.Builder().setTitle("Add a song").setIcon(AlertDialog.Builder.Icon.CONFIRM)
+                        .setParent(SongbookApplication.getMainWindow())
+                        .addTextInput("Name:", s.name(), "Enter song name", "Name of the song. For example 'I Will Always Return'.")
+                        .addTextInput("Author:", s.getAuthor(), "Enter song author", "Author or interpret of the song. For example 'Leonard Cohen'.")
+                        .addTextInput("URL:", s.getUrl(), "Link to a performance of the song.")
+                        .addContentNode(songActiveSwitch)
+                        .addOkButton("Add")
+                        .addCloseButton("Cancel")
+                        .build().awaitData();
 
-        Object[] message;
-
-        message = new Object[]{
-                "Name:", songNameField,
-                "Author:", songAuthorField,
-                "URL:", songURLField,
-                songActiveSwitch
-        };
-
-
-        int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), message, "Add a Song", JOptionPane.OK_CANCEL_OPTION);
-
-
-        UIManager.put("OptionPane.okButtonText", "Ok");
-        UIManager.put("OptionPane.cancelButtonText", "Cancel");
-
-
-        if (option == JOptionPane.OK_OPTION) {
-            Song song = new Song(songNameField.getText(), -1);
-            song.setUrl(songURLField.getText());
-            song.setAuthor(songAuthorField.getText());
+        dialogResult.thenAccept((result) -> {
+            if (result.getKey() != AlertDialog.RESULT_OK) {
+                output.complete(null);
+                return;
+            }
+            Song song = new Song(((TextField) result.getValue().get(1)).getText(), -1);
+            song.setUrl(((TextField) result.getValue().get(5)).getText());
+            song.setAuthor(((TextField) result.getValue().get(3)).getText());
             song.setActive(songActiveSwitch.isSelected());
             song = addSong(song);
-            return song;
-        }
-
-        return null;
+            output.complete(song);
+        });
+        return output;
     }
 
     @Override
-    public Song editSongDialog(Song s) {
-        UIManager.put("OptionPane.okButtonText", "Save Changes");
-        UIManager.put("OptionPane.cancelButtonText", "Cancel");
+    public CompletableFuture<Song> editSongDialog(final Song s) {
+        CompletableFuture<Song> output = new CompletableFuture<>();
+        CheckBox songActiveSwitch = new CheckBox("Active");
+        songActiveSwitch.setSelected(s.isActive());
+        songActiveSwitch.setTooltip(new Tooltip("When disabled, the song will not be included in the songbook."));
+        CompletableFuture<Pair<Integer, ArrayList<Node>>> dialogResult = new AlertDialog.Builder().setTitle(String.format("Edit song id: %s", s.id())).setIcon(AlertDialog.Builder.Icon.CONFIRM)
+                .setParent(SongbookApplication.getMainWindow())
+                .addTextInput("Name:", s.name(), "Enter song name", "Name of the song. For example 'I Will Always Return'.")
+                .addTextInput("URL:", s.getUrl(), "Link to a performance of the song.")
+                .addContentNode(songActiveSwitch)
+                .addOkButton("Add")
+                .addCloseButton("Cancel")
+                .build().awaitData();
 
-        JTextField songNameField = new JTextField();
-        songNameField.setToolTipText("Name of the song. For example 'I Will Always Return'.");
-        JTextField songAuthorField = new JTextField();
-        songAuthorField.setToolTipText("Author or interpret of the song. For example 'Leonard Cohen'.");
-        JTextField songURLField = new JTextField();
-        songURLField.setToolTipText("Link to a video performance of the song.");
-        JCheckBox songActiveSwitch = new JCheckBox("Active");
-        songActiveSwitch.setToolTipText("When disabled, the song will not be included in the songbook.");
-
-        songNameField.setText(s.name());
-        songAuthorField.setText(s.getAuthor());
-        songURLField.setText(s.getUrl());
-        songActiveSwitch.setSelected(true);
-
-        Object[] message = new Object[]{
-                "Name:", songNameField,
-                "URL:", songURLField,
-                songActiveSwitch
-        };
-
-
-        int option = JOptionPane.showConfirmDialog(Environment.getAlwaysOnTopJDialog(), message, "Edit Song id: " + s.id(), JOptionPane.OK_CANCEL_OPTION);
-
-
-        UIManager.put("OptionPane.okButtonText", "Ok");
-        UIManager.put("OptionPane.cancelButtonText", "Cancel");
-
-
-        if (option == JOptionPane.OK_OPTION) {
-            Song song = new Song(songNameField.getText(), s.id());
-            song.setUrl(songURLField.getText());
+        dialogResult.thenAccept((result) -> {
+            if (result.getKey() != AlertDialog.RESULT_OK) {
+                output.complete(null);
+                return;
+            }
+            Song song = new Song(((TextField) result.getValue().get(1)).getText(), s.id());
+            song.setUrl(((TextField) result.getValue().get(3)).getText());
             song.setActive(songActiveSwitch.isSelected());
             song = updateSongRecord(song);
-            return song;
-        }
-
-        return null;
+            output.complete(song);
+        });
+        return output;
     }
 
 

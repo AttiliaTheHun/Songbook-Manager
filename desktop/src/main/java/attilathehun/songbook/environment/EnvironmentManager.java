@@ -194,6 +194,7 @@ public class EnvironmentManager {
         return easterSongActionDialog(manager.getPlaceholderSong(), manager, ACTION_ADD);
     }
 
+    @Deprecated
     public static Song addEasterSongFromTemplateDialog(Song s, CollectionManager manager) {
         UIManager.put("OptionPane.okButtonText", "Add");
         UIManager.put("OptionPane.cancelButtonText", "Cancel");
@@ -210,6 +211,7 @@ public class EnvironmentManager {
         return easterSongActionDialog(s, manager, ACTION_EDIT);
     }
 
+    @Deprecated
     private static Song easterSongActionDialog(Song s, CollectionManager manager, int action) {
 
         if (action < ACTION_EDIT || action > ACTION_ADD) {

@@ -102,16 +102,20 @@ public class CollectionEditor extends Stage implements CollectionListener {
     private void initBottomToolbar() {
         addSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
-            Song song;
+
+            CompletableFuture<Song> result;
             if (SongbookApplication.isControlPressed()) {
-                song = EnvironmentManager.addEasterSongFromTemplateDialog(selectedSong, selectedManager);
+                if (selectedManager.equals(EasterCollectionManager.getInstance())) {
+                    result = EasterCollectionManager.getInstance().addSongFromTemplateDialog(selectedSong);
+                } else {
+                    result = Environment.getInstance().getCollectionManager().addSongDialog();
+                }
             } else {
-                song = Environment.getInstance().getCollectionManager().addSongDialog();
+                result = Environment.getInstance().getCollectionManager().addSongDialog();
             }
-            if (song == null) {
-                return;
-            }
-            //TODO refresh list
+            result.thenAccept((song) -> {
+
+            });
         });
         editSongHTMLButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
@@ -131,16 +135,16 @@ public class CollectionEditor extends Stage implements CollectionListener {
                 return;
             }
 
-            Song song = Environment.getInstance().getCollectionManager().editSongDialog(selectedSong);
+            //Song song = Environment.getInstance().getCollectionManager().editSongDialog(selectedSong);
+            Song song = null;
 
             if (song == null) {
                 return;
             }
 
-            //TODO refresh list
             int index = selectedManager.getDisplayCollectionSongIndex(song);
             if (index != -1) {
-                //TODO list.setSelectedValue(index, true);
+                ((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).getList().getSelectionModel().select(index);
             }
         });
         viewSongButton.setOnAction(actionEvent -> {
@@ -315,6 +319,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
             }
         }
 
+        // the actual listview item (one line)
         private class SongEntry extends HBox {
             private SongEntry(Song s) {
                 if (s == null || s.getManager() == null) {

@@ -163,6 +163,11 @@ public class SongbookApplication extends Application {
                         openAssociatedLink();
                     }
                 }
+                case N -> {
+                    if (keyEvent.isControlDown()) {
+                        Environment.getInstance().getCollectionManager().addSongDialog();
+                    }
+                }
             }
         });
     }
