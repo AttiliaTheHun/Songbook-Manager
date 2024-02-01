@@ -65,21 +65,11 @@ public final class Environment {
         alert.show();
     }
 
-    @Deprecated
-    public static void showErrorMessage(String title, String header, String message, boolean fatal) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(message);
-        alert.show();
-        if (fatal) {
-            Environment.getInstance().exit();
-        }
-    }
+
 
     @Deprecated
     public static void showErrorMessage(String title, String header, String message) {
-        showErrorMessage(title, header, message, false);
+        showErrorMessage(title, header, message);
     }
 
     @Deprecated
@@ -89,12 +79,6 @@ public final class Environment {
         alert.setHeaderText(header);
         alert.setContentText(message);
         alert.show();
-    }
-
-    @Deprecated
-    public static void showWarningMessage(String title, String message) {
-        showMessageDialog(getAlwaysOnTopJDialog(), message, title,
-                JOptionPane.WARNING_MESSAGE);
     }
 
     @Deprecated
@@ -216,7 +200,7 @@ public final class Environment {
     }
 
     /**
-     * Returns the default CollectionManager.
+     * Returns the default {@link CollectionManager}.
      *
      * @return default Collection Manager ({@link StandardCollectionManager} if null)
      */
@@ -228,7 +212,7 @@ public final class Environment {
     }
 
     /**
-     * Sets the default CollectionManager.
+     * Sets the default {@link CollectionManager}.
      *
      * @param collectionManager the manager
      */
