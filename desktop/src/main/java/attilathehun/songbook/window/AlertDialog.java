@@ -65,6 +65,7 @@ public class AlertDialog extends Stage {
      */
     public CompletableFuture<Integer> awaitResult() {
         show();
+        toFront();
         CompletableFuture<Integer> result = new CompletableFuture<>();
         if (okButton != null) {
             okButton.setOnAction((event) -> {
@@ -114,6 +115,7 @@ public class AlertDialog extends Stage {
      */
     public CompletableFuture<Pair<Integer, ArrayList<Node>>> awaitData() {
         show();
+        toFront();
         CompletableFuture<Pair<Integer, ArrayList<Node>>> result = new CompletableFuture<>();
         if (okButton != null) {
             okButton.setOnAction((event) -> {
@@ -158,6 +160,7 @@ public class AlertDialog extends Stage {
      */
     public void open() {
         show();
+        toFront();
         if (okButton != null) {
             okButton.setOnAction((event) -> {
                 if (okButtonAction == null) {

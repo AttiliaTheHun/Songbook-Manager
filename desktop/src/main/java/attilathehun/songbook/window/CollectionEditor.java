@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
@@ -100,22 +101,17 @@ public class CollectionEditor extends Stage implements CollectionListener {
 
     //TODO
     private void initBottomToolbar() {
+        addSongButton.setFocusTraversable(true);
         addSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
 
-            CompletableFuture<Song> result;
-            if (SongbookApplication.isControlPressed()) {
-                if (selectedManager.equals(EasterCollectionManager.getInstance())) {
-                    result = EasterCollectionManager.getInstance().addSongFromTemplateDialog(selectedSong);
-                } else {
-                    result = Environment.getInstance().getCollectionManager().addSongDialog();
-                }
-            } else {
-                result = Environment.getInstance().getCollectionManager().addSongDialog();
-            }
-            result.thenAccept((song) -> {
+            /*if ( ActionEvent.    StandardCollectionManager.getInstance().equals(selectedManager)) {
+                System.out.println("Yikes");
+                EasterCollectionManager.getInstance().addSongFromTemplateDialog(selectedSong);
+            } else {*/
+                selectedManager.addSongDialog();
+           // }
 
-            });
         });
         editSongHTMLButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
@@ -135,17 +131,17 @@ public class CollectionEditor extends Stage implements CollectionListener {
                 return;
             }
 
-            //Song song = Environment.getInstance().getCollectionManager().editSongDialog(selectedSong);
-            Song song = null;
+            CompletableFuture<Song> result = selectedManager.editSongDialog(selectedSong);
+            result.thenAccept((song -> {
+                if (song == null) {
+                    return;
+                }
+                int index = selectedManager.getDisplayCollectionSongIndex(song);
+                if (index != -1) {
+                    ((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).getList().getSelectionModel().select(index);
+                }
+            }));
 
-            if (song == null) {
-                return;
-            }
-
-            int index = selectedManager.getDisplayCollectionSongIndex(song);
-            if (index != -1) {
-                ((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).getList().getSelectionModel().select(index);
-            }
         });
         viewSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
@@ -231,46 +227,46 @@ public class CollectionEditor extends Stage implements CollectionListener {
     }
 
     private void refreshCurrentList() {
-        ((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).refresh();
+        //((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).refresh();
     }
 
     @Override
     public void onSongRemoved(Song s, CollectionManager m) {
-        for (Tab panel : tabbedPane.getTabs()) {
+       /* for (Tab panel : tabbedPane.getTabs()) {
             if (((CollectionPanel) panel).getManager().equals(m)) {
                 ((CollectionPanel) panel).refresh();
                 break;
             }
-        }
+        }*/
     }
 
     @Override
     public void onSongUpdated(Song s, CollectionManager m) {
-        for (Tab panel : tabbedPane.getTabs()) {
+       /* for (Tab panel : tabbedPane.getTabs()) {
             if (((CollectionPanel) panel).getManager().equals(m)) {
                 ((CollectionPanel) panel).refresh();
                 break;
             }
-        }
+        }*/
     }
 
     @Override
     public void onSongAdded(Song s, CollectionManager m) {
-        for (Tab panel : tabbedPane.getTabs()) {
+       /* for (Tab panel : tabbedPane.getTabs()) {
             if (((CollectionPanel) panel).getManager().equals(m)) {
                 ((CollectionPanel) panel).refresh();
                 break;
             }
-        }
+        }*/
     }
 
-    public static class CollectionPanel extends Tab {
+    public static class CollectionPanel extends Tab implements CollectionListener {
         private static final Logger logger = LogManager.getLogger(CollectionPanel.class);
 
-        private CollectionManager manager;
-        private ListView<Song> list;
+        private final CollectionManager manager;
+        private final ListView<Song> list;
 
-        private CollectionPanel(CollectionManager manager) {
+        private CollectionPanel(final CollectionManager manager) {
             if (manager == null) {
                 throw new IllegalArgumentException();
             }
@@ -279,11 +275,12 @@ public class CollectionEditor extends Stage implements CollectionListener {
             this.list = new ListView<Song>();
             list.setOrientation(Orientation.VERTICAL);
             list.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-            ReadOnlyListWrapper<Song> listViewData = new ReadOnlyListWrapper<>(FXCollections.observableArrayList((ArrayList<Song>) manager.getSortedCollection()));
+            ReadOnlyListWrapper<Song> listViewData = new ReadOnlyListWrapper<>(FXCollections.observableArrayList(manager.getSortedCollection()));
             list.setCellFactory(list -> new SongCell());
             list.getItems().addAll(listViewData);
             list.refresh();
             this.setContent(list);
+            manager.addListener(this);
         }
 
         public CollectionManager getManager() {
@@ -296,9 +293,24 @@ public class CollectionEditor extends Stage implements CollectionListener {
 
         public void refresh() {
             list.getItems().clear();
-            ReadOnlyListWrapper<Song> listViewData = new ReadOnlyListWrapper<>(FXCollections.observableArrayList((ArrayList<Song>) manager.getSortedCollection()));
+            ReadOnlyListWrapper<Song> listViewData = new ReadOnlyListWrapper<>(FXCollections.observableArrayList(manager.getSortedCollection()));
             list.getItems().addAll(listViewData);
             list.refresh();
+        }
+
+        @Override
+        public void onSongRemoved(Song s, CollectionManager m) {
+            refresh();
+        }
+
+        @Override
+        public void onSongUpdated(Song s, CollectionManager m) {
+            refresh();
+        }
+
+        @Override
+        public void onSongAdded(Song s, CollectionManager m) {
+            refresh();
         }
 
         private class SongCell extends ListCell<Song> {

@@ -30,12 +30,12 @@ import java.util.concurrent.CompletableFuture;
 public class CodeEditor extends Stage implements CollectionListener {
     private static final Logger logger = LogManager.getLogger(CodeEditor.class);
     private static final HashMap<Song, CodeEditor> instances = new HashMap<>();
-    private final Song song;
+    private Song song;
     private final CollectionManager manager;
     private String filePath;
     private MonacoFX monaco;
 
-    private CodeEditor(Song s, CollectionManager manager) {
+    private CodeEditor(final Song s, final CollectionManager manager) {
         if (s == null) {
             throw new IllegalArgumentException("Song must not be null!");
         }
@@ -53,10 +53,17 @@ public class CodeEditor extends Stage implements CollectionListener {
     }
 
 
-    public static void open(Song s, CollectionManager m) {
-        CodeEditor instance = new CodeEditor(s, m);
-        instances.put(instance.song, instance);
+    public static void open(final Song s, final CollectionManager m) {
+        System.out.println(instances.size());
+        CodeEditor instance;
+        if (instances.get(s) == null) {
+            instance = new CodeEditor(s, m);
+            instances.put(instance.song, instance);
+        } else {
+            instance = instances.get(s);
+        }
         instance.show();
+        instance.toFront();
     }
 
     private void init() {
@@ -97,10 +104,12 @@ public class CodeEditor extends Stage implements CollectionListener {
         registerKeyboardShortcuts();
         registerWindowListener();
         registerTextChangedListener();
+        manager.addListener(this);
     }
 
 
     private void destroy() {
+        manager.removeListener(this);
         instances.remove(song);
         close();
     }
@@ -169,32 +178,38 @@ public class CodeEditor extends Stage implements CollectionListener {
 
     @TODO
     @Override
-    public void onSongRemoved(Song s, CollectionManager m) {
-        /*if (s.equals(song) && manager.equals(m)) {
-            UIManager.put("OptionPane.okButtonText", "Recreate");
-            UIManager.put("OptionPane.cancelButtonText", "Close");
-
-            int option = JOptionPane.showConfirmDialog(this, "The song you are editing was deleted. If you want, you can recreate it. Otherwise, this editor will close.", String.format("Song deleted: %s (%d)", s.name(), s.id()), JOptionPane.OK_CANCEL_OPTION);
-
-            if (option == JOptionPane.OK_OPTION) {
-                m.addSong(s);
+    public void onSongRemoved(final Song s, final CollectionManager m) {
+        if (!(song.equals(s) && manager.equals(m))) {
+            return;
+        }
+        CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle(String.format("Song deleted: %s (%d)", s.name(), s.id())).setIcon(AlertDialog.Builder.Icon.CONFIRM)
+                .setMessage("The song you are editing was deleted. If you want, you can recreate it. Otherwise, this editor will close.")
+                .setCancelable(false).setParent(this).addOkButton("Recreate").addCloseButton("Close").build().awaitResult();
+        result.thenAccept((dialogResult) -> {
+            if (dialogResult == AlertDialog.RESULT_OK) {
+                song = m.addSong(s);
+                filePath = manager.getSongFilePath(song);
                 saveChanges();
-                return;
+            } else if (dialogResult == AlertDialog.RESULT_CLOSE) {
+                destroy();
             }
-            close(this);
-            UIManager.put("OptionPane.okButtonText", "Ok");
-            UIManager.put("OptionPane.cancelButtonText", "Cancel");
-        }*/
+        });
     }
 
     @TODO(description = "if BIND_SONG_TITLES is active, notify about change (if change happened)")
     @Override
-    public void onSongUpdated(Song s, CollectionManager m) {
+    public void onSongUpdated(final Song s, final CollectionManager m) {
+        if (s.id() != song.id()) {
+            return;
+        }
+        if (m.equals(EasterCollectionManager.getInstance()) && s.getFormerId() != -1) {
+
+        }
 
     }
 
     @Override
-    public void onSongAdded(Song s, CollectionManager m) {
+    public void onSongAdded(final Song s, final CollectionManager m) {
 
     }
 }

@@ -55,6 +55,17 @@ public abstract class CollectionManager {
     }
 
     /**
+     * Checks whether an integer holds a valid {@link Song} Id value. A valid Id ensures a 100% compatibility of the song with the framework,
+     * while invalid Id value or some special reserved Id values can cause unexpected behavior of parts of the framework.
+     *
+     * @param songId the song Id ({@link Song#id()})
+     * @return whether the Id is valid for a collection song
+     */
+    public static boolean isValidId(final int songId) {
+        return songId > INVALID_SONG_ID;
+    }
+
+    /**
      * Initializes the collection. Should be called in advance to any collection-related logic.
      */
     public abstract void init();
@@ -146,7 +157,8 @@ public abstract class CollectionManager {
     public abstract void deactivateSong(Song s);
 
     /**
-     * Edit song's properties. The collection manager must be able to link the new song to the old one.
+     * Edit song's properties. The collection manager must be able to link the new song to the old one. Should emit the {@link CollectionListener#onSongUpdated(Song, CollectionManager)}
+     * event.
      *
      * @param s new song data
      * @return actual record of the song from the collection
@@ -176,7 +188,7 @@ public abstract class CollectionManager {
     public abstract void updateSongHTMLFromRecord(Song s);
 
     /**
-     * Returns path of the song HTML file. Song is identified by its id.
+     * Returns path of the song HTML file.
      *
      * @param s target song
      * @return song HTML file path or null
@@ -184,7 +196,7 @@ public abstract class CollectionManager {
     public abstract String getSongFilePath(Song s);
 
     /**
-     * Returns path of the song HTML file.
+     * Returns path of the song HTML file. Song is identified by its id.
      *
      * @param id target song id
      * @return song HTML file path or null
@@ -268,6 +280,13 @@ public abstract class CollectionManager {
      * @param listener the listening object
      */
     public abstract void addListener(CollectionListener listener);
+
+    /**
+     * Removes a listener of collection events. Depending on the implementation, this action may throw the UnsupportedOperationException.
+     *
+     * @param listener the listening object
+     */
+    public abstract void removeListener(CollectionListener listener);
 
     /**
      * Opens a GUI dialog to initiate the addition (creation) of a new song to the target collection. Returns a {@link Song} object of the data

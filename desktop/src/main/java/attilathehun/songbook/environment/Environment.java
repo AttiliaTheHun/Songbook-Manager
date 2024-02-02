@@ -1,5 +1,6 @@
 package attilathehun.songbook.environment;
 
+import attilathehun.songbook.collection.CollectionListener;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
@@ -24,7 +25,7 @@ import java.util.*;
 
 import static javax.swing.JOptionPane.showMessageDialog;
 
-public final class Environment {
+public final class Environment implements CollectionListener {
 
     private static final Logger logger = LogManager.getLogger(Environment.class);
     private static final List<EnvironmentStateListener> listeners = new ArrayList<EnvironmentStateListener>();
@@ -126,7 +127,7 @@ public final class Environment {
      *
      * @param listener the listener
      */
-    public static void addListener(EnvironmentStateListener listener) {
+    public static void addListener(final EnvironmentStateListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("listener is null");
         }
@@ -155,13 +156,13 @@ public final class Environment {
         }
     }
 
-    public static void notifyOnSongOneSet(Song s) {
+    public static void notifyOnSongOneSet(final Song s) {
         for (EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onSongOneSet(s);
         }
     }
 
-    public static void notifyOnSongTwoSet(Song s) {
+    public static void notifyOnSongTwoSet(final Song s) {
         for (EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onSongTwoSet(s);
         }
@@ -217,7 +218,15 @@ public final class Environment {
      * @param collectionManager the manager
      */
     public void setCollectionManager(final CollectionManager collectionManager) {
+        if (collectionManager == null) {
+            return;
+        }
+        if (selectedCollectionManager != null) {
+            selectedCollectionManager.removeListener(this);
+        }
+
         this.selectedCollectionManager = collectionManager;
+        selectedCollectionManager.addListener(this);
     }
 
     public void registerCollectionManager(final CollectionManager collectionManager) {
@@ -279,6 +288,21 @@ public final class Environment {
             return;
         }
         settings = s;
+    }
+
+    @Override
+    public void onSongRemoved(final Song s, final CollectionManager m) {
+        refresh();
+    }
+
+    @Override
+    public void onSongUpdated(final Song s, final CollectionManager m) {
+        refresh();
+    }
+
+    @Override
+    public void onSongAdded(final Song s, final CollectionManager m) {
+        refresh();
     }
 
     public static class EnvironmentSettings extends HashMap<String, Object> implements Serializable {

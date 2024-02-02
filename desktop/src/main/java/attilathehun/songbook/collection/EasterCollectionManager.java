@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -24,11 +25,9 @@ import org.jsoup.nodes.Element;
 
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -163,9 +162,9 @@ public class EasterCollectionManager extends CollectionManager {
 
         return formalList;
     }
-    // TODO implement collection events?
+
     @Override
-    public Song addSong(Song s) {
+    public Song addSong(final Song s) {
         if (s == null) {
             throw new IllegalArgumentException();
         }
@@ -218,7 +217,7 @@ public class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
-    public Song updateSongRecord(Song s) {
+    public Song updateSongRecord(final Song s) {
         int songIdMatches = 0;
         for (Song song : collection) {
             if (song.id() == s.id()) {
@@ -230,7 +229,7 @@ public class EasterCollectionManager extends CollectionManager {
             new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING)
                     .setMessage("Easter song under this Id already exists. Please resolve this conflict manually by changing the Id of the other song, or by choosing a different Id.")
                     .addOkButton().build().open();
-           return s;
+           return null;
         }
 
         int index = getCollectionSongIndex(s);
@@ -244,8 +243,26 @@ public class EasterCollectionManager extends CollectionManager {
             }
 
             index = getCollectionSongIndex(song);
+
+
+            File oldFile= new File(getSongFilePath(s.getFormerId()));
+            File newFile = new File(getSongFilePath(s.id()));
+            if (newFile.exists()) {
+                new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING)
+                        .setMessage(String.format("A file corresponding to the new Easter song Id already exists. To prevent data loss you should manually rename it to another Id. Alternatively you can delete the file to resolve this issues. File path: %s", newFile.getPath()))
+                        .addOkButton().build().open();
+                return null;
+            }
+            if (!oldFile.renameTo(newFile)) {
+                new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                        .setMessage("Something went wrong when renaming the song file. More information may be found in application log file.")
+                        .addOkButton().build().open();
+                return null;
+            }
             collection.remove(index);
+
             collection.add(s);
+
             song = s;
         } else {
             collection.get(index).setName(s.name());
@@ -255,46 +272,42 @@ public class EasterCollectionManager extends CollectionManager {
         }
 
         save();
-        onSongUpdated(s);
+        onSongUpdated(song);
         return song;
     }
 
     @Override
-    public void updateSongRecordTitleFromHTML(Song s) {
+    public void updateSongRecordTitleFromHTML(final Song s) {
         // It is undesired to bind title in easter egg collection
     }
 
     @Override
-    public void updateSongHTMLTitleFromRecord(Song s) {
+    public void updateSongHTMLTitleFromRecord(final Song s) {
         // five lines above
     }
 
     @Override
     @TODO
-    public void updateSongHTMLFromRecord(Song s) {
-        // TODO remove binding titles?
-        if (!(Boolean) EnvironmentManager.getInstance().getSongbookSettings().get("BIND_SONG_TITLES")) {
-            return;
-        }
-        if (s == null || s.id() < 0) {
-            return;
+    public void updateSongHTMLFromRecord(final Song s) {
+        if (!CollectionManager.isValidId(s.id())) {
+            throw new IllegalArgumentException();
         }
         try {
-            String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
+            String songHTML = String.join("\n", Files.readAllLines(Path.of(getSongFilePath(s))));
             Document document = Jsoup.parse(songHTML);
-            Element element = document.select(".song-title").first();
-            String songName = element.text();
-            System.out.println(songName);
+            Element element = document.select("meta[name=url]").first();
+            element.attr("value", s.getUrl());
+            element = document.select("meta[name=active]").first();
+            element.attr("value", String.valueOf(s.isActive()));
 
-            if (!s.name().equals(songName)) {
-                collection.get(getCollectionSongIndex(s)).setName(songName);
-            }
-            save();
-        } catch (IOException e) {
+            FileOutputStream out = new FileOutputStream(getSongFilePath(s));
+            out.write(document.toString().getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            out.close();
+
+        } catch (Exception e) {
+            logger.error(String.format("Target song: %d", s.id()));
             logger.error(e.getMessage(), e);
-            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
-                    .setMessage(String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()))
-                    .addOkButton().build().open();
         }
     }
 
@@ -336,7 +349,7 @@ public class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getSortedCollectionSongIndex(Song s) {
+    public int getSortedCollectionSongIndex(final Song s) {
         int i = 0;
         for (Song song : getSortedCollection()) {
             if (song.equals(s)) {
@@ -348,7 +361,7 @@ public class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getSortedCollectionSongIndex(int id) {
+    public int getSortedCollectionSongIndex(final int id) {
         if (id < 0) {
             throw new IllegalArgumentException();
         }
@@ -363,7 +376,7 @@ public class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getDisplayCollectionSongIndex(Song s) {
+    public int getDisplayCollectionSongIndex(final Song s) {
         int i = 0;
         for (Song song : getDisplayCollection()) {
             if (song.equals(s)) {
@@ -375,7 +388,7 @@ public class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getDisplayCollectionSongIndex(int id) {
+    public int getDisplayCollectionSongIndex(final int id) {
         if (id < 0) {
             throw new IllegalArgumentException();
         }
@@ -390,7 +403,7 @@ public class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getFormalCollectionSongIndex(Song s) {
+    public int getFormalCollectionSongIndex(final Song s) {
         int i = 0;
         for (Song song : getFormalCollection()) {
             if (song.equals(s)) {
@@ -402,7 +415,7 @@ public class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getFormalCollectionSongIndex(int id) {
+    public int getFormalCollectionSongIndex(final int id) {
         if (id < 0) {
             throw new IllegalArgumentException();
         }
@@ -422,12 +435,20 @@ public class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
-    public void addListener(CollectionListener listener) {
+    public void addListener(final CollectionListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException();
 
         }
         listeners.add(listener);
+    }
+
+    @Override
+    public void removeListener(final CollectionListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException();
+        }
+        listeners.remove(listener);
     }
 
     @Override
@@ -461,7 +482,7 @@ public class EasterCollectionManager extends CollectionManager {
         CheckBox songActiveSwitch = new CheckBox("Active");
         songActiveSwitch.setSelected(s.isActive());
         songActiveSwitch.setTooltip(new Tooltip("When disabled, the song will not be included in the songbook."));
-        CompletableFuture<Pair<Integer, ArrayList<Node>>> dialogResult = new AlertDialog.Builder().setTitle("Add a song").setIcon(AlertDialog.Builder.Icon.CONFIRM)
+        CompletableFuture<Pair<Integer, ArrayList<Node>>> dialogResult = new AlertDialog.Builder().setTitle("Add an Easter song").setIcon(AlertDialog.Builder.Icon.CONFIRM)
                 .setParent(SongbookApplication.getMainWindow())
                 .addTextInput("Name:", s.name(), "Enter song name", "Name of the song. For example 'I Will Always Return'.")
                 .addTextInput("Id:", String.valueOf(s.id()), "Enter song id", "Identificator of the song. Do not confuse with collection index (n).")
@@ -503,7 +524,7 @@ public class EasterCollectionManager extends CollectionManager {
                 .addTextInput("Id:", String.valueOf(s.id()), "Enter song id", "Identificator of the song. Do not confuse with collection index (n).")
                 .addTextInput("URL:", s.getUrl(), "Link to a performance of the song.")
                 .addContentNode(songActiveSwitch)
-                .addOkButton("Add")
+                .addOkButton("Edit")
                 .addCloseButton("Cancel")
                 .build().awaitData();
 
@@ -522,19 +543,19 @@ public class EasterCollectionManager extends CollectionManager {
         return output;
     }
 
-    private void onSongAdded(Song s) {
+    private void onSongAdded(final Song s) {
         for (CollectionListener listener : listeners) {
             listener.onSongAdded(s, this);
         }
     }
 
-    private void onSongRemoved(Song s) {
+    private void onSongRemoved(final Song s) {
         for (CollectionListener listener : listeners) {
             listener.onSongRemoved(s, this);
         }
     }
 
-    private void onSongUpdated(Song s) {
+    private void onSongUpdated(final Song s) {
         for (CollectionListener listener : listeners) {
             listener.onSongUpdated(s, this);
         }
@@ -543,8 +564,8 @@ public class EasterCollectionManager extends CollectionManager {
 
     /* Internal helper methods */
 
-    private Song createSongRecordFromLocalFile(int songId) {
-        if (songId == -1) {
+    private Song createSongRecordFromLocalFile(final int songId) {
+        if (!CollectionManager.isValidId(songId)) {
             throw new IllegalArgumentException();
         }
         String songName = null;
@@ -593,12 +614,12 @@ public class EasterCollectionManager extends CollectionManager {
 
     private void repairMissingCollectionFile() {
         logger.info("Repairing easter collection");
-        collection = new ArrayList<Song>();
+        collection = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(EASTER_SONG_DATA_FILE_PATH))) {
             for (Path path : stream) {
 
                 if (!Files.isDirectory(path) && path.toString().trim().endsWith(".html")) {
-                    int songId = -1;
+                    int songId;
                     String pathString = path.toString();
                     if (pathString.contains(File.separator)) {
                         songId = Integer.parseInt(pathString.substring(pathString.lastIndexOf(File.separator) + 1, pathString.indexOf(".html")));

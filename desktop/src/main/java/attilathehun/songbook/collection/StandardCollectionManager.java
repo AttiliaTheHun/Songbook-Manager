@@ -215,7 +215,7 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public Song updateSongRecord(Song s) {
+    public Song updateSongRecord(final Song s) {
         int index = getCollectionSongIndex(s.id());
 
         collection.get(index).setName(s.name());
@@ -223,17 +223,19 @@ public class StandardCollectionManager extends CollectionManager {
         collection.get(index).setActive(s.isActive());
 
         save();
+        updateSongHTMLTitleFromRecord(s);
+        updateSongHTMLFromRecord(s);
         onSongUpdated(s);
         Environment.getInstance().refresh();
         return s;
     }
 
     @Override
-    public void updateSongRecordTitleFromHTML(Song s) {
+    public void updateSongRecordTitleFromHTML(final Song s) {
         if (!(Boolean) EnvironmentManager.getInstance().getSongbookSettings().get("BIND_SONG_TITLES")) {
             return;
-        } // TODO do not forget to emit the songUpdated event
-        if (s == null || s.id() < 0) {
+        }
+        if (s == null || !CollectionManager.isValidId(s.id())) {
             return;
         }
         try {
@@ -245,9 +247,12 @@ public class StandardCollectionManager extends CollectionManager {
 
             if (!s.name().equals(songName)) {
                 collection.get(getCollectionSongIndex(s)).setName(songName);
+                save();
+                onSongUpdated(collection.get(getCollectionSongIndex(s)));
             }
-            save();
+
         } catch (IOException e) {
+            logger.error(String.format("song id: %s", s.id()));
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage(String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()))
@@ -256,67 +261,73 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public void updateSongHTMLTitleFromRecord(Song s) {
+    public void updateSongHTMLTitleFromRecord(final Song s) {
+        System.out.println(EnvironmentManager.getInstance().getSongbookSettings().get("BIND_SONG_TITLES"));
+        System.out.println(s.name() + s.id());
         if (!(Boolean) EnvironmentManager.getInstance().getSongbookSettings().get("BIND_SONG_TITLES")) {
             return;
         }
-        if (s == null || s.id() < 0) {
+        System.out.println(1);
+        if (s == null || !CollectionManager.isValidId(s.id())) {
             return;
         }
+        System.out.println(2);
         try {
             String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
             Document document = Jsoup.parse(songHTML);
             Element element = document.select(".song-title").first();
             element.text(s.name());
+            System.out.println(element.text());
+            FileOutputStream out = new FileOutputStream(getSongFilePath(s));
+            System.out.println(document);
+            out.write(document.toString().getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            out.close();
+
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage(String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()))
+                    .addOkButton().build().open();
+        }
+    }
+
+    @Override
+    public void updateSongHTMLFromRecord(final Song s) {
+        if (!CollectionManager.isValidId(s.id())) {
+            throw new IllegalArgumentException();
+        }
+        try {
+            String songHTML = String.join("\n", Files.readAllLines(Path.of(getSongFilePath(s))));
+            Document document = Jsoup.parse(songHTML);
+            Element element = document.select("meta[name=url]").first();
+            element.attr("value", s.getUrl());
+            element = document.select("meta[name=active]").first();
+            element.attr("value", String.valueOf(s.isActive()));
 
             FileOutputStream out = new FileOutputStream(getSongFilePath(s));
             out.write(document.toString().getBytes(StandardCharsets.UTF_8));
             out.flush();
             out.close();
-        } catch (IOException e) {
+
+        } catch (Exception e) {
+            logger.error(String.format("Target song: %d", s.id()));
             logger.error(e.getMessage(), e);
-            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
-                    .setMessage(String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()))
-                    .addOkButton().build().open();
         }
     }
 
     @Override
-    public void updateSongHTMLFromRecord(Song s) {
-        if (!(Boolean) EnvironmentManager.getInstance().getSongbookSettings().get("BIND_SONG_TITLES")) {
-            return;
-        }
-        try {
-            String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
-            Document document = Jsoup.parse(songHTML);
-            Element element = document.select(".song-title").first();
-            String songName = element.text();
-            System.out.println(songName);
-
-            if (!s.name().equals(songName)) {
-                collection.get(getCollectionSongIndex(s)).setName(songName);
-            }
-            save();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
-                    .setMessage(String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()))
-                    .addOkButton().build().open();
-        }
-    }
-
-    @Override
-    public String getSongFilePath(Song s) {
+    public String getSongFilePath(final Song s) {
         return getSongFilePath(s.id());
     }
 
     @Override
-    public String getSongFilePath(int id) {
+    public String getSongFilePath(final int id) {
         return Paths.get(String.format("%s/%d.html", settings.getSongDataFilePath(), id)).toString();
     }
 
     @Override
-    public int getCollectionSongIndex(Song s) {
+    public int getCollectionSongIndex(final Song s) {
         int i = 0;
         for (Song song : collection) {
             if (song.equals(s)) {
@@ -328,7 +339,7 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getCollectionSongIndex(int songId) {
+    public int getCollectionSongIndex(final int songId) {
         if (songId < 0) {
             throw new IllegalArgumentException();
         }
@@ -343,7 +354,7 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getSortedCollectionSongIndex(Song s) {
+    public int getSortedCollectionSongIndex(final Song s) {
         int i = 0;
         for (Song song : getSortedCollection()) {
             if (song.equals(s)) {
@@ -355,7 +366,7 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getSortedCollectionSongIndex(int id) {
+    public int getSortedCollectionSongIndex(final int id) {
         if (id < 0) {
             throw new IllegalArgumentException();
         }
@@ -370,7 +381,7 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getDisplayCollectionSongIndex(Song s) {
+    public int getDisplayCollectionSongIndex(final Song s) {
         int i = 0;
         for (Song song : getDisplayCollection()) {
             if (song.equals(s)) {
@@ -382,7 +393,7 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getDisplayCollectionSongIndex(int id) {
+    public int getDisplayCollectionSongIndex(final int id) {
         if (id < 0) {
             throw new IllegalArgumentException();
         }
@@ -397,7 +408,7 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getFormalCollectionSongIndex(Song s) {
+    public int getFormalCollectionSongIndex(final Song s) {
         int i = 0;
         for (Song song : getFormalCollection()) {
             if (song.equals(s)) {
@@ -409,7 +420,7 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public int getFormalCollectionSongIndex(int id) {
+    public int getFormalCollectionSongIndex(final int id) {
         if (id < 0) {
             throw new IllegalArgumentException();
         }
@@ -454,11 +465,19 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public void addListener(CollectionListener listener) {
+    public void addListener(final CollectionListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException();
         }
         listeners.add(listener);
+    }
+
+    @Override
+    public void removeListener(final CollectionListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException();
+        }
+        listeners.remove(listener);
     }
 
     @Override
@@ -525,7 +544,7 @@ public class StandardCollectionManager extends CollectionManager {
                 .addTextInput("Name:", s.name(), "Enter song name", "Name of the song. For example 'I Will Always Return'.")
                 .addTextInput("URL:", s.getUrl(), "Link to a performance of the song.")
                 .addContentNode(songActiveSwitch)
-                .addOkButton("Add")
+                .addOkButton("Edit")
                 .addCloseButton("Cancel")
                 .build().awaitData();
 
@@ -544,19 +563,19 @@ public class StandardCollectionManager extends CollectionManager {
     }
 
 
-    private void onSongAdded(Song s) {
+    private void onSongAdded(final Song s) {
         for (CollectionListener listener : listeners) {
             listener.onSongAdded(s, this);
         }
     }
 
-    private void onSongUpdated(Song s) {
+    private void onSongUpdated(final Song s) {
         for (CollectionListener listener : listeners) {
             listener.onSongUpdated(s, this);
         }
     }
 
-    private void onSongRemoved(Song s) {
+    private void onSongRemoved(final Song s) {
         for (CollectionListener listener : listeners) {
             listener.onSongRemoved(s, this);
         }
@@ -574,7 +593,7 @@ public class StandardCollectionManager extends CollectionManager {
         return id + 1;
     }
 
-    private Song createSongRecordFromLocalFile(int songId) {
+    private Song createSongRecordFromLocalFile(final int songId) {
         if (songId == -1) {
             throw new IllegalArgumentException();
         }
@@ -591,7 +610,7 @@ public class StandardCollectionManager extends CollectionManager {
 
             return new Song(songId, songName, songActiveStatus, songURL);
         } catch (Exception e) {
-            logger.info(String.format("Target song: %d %s", songId, songName));
+            logger.error(String.format("Target song: %d %s", songId, songName));
             logger.error(e.getMessage(), e);
         }
 

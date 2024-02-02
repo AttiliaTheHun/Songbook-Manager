@@ -40,7 +40,7 @@ public class EnvironmentManager {
 
     public SongbookSettings getDefaultSongbookSettings() {
         SongbookSettings settings = new SongbookSettings();
-        settings.put("BIND_SONG_TITLE", Boolean.TRUE);
+        settings.put("BIND_SONG_TITLES", Boolean.TRUE);
         settings.put("LANGUAGE", Locale.ENGLISH);
         return settings;
     }
