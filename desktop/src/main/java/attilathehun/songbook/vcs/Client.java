@@ -1,6 +1,8 @@
 package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.window.AlertDialog;
+import attilathehun.songbook.window.SongbookApplication;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,7 +40,9 @@ class Client {
             outputStream.close();
             conn.disconnect();
         } else {
-            Environment.showMessage("Could not upload the data", "HTTP response code: " + conn.getResponseCode());
+            new AlertDialog.Builder().setTitle("Could not upload the data").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage(String.format("HTTP response code: %s", conn.getResponseCode()))
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
         }
         setStatus(new Status(conn.getResponseCode(), (conn.getErrorStream() != null) ? new String(conn.getErrorStream().readAllBytes()) : ""));
     }
@@ -66,7 +70,9 @@ class Client {
             conn.disconnect();
             return outputPath.toString();
         } else {
-            Environment.showMessage("Could not upload the data", "HTTP response code: " + conn.getResponseCode());
+            new AlertDialog.Builder().setTitle("Could not upload the data").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage(String.format("HTTP response code: %s", conn.getResponseCode()))
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
         }
         setStatus(new Status(conn.getResponseCode(), (conn.getErrorStream() != null) ? new String(conn.getErrorStream().readAllBytes()) : ""));
         return null;

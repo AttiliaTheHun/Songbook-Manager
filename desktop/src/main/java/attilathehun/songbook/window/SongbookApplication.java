@@ -9,6 +9,8 @@ import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
@@ -17,6 +19,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import java.awt.Desktop;
+
+import javafx.stage.WindowEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,6 +42,7 @@ public class SongbookApplication extends Application {
     public static void main(String[] args) {
         System.setProperty("log4j2.configurationFile", Main.class.getResource("log4j2.yaml").toString());
         System.out.println(Main.class.getResource("log4j2.yaml").toString());
+        System.out.println(System.getProperty("log4j2.configurationFile"));
         PluginManager.getInstance().init();
         SettingsManager.init();
         Installer.runDiagnostics();
@@ -97,18 +102,14 @@ public class SongbookApplication extends Application {
     public void start(Stage stage) throws IOException {
 
 
-        /*stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent t) {
-                CodeEditorV1.setApplicationClosed();
-                if (CodeEditorV1.instanceCount() == 0) {
-                    Platform.exit();
-                    Environment.getInstance().exit();
-                }
+        stage.setOnCloseRequest(t -> {
 
+            if (!CodeEditor.hasInstanceOpen()) {
+                Environment.getInstance().exit();
             }
+
         });
-*/
+
 
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("songbook-view.fxml"));
         AnchorPane root = fxmlLoader.load();

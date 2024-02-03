@@ -13,12 +13,12 @@ public class Song implements Serializable {
 
     private transient CollectionManager manager = null;
 
-    public Song(String name, int id) {
+    public Song(final String name, final int id) {
         this.name = name;
         this.id = id;
     }
 
-    public Song(int id, String name, boolean active, String url) {
+    public Song(final int id, final String name, final boolean active, final String url) {
         this.name = name;
         this.id = id;
         this.active = active;
@@ -40,7 +40,7 @@ public class Song implements Serializable {
         this.id = id;
     }
 
-    public void setName(String name) {
+    public void setName(final String name) {
         this.name = name;
     }
 
@@ -52,7 +52,7 @@ public class Song implements Serializable {
         return active;
     }
 
-    public void setActive(boolean active) {
+    public void setActive(final boolean active) {
         this.active = active;
     }
 
@@ -60,7 +60,7 @@ public class Song implements Serializable {
         return url;
     }
 
-    public void setUrl(String url) {
+    public void setUrl(final String url) {
         this.url = url;
     }
 
@@ -68,7 +68,7 @@ public class Song implements Serializable {
         return author;
     }
 
-    public void setAuthor(String author) {
+    public void setAuthor(final String author) {
         this.author = author;
     }
 
@@ -76,7 +76,7 @@ public class Song implements Serializable {
         return formerId;
     }
 
-    public void setFormerId(int formerId) {
+    public void setFormerId(final int formerId) {
         this.formerId = formerId;
     }
 
@@ -84,11 +84,11 @@ public class Song implements Serializable {
         return manager;
     }
 
-    public void setManager(CollectionManager manager) {
+    public void setManager(final CollectionManager manager) {
         this.manager = manager;
     }
 
-    // possibly a standard song could be matched to its corresponding easter song, TODO add manager comparison (when manager not null ofc)
+    // TODO does it make sense to compare the active property?
     @Override
     public boolean equals(Object o) {
         if (o == null || !o.getClass().equals(Song.class)) {
@@ -99,6 +99,10 @@ public class Song implements Serializable {
             return false;
         } else if (!(((Song) o).active == this.active)) {
             return false;
+        } else if(((Song) o).manager != null && manager != null) {
+            if (!((Song) o).manager.equals(manager)) {
+                return false;
+            }
         }
         return true;
     }

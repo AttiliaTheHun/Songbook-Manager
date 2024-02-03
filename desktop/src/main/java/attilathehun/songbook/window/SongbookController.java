@@ -335,12 +335,12 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         }
 
         easterSwitch.selectedProperty().addListener((observableValue, aBoolean, t1) -> {
-            if (easterSwitch.isSelected()) {
+            if (t1) {
                 Environment.getInstance().setCollectionManager(EasterCollectionManager.getInstance());
             } else {
                 Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
             }
-            Environment.getInstance().refresh();
+
             refreshWebView();
         });
 
@@ -373,7 +373,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         });
     }
 
-    private void switchPage(boolean toTheRight) {
+    private void switchPage(final boolean toTheRight) {
         if (toTheRight) {
             SONG_ONE_INDEX += 2;
             SONG_TWO_INDEX += 2;
@@ -418,21 +418,21 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     }
 
     @Override
-    public void onSongRemoved(Song s, CollectionManager m) {
+    public void onSongRemoved(final Song s, final CollectionManager m) {
         if (s.id() == SONG_ONE.id() || s.id() == SONG_TWO.id()) {
             refreshWebView();
         }
     }
 
     @Override
-    public void onSongUpdated(Song s, CollectionManager m) {
+    public void onSongUpdated(final Song s, final CollectionManager m) {
         if (s.id() == SONG_ONE.id() || s.id() == SONG_TWO.id()) {
             refreshWebView();
         }
     }
 
     @Override
-    public void onSongAdded(Song s, CollectionManager m) {
+    public void onSongAdded(final Song s, final CollectionManager m) {
         refreshWebView();
     }
 
@@ -460,7 +460,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     }
 
     @Override
-    public void onSongOneSet(Song s) {
+    public void onSongOneSet(final Song s) {
         try {
             if (s.id() == CollectionManager.INVALID_SONG_ID) {
                 return;
@@ -480,7 +480,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     }
 
     @Override
-    public void onSongTwoSet(Song s) {
+    public void onSongTwoSet(final Song s) {
         try {
             if (s.id() == CollectionManager.INVALID_SONG_ID) {
                 return;
@@ -500,7 +500,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     }
 
     @Override
-    public void onCollectionManagerChanged() {
+    public void onCollectionManagerChanged(final CollectionManager m) {
 
     }
 }

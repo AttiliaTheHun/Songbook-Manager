@@ -114,6 +114,10 @@ public class CodeEditor extends Stage implements CollectionListener {
         close();
     }
 
+    public static boolean hasInstanceOpen() {
+        return instances.size() > 0;
+    }
+
 
     private void registerKeyboardShortcuts() {
         this.getScene().setOnKeyPressed(keyEvent -> {
@@ -127,9 +131,7 @@ public class CodeEditor extends Stage implements CollectionListener {
             }
         });
     }
-
-
-    @TODO(description = "move from JOptionPane")
+    
     private void registerWindowListener() {
         setOnCloseRequest(event -> {
             if (getTitle().startsWith("*")) {

@@ -37,7 +37,7 @@ public abstract class CollectionManager {
      * @param listPartId number of the part of the songlist
      * @return song object representing a part of the songlist
      */
-    public static Song getSonglistSong(int listPartId) {
+    public static Song getSonglistSong(final int listPartId) {
         if (listPartId < 0) {
             throw new IllegalArgumentException();
         }

@@ -2,6 +2,8 @@ package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.vcs.index.Index;
+import attilathehun.songbook.window.AlertDialog;
+import attilathehun.songbook.window.SongbookApplication;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
@@ -45,7 +47,10 @@ public class VCSAgent {
             } else if (remoteVersionTimestamp < CacheManager.getInstance().getCachedSongbookVersionTimestamp()) {
                 VCSAdmin.getInstance().push(this);
             } else {
-                Environment.showMessage("Message", "Local version of the songbook is up to date with the remote one.");
+                new AlertDialog.Builder().setTitle("Message").setIcon(AlertDialog.Builder.Icon.INFO)
+                                .setMessage("Local version of the songbook is up to date with the remote one.")
+                                .addOkButton()
+                                .setParent(SongbookApplication.getMainWindow()).build().open();
             }
             logger.info("Running diagnostics - Success");
         } catch (IOException e) {

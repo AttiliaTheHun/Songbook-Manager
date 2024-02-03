@@ -45,51 +45,6 @@ public final class Environment implements CollectionListener {
         return INSTANCE;
     }
 
-    @Deprecated
-    public static void showErrorMessage(String title, String message) {
-        showErrorMessage(title, message);
-    }
-
-    @Deprecated
-    public static void showMessage(String title, String message) {
-        showMessageDialog(getAlwaysOnTopJDialog(), message, title,
-                JOptionPane.INFORMATION_MESSAGE);
-
-    }
-
-    @Deprecated
-    public static void showMessage(String title, String header, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(message);
-        alert.show();
-    }
-
-
-
-    @Deprecated
-    public static void showErrorMessage(String title, String header, String message) {
-        showErrorMessage(title, header, message);
-    }
-
-    @Deprecated
-    public static void showWarningMessage(String title, String header, String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(message);
-        alert.show();
-    }
-
-    @Deprecated
-    public static JDialog getAlwaysOnTopJDialog() {
-        JDialog dialog = new JDialog();
-        dialog.setAlwaysOnTop(true);
-        dialog.toFront();
-        dialog.requestFocusInWindow();
-        return dialog;
-    }
 
     /**
      * Scrolls the songbook so that the requested song is visible in the web view as if the user navigated on it himself, which means that
@@ -97,27 +52,27 @@ public final class Environment implements CollectionListener {
      *
      * @param s the song to be displayed
      */
-    public static void navigateWebViewToSong(Song s) {
+    public static void navigateWebViewToSong(final Song s) {
         if (s == null) {
             throw new IllegalArgumentException();
         }
-        if (s.getManager() != null && !s.getManager().equals(Environment.getInstance().getCollectionManager())) {
-            Environment.getInstance().setCollectionManager(s.getManager());
+        if (s.getManager() != null && !s.getManager().equals(getInstance().getCollectionManager())) {
+            getInstance().setCollectionManager(s.getManager());
         }
         int index = getInstance().getCollectionManager().getFormalCollectionSongIndex(s);
         if (index % 2 == 0) {
-            notifyOnSongOneSet(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
-            if (index + 1 >= Environment.getInstance().getCollectionManager().getFormalCollection().size()) {
+            notifyOnSongOneSet(getInstance().getCollectionManager().getFormalCollection().get(index));
+            if (index + 1 >= getInstance().getCollectionManager().getFormalCollection().size()) {
                 notifyOnSongTwoSet(CollectionManager.getShadowSong());
             } else {
-                notifyOnSongTwoSet(Environment.getInstance().getCollectionManager().getFormalCollection().get(index + 1));
+                notifyOnSongTwoSet(getInstance().getCollectionManager().getFormalCollection().get(index + 1));
             }
         } else {
-            notifyOnSongTwoSet(Environment.getInstance().getCollectionManager().getFormalCollection().get(index));
+            notifyOnSongTwoSet(getInstance().getCollectionManager().getFormalCollection().get(index));
             if (index - 1 < 0) {
                 notifyOnSongOneSet(CollectionManager.getShadowSong());
             } else {
-                notifyOnSongOneSet(Environment.getInstance().getCollectionManager().getFormalCollection().get(index - 1));
+                notifyOnSongOneSet(getInstance().getCollectionManager().getFormalCollection().get(index - 1));
             }
         }
     }
@@ -132,6 +87,13 @@ public final class Environment implements CollectionListener {
             throw new IllegalArgumentException("listener is null");
         }
         listeners.add(listener);
+    }
+
+    public static void removeListener(final EnvironmentStateListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("listener is null");
+        }
+        listeners.remove(listener);
     }
 
     public static List<EnvironmentStateListener> getListeners() {
@@ -168,6 +130,12 @@ public final class Environment implements CollectionListener {
         }
     }
 
+    private static void notifyOnCollectionManagerChanged(final CollectionManager m) {
+        for (EnvironmentStateListener listener : Environment.getListeners()) {
+            listener.onCollectionManagerChanged(m);
+        }
+    }
+
     public String acquireToken() {
         if (tokenInMemory != null) {
             return tokenInMemory;
@@ -184,15 +152,13 @@ public final class Environment implements CollectionListener {
                 if (FLAG_IGNORE_SEGMENTS && f.getName().startsWith("segment")) {
                     continue;
                 }
-               /* if (f.getPath().equals(String.format(PDFGenerator.PREVIEW_SEGMENT_PATH, PDFGenerator.EXTENSION_PDF))) {
-                    continue;
-                }*/
-                if (!f.delete()) {
+                if (!f.delete() && !f.getName().endsWith(PDFGenerator.EXTENSION_PDF)) {
                     new AlertDialog.Builder().setTitle("Refreshing error").setIcon(AlertDialog.Builder.Icon.ERROR)
                                     .setMessage("Cannot clean temp folder!").addOkButton().build().open();
                     exit();
                 }
             }
+
             logger.debug("Environment refresh()");
         } catch (NullPointerException npe) {
             logger.error(npe.getMessage(), npe);
@@ -219,7 +185,7 @@ public final class Environment implements CollectionListener {
      */
     public void setCollectionManager(final CollectionManager collectionManager) {
         if (collectionManager == null) {
-            return;
+            throw new IllegalArgumentException("manager is null");
         }
         if (selectedCollectionManager != null) {
             selectedCollectionManager.removeListener(this);
@@ -227,13 +193,14 @@ public final class Environment implements CollectionListener {
 
         this.selectedCollectionManager = collectionManager;
         selectedCollectionManager.addListener(this);
+        refresh();
+        notifyOnCollectionManagerChanged(selectedCollectionManager);
     }
 
     public void registerCollectionManager(final CollectionManager collectionManager) {
         if (collectionManager == null) {
             throw new IllegalArgumentException("manager is null");
         }
-        //this.settings.collections.putIfAbsent(collectionManager.getCollectionName(), collectionManager.getSettings());
         collectionManagers.put(collectionManager.getCollectionName(), collectionManager);
         SettingsManager.getInstance().save();
     }
@@ -242,7 +209,6 @@ public final class Environment implements CollectionListener {
         if (collectionManager == null) {
             throw new IllegalArgumentException("manager is null");
         }
-        //this.settings.collections.remove(collectionManager.getCollectionName());
         collectionManagers.remove(collectionManager.getCollectionName());
         SettingsManager.getInstance().save();
     }
@@ -285,7 +251,7 @@ public final class Environment implements CollectionListener {
 
     public void setSettings(final EnvironmentSettings s) {
         if (s == null) {
-            return;
+            throw new IllegalArgumentException("settings are null");
         }
         settings = s;
     }
@@ -305,7 +271,7 @@ public final class Environment implements CollectionListener {
         refresh();
     }
 
-    public static class EnvironmentSettings extends HashMap<String, Object> implements Serializable {
+    public static final class EnvironmentSettings extends HashMap<String, Object> implements Serializable {
         private static final Logger logger = LogManager.getLogger(attilathehun.songbook.environment.Environment.EnvironmentSettings.class);
         public static final String SETTINGS_FILE_PATH = "settings.json";
         private static final String EASTER_EXE_FILE_PATH = "easter.exe";

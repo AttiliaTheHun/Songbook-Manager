@@ -19,7 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 
-public class SettingsManager {
+public final class SettingsManager {
     private static final Logger logger = LogManager.getLogger(SettingsManager.class);
 
     private static final SettingsManager INSTANCE = new SettingsManager();
@@ -37,6 +37,7 @@ public class SettingsManager {
     }
 
     public void save() {
+        System.out.println("saved");
         Settings settings = new Settings();
         settings.environment = Environment.getInstance().getSettings();
         HashMap<String, CollectionManager.CollectionSettings> c = new HashMap<>();

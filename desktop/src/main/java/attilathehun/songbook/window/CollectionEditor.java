@@ -30,7 +30,7 @@ import java.util.concurrent.CompletableFuture;
 @TODO(priority = true)
 public class CollectionEditor extends Stage implements CollectionListener {
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
-    private static final CollectionEditor instance = new CollectionEditor();
+    private static final CollectionEditor INSTANCE = new CollectionEditor();
     @FXML
     public Button editSongHTMLButton;
     @FXML
@@ -54,25 +54,25 @@ public class CollectionEditor extends Stage implements CollectionListener {
     }
 
     public static void open() {
-        if (instance == null) {
+        if (INSTANCE == null) {
             throw new IllegalStateException();
         }
-        if (instance.isShowing()) {
-            instance.toFront();
+        if (INSTANCE.isShowing()) {
+            INSTANCE.toFront();
         } else {
-            instance.show();
+            INSTANCE.show();
         }
     }
 
     public static CollectionEditor getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     public static void shut() {
-        if (instance == null) {
+        if (INSTANCE == null) {
             throw new IllegalStateException();
         }
-        instance.hide();
+        INSTANCE.hide();
     }
 
     @FXML
@@ -99,15 +99,20 @@ public class CollectionEditor extends Stage implements CollectionListener {
 
     }
 
+    public static void refreshInstance() {
+        INSTANCE.tabbedPane.getTabs().clear();
+        INSTANCE.initTabbedPane();
+    }
+    
     //TODO
     private void initBottomToolbar() {
         addSongButton.setFocusTraversable(true);
         addSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
 
-            /*if ( ActionEvent.    StandardCollectionManager.getInstance().equals(selectedManager)) {
+            /*if ( ActionEvent.    StandardCollectionManager.getINSTANCE().equals(selectedManager)) {
                 System.out.println("Yikes");
-                EasterCollectionManager.getInstance().addSongFromTemplateDialog(selectedSong);
+                EasterCollectionManager.getINSTANCE().addSongFromTemplateDialog(selectedSong);
             } else {*/
                 selectedManager.addSongDialog();
            // }

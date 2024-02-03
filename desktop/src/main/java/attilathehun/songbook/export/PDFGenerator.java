@@ -6,6 +6,8 @@ import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.plugin.Export;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.util.HTMLGenerator;
+import attilathehun.songbook.window.AlertDialog;
+import attilathehun.songbook.window.SongbookApplication;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.pdfbox.io.MemoryUsageSetting;
@@ -50,7 +52,9 @@ public class PDFGenerator {
             new File((String) Environment.getInstance().getSettings().get("OUTPUT_FILE_PATH")).mkdirs();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            Environment.showErrorMessage("PDF Generation Error", "Cannot initialize the output folder!", "");
+            new AlertDialog.Builder().setTitle("PDF Generation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                            .setMessage("Cannot initialize the output folder!").setParent(SongbookApplication.getMainWindow())
+                            .addOkButton().build().open();
             throw new RuntimeException(e);
         }
     }

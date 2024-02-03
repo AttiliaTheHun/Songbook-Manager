@@ -178,7 +178,9 @@ public class EnvironmentManager {
         extractLocalDataFile();
         Environment.getInstance().refresh();
         Environment.getInstance().getCollectionManager().init();
-        Environment.showMessage("Success", "Songbook loaded successfully.");
+        new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO)
+                .setMessage("Songbook loaded successfully.")
+                .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
         logger.debug("Songbook loaded");
     }
 

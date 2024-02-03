@@ -21,5 +21,5 @@ public interface EnvironmentStateListener {
     /**
      * Emited when the default CollectionManager is changed using {@link Environment#setCollectionManager(CollectionManager)}.
      */
-    void onCollectionManagerChanged();
+    void onCollectionManagerChanged(CollectionManager m);
 }
