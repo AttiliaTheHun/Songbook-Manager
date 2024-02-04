@@ -37,7 +37,6 @@ public final class SettingsManager {
     }
 
     public void save() {
-        System.out.println("saved");
         Settings settings = new Settings();
         settings.environment = Environment.getInstance().getSettings();
         HashMap<String, CollectionManager.CollectionSettings> c = new HashMap<>();
@@ -47,8 +46,8 @@ public final class SettingsManager {
         settings.songbook = EnvironmentManager.getInstance().getSongbookSettings();
         settings.plugins = PluginManager.getInstance().getSettingsMap();
         settings.vcs = VCSAdmin.getInstance().getSettings();
-
         Misc.saveObjectToFileInJSON(settings, new File(Environment.EnvironmentSettings.SETTINGS_FILE_PATH));
+        System.out.println("saved");
     }
 
     public void load() {

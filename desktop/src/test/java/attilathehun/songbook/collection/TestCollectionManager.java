@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class TestCollectionManager extends CollectionManager {
 
-    private static final List<CollectionListener> listeners = new ArrayList<>();
+    private final List<CollectionListener> listeners = new ArrayList<>();
     private CollectionSettings settings = getDefaultSettings();
     private static int instanceNumber = 0;
     private final String collectionName = String.format("test%d", instanceNumber);

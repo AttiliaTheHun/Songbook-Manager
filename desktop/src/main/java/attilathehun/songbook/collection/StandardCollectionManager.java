@@ -2,6 +2,7 @@ package attilathehun.songbook.collection;
 
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
+import attilathehun.songbook.misc.Misc;
 import attilathehun.songbook.plugin.DynamicSonglist;
 import attilathehun.songbook.plugin.Frontpage;
 import attilathehun.songbook.plugin.PluginManager;
@@ -23,12 +24,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -39,27 +38,23 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 
 public class StandardCollectionManager extends CollectionManager {
-
     private static final Logger logger = LogManager.getLogger(StandardCollectionManager.class);
 
     private static final List<CollectionListener> listeners = new ArrayList<>();
     private static final StandardCollectionManager INSTANCE = new StandardCollectionManager();
-    
-    private CollectionSettings settings = getDefaultSettings();
-
     private final String collectionName = "standard";
+    private CollectionSettings settings = getDefaultSettings();
     private ArrayList<Song> collection;
 
     private StandardCollectionManager() {
     }
 
-    private StandardCollectionManager(ArrayList<Song> collection) {
-        this.collection = new ArrayList<Song>(collection);
+    private StandardCollectionManager(final ArrayList<Song> collection) {
+        this.collection = new ArrayList<>(collection);
     }
 
     public static StandardCollectionManager getInstance() {
@@ -69,32 +64,28 @@ public class StandardCollectionManager extends CollectionManager {
     @Override
     public void init() {
         Environment.getInstance().registerCollectionManager(this);
-        try {
-            File collectionJSONFile = new File(settings.getCollectionFilePath());
-            if (!collectionJSONFile.exists()) {
-                File songDataFolder = new File(settings.getSongDataFilePath());
-                if (songDataFolder.exists() && songDataFolder.isDirectory()) {
-                    repairSongbookDialog();
-                } else {
-                    createSongbookDialog();
-                }
-                return;
-            }
 
-            String json = String.join("", Files.readAllLines(collectionJSONFile.toPath()));
-
-            Type targetClassType = new TypeToken<ArrayList<Song>>() {
-            }.getType();
-            collection = new Gson().fromJson(json, targetClassType);
-            for (Song song : collection) {
-                song.setManager(this);
+        File collectionJSONFile = new File(settings.getCollectionFilePath());
+        if (!collectionJSONFile.exists()) {
+            File songDataFolder = new File(settings.getSongDataFilePath());
+            if (songDataFolder.exists() && songDataFolder.isDirectory()) {
+                repairSongbookDialog();
+            } else {
+                createSongbookDialog();
             }
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            new AlertDialog.Builder().setTitle("Collection Initialisation error").setIcon(AlertDialog.Builder.Icon.ERROR)
-                    .setMessage("Can not load the song collection, for complete error message view the log file. If the problem persists, try reformatting or deleting the collection file.")
-                    .addOkButton().build().open();
+            return;
         }
+
+        collection = Misc.loadObjectFromFileInJSON(new TypeToken<ArrayList<Song>>(){}, collectionJSONFile);
+
+        if (collection == null) {
+            Environment.getInstance().exit();
+        }
+
+        for (Song song : collection) {
+            song.setManager(this);
+        }
+
         logger.info("StandardCollectionManager initialized");
     }
 
@@ -186,7 +177,7 @@ public class StandardCollectionManager extends CollectionManager {
         }
         collection.remove(getCollectionSongIndex(s));
         save();
-        File songFile = new File(String.format("%s/%d.html",settings.getSongDataFilePath(), s.id()));
+        File songFile = new File(String.format("%s/%d.html", settings.getSongDataFilePath(), s.id()));
 
 
         if (songFile.delete()) {
@@ -509,14 +500,14 @@ public class StandardCollectionManager extends CollectionManager {
         songActiveSwitch.setSelected(s.isActive());
         songActiveSwitch.setTooltip(new Tooltip("When disabled, the song will not be included in the songbook."));
         CompletableFuture<Pair<Integer, ArrayList<Node>>> dialogResult = new AlertDialog.Builder().setTitle("Add a song").setIcon(AlertDialog.Builder.Icon.CONFIRM)
-                        .setParent(SongbookApplication.getMainWindow())
-                        .addTextInput("Name:", s.name(), "Enter song name", "Name of the song. For example 'I Will Always Return'.")
-                        .addTextInput("Author:", s.getAuthor(), "Enter song author", "Author or interpret of the song. For example 'Leonard Cohen'.")
-                        .addTextInput("URL:", s.getUrl(), "Link to a performance of the song.")
-                        .addContentNode(songActiveSwitch)
-                        .addOkButton("Add")
-                        .addCloseButton("Cancel")
-                        .build().awaitData();
+                .setParent(SongbookApplication.getMainWindow())
+                .addTextInput("Name:", s.name(), "Enter song name", "Name of the song. For example 'I Will Always Return'.")
+                .addTextInput("Author:", s.getAuthor(), "Enter song author", "Author or interpret of the song. For example 'Leonard Cohen'.")
+                .addTextInput("URL:", s.getUrl(), "Link to a performance of the song.")
+                .addContentNode(songActiveSwitch)
+                .addOkButton("Add")
+                .addCloseButton("Cancel")
+                .build().awaitData();
 
         dialogResult.thenAccept((result) -> {
             if (result.getKey() != AlertDialog.RESULT_OK) {
@@ -647,7 +638,7 @@ public class StandardCollectionManager extends CollectionManager {
 
     private void repairMissingCollectionFile() {
         logger.info("Repairing standard collection");
-        collection = new ArrayList<Song>();
+        collection = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(settings.getSongDataFilePath()))) {
             for (Path path : stream) {
 

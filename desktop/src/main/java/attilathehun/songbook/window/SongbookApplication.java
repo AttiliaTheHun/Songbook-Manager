@@ -30,6 +30,9 @@ import java.util.concurrent.CompletableFuture;
 
 
 public class SongbookApplication extends Application {
+    static {
+        System.setProperty("log4j2.configurationFile", Main.class.getResource("log4j2.yaml").toString());
+    }
 
     private static final Logger logger = LogManager.getLogger(SongbookApplication.class);
 
@@ -40,20 +43,14 @@ public class SongbookApplication extends Application {
 
 
     public static void main(String[] args) {
-        System.setProperty("log4j2.configurationFile", Main.class.getResource("log4j2.yaml").toString());
-        System.out.println(Main.class.getResource("log4j2.yaml").toString());
-        System.out.println(System.getProperty("log4j2.configurationFile"));
         PluginManager.getInstance().init();
         SettingsManager.init();
         Installer.runDiagnostics();
         EnvironmentManager.getInstance().autoLoad();
         Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
         EnvironmentVerificator.automated();
-        System.out.println("main happened");
-        logger.error("22222");
         launch(args);
         logger.debug("Application started successfully");
-
     }
 
     private static void registerNativeHook() {

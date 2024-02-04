@@ -160,12 +160,12 @@ class EnvironmentTest implements EnvironmentStateListener {
     public void testSetCollectionManager_thatPreviousManagerListenerUnregistered() {
         FLAG_MANAGER_CHANGED_EVENT_RECEIVED = false;
         TestCollectionManager manager1 = new TestCollectionManager();
+        TestCollectionManager manager2 = new TestCollectionManager();
+
         Environment.getInstance().setCollectionManager(manager1);
         assertEquals(1, manager1.getListeners().size());
-        TestCollectionManager manager2 = new TestCollectionManager();
+
         Environment.getInstance().setCollectionManager(manager2);
-        assertNotEquals(manager1, manager2);
-        System.out.println(manager1.getListeners().get(0).getClass().getSimpleName());
         assertEquals(0, manager1.getListeners().size());
     }
 
