@@ -12,7 +12,10 @@
 	        "enabled": true
 	    },
 	    "Export": {
-	        "enabled": true
+	        "enabled": true,
+	        "defaultExportFileName": "ExportDefault.pdf",
+	        "singlepageExportFileName": "ExportSinglepage.pdf",
+	        "printableExportFileName": "ExportPrintable.pdf"
 	    }
 	},
 	"homepage": {
@@ -21,5 +24,6 @@
 	"preview": {
 	    "enabled": true
 	},
-	"locale": "cs_CZ"
+	"locale": "cs_CZ",
+	"url": "http://beta-hrabozpevnik.clanweb.eu"
 }

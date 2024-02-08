@@ -1,9 +1,15 @@
 <?php
+// TODO: add a way to translate this perhaps through a strings.xml file so the script does not have to be modified
+/**
+ * This file is retrieved when the remote server homepage is visited. This script generates the HTML response
+ * file. You can modify the HTML structure to alter the layout of the page or you can make changes to the stylesheet,
+ * but modifying the PHP code is not recommended. The homepage feature can be disabled in the settings file.
+ **/
 include('./lib/lib_settings.php');
 
 if ($settings['homepage']['enabled'] == false) {
-    http_response_code(204);
-    include './resources/pages/204.html';
+    include './resources/pages/405.php';
+    http_response_code(405);
     exit(0);
 }
 ?>
@@ -33,12 +39,19 @@ Prohlížet zpěvník
 </span>
 </a>
 <ul>
-<h1><img width="24" height="24" src="https://img.icons8.com/sf-black/64/downloading-updates.png" alt="downloading-updates"/> Stáhnout</h1>
-<li><a href="" target="_blank" download>Stáhnout (A4)</a></li>
-<li><a href="" target="_blank" download>Stáhnout (A5)</a></li>
-<li><a href="" target="_blank" download>Stáhnout verzi k oboustrannému tisku (A5)</a></li>
-<br>
-
+<?php
+if ($settings["plugin"]["Export"]["enabled"] == true) {
+    $temp = [
+        '/files/' . $settings["plugin"]["Export"]["defaultExportFileName"],
+        '/files/' . $settings["plugin"]["Export"]["singlepageExportFileName"],
+        '/files/' . $settings["plugin"]["Export"]["printableExportFileName"]
+    ];
+    echo "<h1><img width=\"24\" height=\"24\" src=\"https://img.icons8.com/sf-black/64/downloading-updates.png\" alt=\"downloading-updates\"/> Stáhnout</h1>\n";
+    echo "<li><a href=\"$temp[1]\" target=\"_blank\" download>Stáhnout (A4)</a></li>\n
+          <li><a href=\"$temp[0]\" target=\"_blank\" download>Stáhnout (A5)</a></li>\n
+          <li><a href=\"$temp[2]\" target=\"_blank\" download>Stáhnout verzi k oboustrannému tisku (A5)</a></li>\n";
+}
+?>
 <h1><img width="24" height="24" src="https://img.icons8.com/sf-black/64/hashtag.png" alt="hashtag"/> Další</h1>
 
 

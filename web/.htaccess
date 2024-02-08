@@ -1,10 +1,23 @@
+# Set custom error documents
 ErrorDocument 403 /resources/pages/403.php
 ErrorDocument 404 /resources/pages/404.php
-Options -Indexes
 
+# Set custom index file
+Options -Indexes
 DirectoryIndex homepage.php
 
+# URL manipulation rules
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Add trailing forward slash
+RewriteCond %{REQUEST_URI} !(/$|\.) 
+RewriteRule (.*) %{REQUEST_URI}/ [R=301,L] 
+
+# Allow address.domain/target_file/arg1/arg2/arg3... to be mapped as 
+# address.domain/target_file?params=arg1/arg2/arg3... for pageview.php
+RewriteRule ^pageview/(.+)$ pageview.php?params=$1 [QSA,L]
+# Remove .php and .html file extensions from the URL
 RewriteRule ^([^\.]+)$ $1.php [NC,L]
 RewriteRule ^([^\.]+)$ $1.html [NC,L]

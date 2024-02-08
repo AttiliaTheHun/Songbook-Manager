@@ -1,11 +1,11 @@
 <?php
 include dirname(__FILE__) . '/lib_settings.php';
 
-$collection_file_path = dirname(__FILE__) . '/./data/songbook/collection.json';
-$easter_collection_file_path = dirname(__FILE__) . '/./data/songbook/easter_collection.json';
+$collection_file_path = dirname(__FILE__) . '/../data/songbook/collection.json';
+$easter_collection_file_path = dirname(__FILE__) . '/../data/songbook/easter_collection.json';
 
 function init_standard_collection() {
-    setlocale(LC_ALL, $GLOBALS['settings']->locale);
+    setlocale(LC_ALL, $GLOBALS['settings']['locale']);
  
     if(!file_exists($GLOBALS['collection_file_path'])) {
         repair_standard_collection();
@@ -40,7 +40,7 @@ function init_standard_collection() {
     }
     
     $collection = array_filter($collection, "is_song_active");
-    $GLOBALS['collection'] = $collection;
+    $GLOBALS['collections']['standard'] = $collection;
     //echo "\n\n\n\n\n";
     //global $collection;
     //var_dump($collection);

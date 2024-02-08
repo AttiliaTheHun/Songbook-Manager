@@ -15,5 +15,17 @@
 </div>
 </div>
 </div>
+<script>
+    const leftArrowCode = 37;
+    const rightArrowCode = 39;
+    
+    document.onkeydown = function(keyEvent) {
+        if (keyEvent.keyCode === leftArrowCode) {
+            window.location.href = "<replace "previous-song">";
+        } else if (keyEvent.keyCode === rightArrowCode) {
+            window.location.href = "<replace "next-song">";
+        }
+    }
+</script>
 </body>
 </html>
