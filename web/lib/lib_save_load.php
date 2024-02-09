@@ -1,12 +1,13 @@
+<?php
 //TODO fill in the code for easter songs
 //TODO implements the backup system
 
-<?php
 include dirname(__FILE__) . '/lib_zip_util.php';
 include dirname(__FILE__) . '/lib_backup_restore.php';
 include dirname(__FILE__) . '/lib_settings.php';
 include dirname(__FILE__) . '/lib_index.php';
 
+$data_path = dirname(__FILE__) . '/../data/songbook/';
 $temp_path = dirname(__FILE__) . '/../temp/';
 $request_collection_file = dirname(__FILE__) . '/../temp/collection.json';
 $request_easter_collection_file = dirname(__FILE__) . '/../temp/easter_collection.json';

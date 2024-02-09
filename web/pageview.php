@@ -1,6 +1,4 @@
 <?php
-// TODO: implement empty song shadowing and prevent crashes for odd number of songs (or zero)
-// TODO: go for more edge cases and add corresponfing error or warning messages (when casting for example)
 /**
  * This file is retrieved when a user decides to visit the online preview of the songbook. This script generates
  * the HTML response file. It is advised not to modify this file in any way to prevent breaking the preview 
@@ -71,14 +69,15 @@ if (count($params) == 0) {
                 $nodecoration = true;
                 break;
             default:
-                // first priority is the collection, then song1 and finally song2
-                if ($collection_name == "") {
+                if (ctype_digit($params[$x])) {
+                    if (!isset($song1_index)) {
+                        $song1_index = (int)$params[$x];
+                    } else if (!isset($song2_index)) {
+                        $song2_index = (int)$params[$x];
+                    }
+                } else if ($collection_name == "") {
                     $_SESSION['COLLECTION'] = $_SESSION['collections'][$params[$x]];
                     $collection_name = $params[$x] . "/";
-                } else if (!isset($song1_index)) {
-                    $song1_index = (int)$params[$x];
-                } else if (!isset($song2_index)) {
-                    $song2_index = (int)$params[$x];
                 }
         }
     }
@@ -92,72 +91,107 @@ if (count($params) == 0) {
         if (!isset($song1_index)) {
             $song2_index = 1;
         } else {
-            $song2_index = $song1_index + 1; // TODO: check for overflow
+            $song2_index = $song1_index + 1;
         }
+    }
+    // if song2 is defined but invalid, we make it nonexistent so it gets shadowed.
+    if ($song2_index < 0 || $song2_index >= count($_SESSION['COLLECTION'])) {
+                $song2_index = -1;
     }
     
     if (!isset($song1_index)) {
         $song1_index = 0;
     }
+    // and we do the same for song1
+    if ($song1_index < 0 || $song1_index >= count($_SESSION['COLLECTION'])) {
+                $song1_index = -1;
+    }
     
 }
 
-
 // create the response HTML from the template
-
-// no decoration means thebackground, which is addded through a stylesheet
+// no decoration means the background, which is addded through a stylesheet
 if (!$nodecoration) {
     $head_html = $head_html . PHP_EOL . "<link rel=\"stylesheet\" href=\"$url/resources/css/style_pageview.css\">";
 }
 
-// when buttons are allowed and the songs displayed are subsequent, it makes sense to add "next" and "last" buttons
-if (!$nobuttons && abs($song2_index - $song1_index) == 1) {
-    $head_html = $head_html . PHP_EOL . "<link rel=\"stylesheet\" href=\"$url/resources/css/style_navbar.css\">";
-    $previous_song_index = "";
-    $next_song_index = "";
+// now we setup convenience for browsing: navbar with prev/next buttons (if enabled) and right/left arrow keys
+$previous_song_index = "";
+$next_song_index = "";
     
-    if ($song1_index == 0) {
-        $previous_song_index = $song1_index;
-    } else {
-        $previous_song_index = $song1_index - 2;
-    }
+// if it is thefirst song, we simply let the page turned backwards action collapse back to this song,
+// otherwise we init index of the previus page song1
+if ($song1_index == 0) {
+    $previous_song_index = $song1_index;
+} else {
+    $previous_song_index = $song1_index - 2;
+}
     
-    
-    if ($song2_index == count($_SESSION["COLLECTION"])) {
-        $next_song_index = $song2_index;
+// if it is the last song, we simply let the page turned forward action collapse back to this song,
+// otherwise we init index of the upcoming page song1
+if ($song2_index == count($_SESSION["COLLECTION"]) - 1) {
+    $next_song_index = $song1_index;
+} else {
+    if ($song2_index == -1) {
+        $next_song_index = $song1_index;
     } else {
         $next_song_index = $song2_index + 1;
     }
-    
-    // replace next and previous page links inside the lfet and right arrow key press events
-    $template_html = str_replace($_SESSION['REPLACE_MARKS']['previous_song_replace_mark'], $url . "/pageview/" . $collection_name . $previous_song_index, $template_html);
-    $template_html = str_replace($_SESSION['REPLACE_MARKS']['next_song_replace_mark'], $url . "/pageview/" . $collection_name . $next_song_index, $template_html);
-   
-    // init the navbar
-    $navbar_html = file_get_contents('./resources/templates/navbar.html');
-    $navbar_html = str_replace($_SESSION['REPLACE_MARKS']['previous_song_replace_mark'], $url . "/pageview/" . $collection_name . $previous_song_index, $navbar_html);
-    $navbar_html = str_replace($_SESSION['REPLACE_MARKS']['next_song_replace_mark'], $url .  "/pageview/" . $collection_name . $next_song_index, $navbar_html);
-    $template_html = str_replace($_SESSION['REPLACE_MARKS']['navbar_replace_mark'], $navbar_html, $template_html);
-} else {
-    $template_html = str_replace($_SESSION['REPLACE_MARKS']['previous_song_replace_mark'], $_SERVER['REQUEST_URI'], $template_html);
-    $template_html = str_replace($_SESSION['REPLACE_MARKS']['next_song_replace_mark'], $_SERVER['REQUEST_URI'], $template_html);
-   
 }
+
+
+// when the songs displayed are subsequent, it makes sense to add "next" and "last" buttons
+if (abs($song2_index - $song1_index) == 1) {
+    // only if the buttons are not disabled tho
+    if (!$nobuttons) {
+       $head_html = $head_html . PHP_EOL . "<link rel=\"stylesheet\" href=\"$url/resources/css/style_navbar.css\">";
+
+        // init the navbar
+        $navbar_html = file_get_contents('./resources/templates/navbar.html');
+        $template_html = str_replace($_SESSION['REPLACE_MARKS']['navbar_replace_mark'], $navbar_html, $template_html);
+    }
+    
+    // we also set up the left and right arrow key event redirect links
+    
+    // set up our param flags so they are included in link and key event redirect URLs
+    $applied_params = "";
+    if ($nobuttons) {
+        if ($nodecoration) {
+            $applied_params = "/print";
+        } else {
+            $applied_params = "/nobuttons";
+        }
+    } else if ($nodecoration) {
+        $applied_params = "/nodecoration";
+    }
+    
+    // replace next and previous page links inside the left and right arrow key press events and buttons
+    $template_html = str_replace($_SESSION['REPLACE_MARKS']['previous_song_replace_mark'], $url . "/pageview/" . $collection_name . $previous_song_index . $applied_params, $template_html);
+    $template_html = str_replace($_SESSION['REPLACE_MARKS']['next_song_replace_mark'], $url . "/pageview/" . $collection_name . $next_song_index . $applied_params, $template_html);
+}
+
 
 $template_html = str_replace($_SESSION['REPLACE_MARKS']['head_replace_mark'], $head_html, $template_html);
 
 // now we need to prepare the actual songs to be added to the template
 $song1_html = '<div class="song"></div>';
-$song1_id = $_SESSION['COLLECTION'][$song1_index]['id'];
+if ($song1_index != -1) {
+    $song1_id = $_SESSION['COLLECTION'][$song1_index]['id'];
+}
 
-if (file_exists("./data/songbook/songs/html/$song1_id.html")) {
+// -1 means the song does not exist, so we leave the shadow (empty) song as the HTML
+if ($song1_index != -1 && file_exists("./data/songbook/songs/html/$song1_id.html")) {
     $song1_html = file_get_contents("./data/songbook/songs/html/$song1_id.html");
 }
 
 $song2_html = '<div class="song"></div>';
-$song2_id = $_SESSION['COLLECTION'][$song2_index]['id'];
+if ($song2_index != -1) {
+    $song2_id = $_SESSION['COLLECTION'][$song2_index]['id'];
+}
 
-if (file_exists("./data/songbook/songs/html/$song2_id.html")) {
+
+// -1 means the song does not exist, so we leave the shadow (empty) song as the HTML
+if ($song2_index != -1 && file_exists("./data/songbook/songs/html/$song2_id.html")) {
     $song2_html = file_get_contents("./data/songbook/songs/html/$song2_id.html");
 }
 

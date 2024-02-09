@@ -41,6 +41,7 @@ function init_standard_collection() {
     
     $collection = array_filter($collection, "is_song_active");
     $GLOBALS['collections']['standard'] = $collection;
+    $GLOBALS['collection_data']['standard']['data_path'] = dirname(__FILE__) . '/../data/song/html/';
     //echo "\n\n\n\n\n";
     //global $collection;
     //var_dump($collection);
