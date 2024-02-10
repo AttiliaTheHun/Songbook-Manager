@@ -28,16 +28,17 @@ $_SESSION['COLLECTION'] = $GLOBALS['collections']['standard'];
 $_SESSION['SETTINGS'] = $settings;
 
 // these "marks" are used when the page is being generated from the template
-if (!isset($_SESSION['REPLACE_MARKS'])) {
-    $_SESSION['REPLACE_MARKS'] = [
-        'head_replace_mark' => '<replace "head">',
-        'navbar_replace_mark' => '<replace "navbar">',
-        'song1_replace_mark' => '<replace "song1">',
-        'song2_replace_mark' => '<replace "song2">',
-        'previous_song_replace_mark' => '<replace "previous-song">',
-        'next_song_replace_mark' => '<replace "next-song">'
-    ];
+$_SESSION['REPLACE_MARKS'] = [
+    'head_replace_mark' => '<replace "head">',
+    'navbar_replace_mark' => '<replace "navbar">',
+    'song1_replace_mark' => '<replace "song1">',
+    'song2_replace_mark' => '<replace "song2">',
+    'previous_song_replace_mark' => '<replace "previous-song">',
+    'next_song_replace_mark' => '<replace "next-song">',
+    'previous_song_button_text_replace_mark' => '<replace "previous-song-button-text">',
+    'next_song_button_text_replace_mark' => '<replace "next-song-button-text">',
+    'site_description_replace_mark' => '<replace "site-description">'
+];
 
-}
 
 ?>

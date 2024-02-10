@@ -4,7 +4,7 @@ include dirname(__FILE__) . '/lib_settings.php';
 $collection_file_path = dirname(__FILE__) . '/../data/songbook/collection.json';
 $easter_collection_file_path = dirname(__FILE__) . '/../data/songbook/easter_collection.json';
 
-function init_standard_collection() {
+function init_standard_collection($filter = true) {
     setlocale(LC_ALL, $GLOBALS['settings']['locale']);
  
     if(!file_exists($GLOBALS['collection_file_path'])) {
@@ -24,7 +24,6 @@ function init_standard_collection() {
         return strcmp($a["name"], $b["name"]);
     });
         
-    //var_dump($collection);
 
     for ($x = 0; $x < count($collection); $x++) {
         for ($y = 0; $y < count($collection); $y++) {
@@ -38,16 +37,18 @@ function init_standard_collection() {
     function is_song_active($var) {
         return $var['active'];
     }
+    if ($filter) {
+        $collection = array_filter($collection, "is_song_active");
+    }
     
-    $collection = array_filter($collection, "is_song_active");
     $GLOBALS['collections']['standard'] = $collection;
-    $GLOBALS['collection_data']['standard']['data_path'] = dirname(__FILE__) . '/../data/song/html/';
-    //echo "\n\n\n\n\n";
-    //global $collection;
-    //var_dump($collection);
+    $GLOBALS['collection_data']['standard']['data_path'] = dirname(__FILE__) . '/../data/songbook/songs/html/';
+    $GLOBALS['collection_data']['standard']['relative_data_path'] = 'songs/html/';
+    $GLOBALS['collection_data']['standard']['file_path'] = $GLOBALS['collection_file_path'];
+    $GLOBALS['collection_data']['standard']['file_name'] = "collection.json";
 }
 
-function init_easter_collection() {
+function init_easter_collection($filter = true) {
     
 }
 

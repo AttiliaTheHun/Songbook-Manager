@@ -1,5 +1,8 @@
 <?php
-
+/**
+ * This library is used to authenticate HTTP requests on the API. It features basic token authentication.
+ **/
+ 
 class Token {
     
     private $token = "";
@@ -90,7 +93,8 @@ $tokens_file_path = dirname(__FILE__) . '/../data/tokens.json';
 
 /**
 * Scans the local token list for the presented token. Returns its complete representation when found and null otherwise.
-* @param token the authentification token's value
+* 
+* @param $token the authentification token's value
 * @return a Token object or null
 */
 function get_token_object($token) {
@@ -99,9 +103,14 @@ function get_token_object($token) {
             return new Token(json_decode(json_encode($GLOBALS['tokens'][$x]), true));
         }
     }
-    return null;
+    return NULL;
 }
 
+/**
+ * Extracts the token from HTTP request and if found returns its string value.
+ * 
+ * @return token value string of the request token or null
+ **/
 function get_request_token() {
     $headers = apache_request_headers();
 
@@ -110,24 +119,34 @@ function get_request_token() {
             return trim(substr($value, 7));
         }
     }
-    return null;
+    return NULL;
 }
 
+/**
+ * Initializes the local token database into $GLOBALS['tokens']. Must be called in advance to any other functions
+ * from this library. It also automatically initializes the token of the current request into $GLOBALS['token'].
+ **/
 function auth_init() {
     $tokens_file_contents = file_get_contents($GLOBALS['tokens_file_path']);
     $GLOBALS['tokens'] = json_decode($tokens_file_contents, true);
     $GLOBALS['token'] = get_token_object(get_request_token());
 }
 
+/**
+ * Registers a new token to the database.
+ * 
+ * @param $token the token to register
+ **/
 function register_token(mixed $token) {
     array_push($GLOBALS['tokens'], $token);
     file_put_contents($GLOBALS['tokens_file_path'], $GLOBALS['tokens']);
     save_tokens();
 }
 
+/**
+ * Saves the token database.
+ **/
 function save_tokens() {
     file_put_contents($GLOBALS['tokens_file_path'], json_encode($GLOBALS['tokens']));
 }
-
-
 ?>

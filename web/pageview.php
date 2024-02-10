@@ -9,18 +9,25 @@ include('./lib/lib_settings.php');
 // if online preview feature is disabled, we will not serve any content
 // 405 Method Not Allowed
 if ($settings['preview']['enabled'] == false) {
-    http_response_code(405);
-    include './resources/pages/405.php';
+    http_response_code(204);
+    include './resources/pages/204.php';
     exit(0);
 }
 
-include('./lib/init_preview_session.php');
+include('./lib/lib_strings.php');
+if (!isset($_SESSION)) {
+    include('./lib/init_preview_session.php');
+}
+
 
 $url = $_SESSION['SETTINGS']['url'];
 
 $template_html = file_get_contents('./resources/templates/pageview.html');
 
 $head_html = file_get_contents('./resources/templates/head.html');
+$head_html = str_replace($_SESSION['REPLACE_MARKS']['site_description_replace_mark'], $strings['site_description'], $head_html);
+$head_html .= "<title>{$strings['pageview']['page_title']}</title>" . PHP_EOL;
+
 $head_html = $head_html . PHP_EOL . "<link rel=\"stylesheet\" href=\"$url/resources/css/style.css\">";
 
 // parse URL parameters that will be provided as ?params=param1/param2/...
@@ -148,6 +155,8 @@ if (abs($song2_index - $song1_index) == 1) {
 
         // init the navbar
         $navbar_html = file_get_contents('./resources/templates/navbar.html');
+        $navbar_html = str_replace($_SESSION['REPLACE_MARKS']['previous_song_button_text_replace_mark'], $strings['pageview']['previous_song_button_text'], $navbar_html);
+        $navbar_html = str_replace($_SESSION['REPLACE_MARKS']['next_song_button_text_replace_mark'], $strings['pageview']['next_song_button_text'], $navbar_html);
         $template_html = str_replace($_SESSION['REPLACE_MARKS']['navbar_replace_mark'], $navbar_html, $template_html);
     }
     

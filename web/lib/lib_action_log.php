@@ -1,21 +1,31 @@
 <?php
-$ACTION_UPLOAD = "UPLOAD";
-$ACTION_DOWNLOAD = "DOWNLOAD";
-$ACTION_BACKUP = "BACKUP";
-$ACTION_RESTORE = "RESTORE";
+/**
+ * This library allows the management of action log file.
+ **/
+const ACTION_UPLOAD = "UPLOAD";
+const ACTION_DOWNLOAD = "DOWNLOAD";
+const ACTION_BACKUP = "BACKUP";
+const ACTION_RESTORE = "RESTORE";
 
+$action_log_file_path = dirname(__FILE__) . "/../data/action_log.txt";
 
-function log_action(string $action, mixed $token, string $backup_file_name) {
+function log_action(string $action, Token $token = NULL, string $backup_file_name = "") {
     if ($backup_file_name == null) {
         $backup_file_name = "";
     }
-    $action_log_file_path = dirname(__DIR__) . "/../data/action_log.txt";
-
+    
     $date = date_create();
    
-    $data = date_format($date,"[Y/m/d H:i:s]") . " " . $action . $token->get_name() . " " . $backup_file_name;
-    file_put_contents($action_log_file_path, $data, FILE_APPEND | LOCK_EX);
+    $data = date_format($date,"[Y/m/d H:i:s]") . " " . $action ;
+    if ($token !== NULL) {
+        $data .= " " . $token->get_name();
+    }
+    $data .= " " . $backup_file_name;
+    file_put_contents($GLOBALS['action_log_file_path'], $data . PHP_EOL, FILE_APPEND | LOCK_EX);
 }
 
+function clear_log() {
+    file_put_contents($GLOBALS['action_log_file_path'], "");
+}
 
 ?>

@@ -1,2 +1,11 @@
-<h1>204 - No content</h1>
-<p>This feature has been disabled by the Songbook Manager server administrator.</p>
+<?php
+include '../../lib/lib_settings.php';
+$url = $settings['url'];
+?>
+
+<h1>204 - No Content</h1>
+<p>This page has been disabled.</p>
+
+<?php
+echo "<a href=\"$url\">Back to the homepage, shall we?</a>";
+?>

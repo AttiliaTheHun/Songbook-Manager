@@ -1,0 +1,20 @@
+{
+    "homepage" : {
+        "page_title": "Zpěvník Hrabošů",
+        "header_text": "Hraboší zpěvník",
+        "header_logo_alt": "Hraboší logo",
+        "browse_songbook_button_text": "Prohlížet zpěvník",
+        "download_header_text": "Stáhnout",
+        "download_singlepage_A4": "Stáhnout (A4)",
+        "download_default_A5": "Stáhnout (A5)",
+        "download_printable_A5": "Stáhnout verzi k oboustrannému tisku (A5)",
+        "licenses": "Licenses",
+        "footer_credits_text": "Vytvořeno pomocí programu&nbsp;"
+    },
+    "pageview": {
+        "page_title": "Prohlížet zpěvník Hrabošů",
+        "previous_song_button_text": "Předchozí",
+        "next_song_button_text": "Následující"
+    },
+    "site_description": "Zpěvník oddílu TOM Hraboši."
+}

@@ -6,12 +6,79 @@ include dirname(__FILE__) . '/lib_zip_util.php';
 include dirname(__FILE__) . '/lib_backup_restore.php';
 include dirname(__FILE__) . '/lib_settings.php';
 include dirname(__FILE__) . '/lib_index.php';
+//include dirname(__FILE__) . '/lib_action_log.php';
 
 $data_path = dirname(__FILE__) . '/../data/songbook/';
 $temp_path = dirname(__FILE__) . '/../temp/';
 $request_collection_file = dirname(__FILE__) . '/../temp/collection.json';
 $request_easter_collection_file = dirname(__FILE__) . '/../temp/easter_collection.json';
 
+init_standard_collection(false);
+
+/**
+ * Archive the entire songbook data and save it to the temp path.
+ * 
+ * @return path to the archive
+ **/
+function create_complete_load_request_response_archive() {
+    $archive = new XZipArchive();
+    // if multiple requests are being processed at the same time, they would overwrite each others response file
+    $num = -1;
+    do {
+        $num += 1;
+        $archive_name = $GLOBALS['temp_path'] . "load_request$num.zip";
+    } while (file_exists($archive_name));
+    
+    if ($archive->open($archive_name, ZipArchive::CREATE)!==TRUE) {
+        exit("Failed to create a response archive: <$filename>\n");
+    }
+    
+    $archive->addFolderContent($GLOBALS['data_path']);
+    $archive->close();
+    return $archive_name;
+}
+
+/**
+ * Creates an archive of songs and collections requested by load request index.
+ * 
+ * @param $index the load index
+ * @return path to the archive
+ **/
+function create_partial_load_request_response_archive(array $load_index) {
+    $archive = new XZipArchive();
+    // if multiple requests are being processed at the same time, they would overwrite each others response file
+    $num = -1;
+    do {
+        $num += 1;
+        $archive_name = $GLOBALS['temp_path'] . "load_request$num.zip";
+    } while (file_exists($archive_name));
+    
+    if ($archive->open($archive_name, ZipArchive::CREATE)!==TRUE) {
+        exit("Failed to create a response archive: <$filename>\n");
+    }
+    
+    foreach (array_keys($load_index['missing']) as $collection) {
+        foreach (array_values($load_index['missing'][$collection]) as $file) {
+            $archive->addFile($GLOBALS['collection_data'][$collection]['data_path'] . $file, $GLOBALS['collection_data'][$collection]['relative_data_path'] . $file);
+        }
+    }
+    
+    foreach (array_keys($load_index['outdated']) as $collection) {
+        for ($x = 0; $x < count($load_index['outdated'][$collection]); $x++) {
+            $archive->addFile($GLOBALS['collection_data'][$collection]['data_path'] . $load_index['outdated'][$collection][$x], $GLOBALS['collection_data'][$collection]['relative_data_path'] . $load_index['outdated'][$collection][$x]);
+        }
+    }
+    
+    for ($x = 0; $x < count($load_index['collections']); $x++) {
+        $archive->addFile($GLOBALS['data_path'] . $GLOBALS['collection_data'][$load_index['collections'][$x]]['file_name'], $GLOBALS['collection_data'][$load_index['collections'][$x]]['file_name']);
+    }
+    
+    $archive->close();
+    return $archive_name;
+}
+
+
+/*
 function dir_is_empty($dir) {
   $handle = opendir($dir);
   while (false !== ($entry = readdir($handle))) {
@@ -130,5 +197,5 @@ function update_collections() {
     if (file_exists($temp_path."easter_collection.json")) {
         rename($temp_path."easter_collection.json", $songbook_data_path."easter_collection.json");
     }
-}
+}*/
 ?>
