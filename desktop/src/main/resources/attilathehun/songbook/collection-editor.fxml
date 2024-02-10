@@ -75,7 +75,7 @@
                                 text="Edit Song Record" GridPane.columnIndex="0"/>
                         <Button fx:id="editSongHTMLButton" mnemonicParsing="false" prefWidth="140" text="Edit Song HTML"
                                 GridPane.columnIndex="1"/>
-                        <Button fx:id="viewSongButton" mnemonicParsing="false" prefWidth="140" text="View Song"
+                        <Button fx:id="viewSongButton" mnemonicParsing="false" prefWidth="140" text="Navigate to Song"
                                 GridPane.columnIndex="2"/>
                         <Button fx:id="previewPDFButton" mnemonicParsing="false" prefWidth="140" text="Preview PDF"
                                 GridPane.columnIndex="3"/>

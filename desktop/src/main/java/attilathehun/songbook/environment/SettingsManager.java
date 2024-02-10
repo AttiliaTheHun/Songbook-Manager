@@ -59,7 +59,6 @@ public final class SettingsManager {
             Type targetClassType = new TypeToken<Settings>() {
             }.getType();
             Settings settings = new Gson().fromJson(json, targetClassType);
-            logger.debug("Loaded local settings");
             Environment.getInstance().setSettings(settings.environment);
             StandardCollectionManager.getInstance().setSettings(settings.collections.get(StandardCollectionManager.getInstance().getCollectionName()));
             StandardCollectionManager.getInstance().init();
@@ -69,6 +68,7 @@ public final class SettingsManager {
             EnvironmentManager.getInstance().setSongbookSettings(settings.songbook);
             PluginManager.getInstance().loadPluginSettings(settings.plugins);
             VCSAdmin.getInstance().setSettings(settings.vcs);
+            logger.debug("Loaded local settings");
 
         } catch (NoSuchFileException nsf) {
 

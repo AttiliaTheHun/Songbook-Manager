@@ -43,10 +43,11 @@ import java.util.stream.Collectors;
 
 public class StandardCollectionManager extends CollectionManager {
     private static final Logger logger = LogManager.getLogger(StandardCollectionManager.class);
-
     private static final List<CollectionListener> listeners = new ArrayList<>();
     private static final StandardCollectionManager INSTANCE = new StandardCollectionManager();
     private final String collectionName = "standard";
+    public final String STANDARD_SONG_DATA_FILE_PATH = Paths.get(Environment.getInstance().getSettings().get("SONGS_FILE_PATH") + "/" + collectionName + "/").toString();
+
     private CollectionSettings settings = getDefaultSettings();
     private ArrayList<Song> collection;
 
@@ -474,8 +475,9 @@ public class StandardCollectionManager extends CollectionManager {
     @Override
     public CollectionSettings getDefaultSettings() {
         CollectionSettings settings = new CollectionSettings();
-        settings.put("COLLECTION_FILE_PATH", Paths.get(Environment.getInstance().getSettings().get("DATA_FILE_PATH") + "/collection.json").toString());
-        settings.put("SONG_DATA_FILE_PATH", Paths.get(Environment.getInstance().getSettings().get("DATA_FILE_PATH") + "/songs/html/").toString());
+        settings.put("COLLECTION_FILE_PATH", Paths.get(Environment.getInstance().getSettings().get("DATA_FILE_PATH") + String.format(CollectionManager.COLLECTION_FILE_NAME, collectionName)).toString());
+        settings.put("RELATIVE_FILE_PATH", Paths.get(String.format(CollectionManager.RELATIVE_DATA_FILE_NAME, collectionName)).toString());
+        settings.put("SONG_DATA_FILE_PATH", Paths.get(STANDARD_SONG_DATA_FILE_PATH));
         return settings;
     }
 

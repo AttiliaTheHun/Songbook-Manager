@@ -40,6 +40,7 @@ public class HTMLGenerator {
     private static final String TEMP_FRONTPAGE_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMP_FILE_PATH") + "/frontpage.html").toString();
     private static final String TEMP_PAGEVIEW_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMP_FILE_PATH") + "/current_page.html").toString();
     private static final String BASE_STYLE_FILE_PATH = Paths.get(Environment.getInstance().getSettings().get("CSS_RESOURCES_FILE_PATH") + "/style.css").toString();
+    private static final String SHADOW_SONG_HTML = "<div class=\"song\"></div>";
     private static final String NAVBAR_REPLACE_MARK = "<replace \"navbar\">";
     private static final String HEAD_REPLACE_MARK = "<replace \"head\">";
     private static final String BASE_STYLE_PATH_REPLACE_MARK = "<replace \"basecss\">"; //style.css
@@ -63,14 +64,21 @@ public class HTMLGenerator {
     public HTMLGenerator() {
         try {
             Files.copy(Paths.get(BASE_STYLE_FILE_PATH), Paths.get(Environment.getInstance().getSettings().get("TEMP_FILE_PATH") + "/style.css"), StandardCopyOption.REPLACE_EXISTING);
-            File shadowSongFile = new File(SHADOW_SONG_PATH);
-            shadowSongFile.createNewFile();
+            createShadowSongFile();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage("Cannot instantiate the HTML generator").addOkButton().build().open();
             System.exit(0);
         }
+    }
+
+    private void createShadowSongFile() throws IOException {
+        File shadowSongFile = new File(SHADOW_SONG_PATH);
+        shadowSongFile.createNewFile();
+        PrintWriter printWriter = new PrintWriter(new FileWriter((shadowSongFile), false));
+        printWriter.write(SHADOW_SONG_HTML);
+        printWriter.close();
     }
 
     /**
@@ -118,32 +126,30 @@ public class HTMLGenerator {
         String html = String.join("\n", Files.readAllLines(path));
         ArrayList<Song> collection = Environment.getInstance().getCollectionManager().getDisplayCollection();
         StringBuilder payload = new StringBuilder();
-        int columns = (endIndex - startIndex > DynamicSonglist.MAX_SONG_PER_COLUMN) ? 2 : 1;
+        int columns = (endIndex - startIndex > DynamicSonglist.MAX_SONGS_PER_COLUMN) ? 2 : 1;
         int columnStartIndex = startIndex;
-        int columnEndIndex = Math.min(startIndex + DynamicSonglist.MAX_SONG_PER_COLUMN, endIndex);
+        int columnEndIndex = Math.min(startIndex + DynamicSonglist.MAX_SONGS_PER_COLUMN, endIndex);
         for (int j = 1; j < columns + 1; j++) {
 
-            payload.append("<div>\n");
-            payload.append("<td class=\"songlist-column-wrapper\"><ul>\n");
+            payload.append("<div class=\"songlist-column\">\n<ul class=\"songlist-formatting\">");
 
             for (int i = columnStartIndex; i < columnEndIndex; i++) {
                 payload.append("<li>");
-                if (collection.get(i).id() == 96) {
+                if (collection.get(i).name().equals("Píseň Hraboše")) {
                     payload.append("<b><u>");
                 }
                 payload.append(collection.get(i).name());
-                if (collection.get(i).id() == 96) {
+                if (collection.get(i).name().equals("Píseň Hraboše")) {
                     payload.append("</b></u>");
                 }
 
                 payload.append("</li>\n");
             }
 
-            payload.append("</ul></td>\n");
-            payload.append("</div>\n");
+            payload.append("</ul></div>\n");
 
             columnStartIndex = columnEndIndex;
-            columnEndIndex = Math.min(columnEndIndex + DynamicSonglist.MAX_SONG_PER_COLUMN, endIndex);
+            columnEndIndex = Math.min(columnEndIndex + DynamicSonglist.MAX_SONGS_PER_COLUMN, endIndex);
         }
 
         html = html.replace(SONG_LIST_REPLACE_MARK, payload.toString());

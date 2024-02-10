@@ -16,6 +16,7 @@ public class LoadIndex extends PartialIndex {
     private Property missing;
     private Property outdated;
     private Collection<String> collections;
+    @Deprecated(forRemoval = true)
     @SerializedName("version_timestamp")
     private long versionTimestamp;
 
@@ -36,7 +37,7 @@ public class LoadIndex extends PartialIndex {
         return missing;
     }
 
-    public void setMissing(Property missing) {
+    public void setMissing(final Property missing) {
         this.missing = missing;
     }
 
@@ -44,7 +45,7 @@ public class LoadIndex extends PartialIndex {
         return outdated;
     }
 
-    public void setOutdated(Property outdated) {
+    public void setOutdated(final Property outdated) {
         this.outdated = outdated;
     }
 
@@ -52,7 +53,7 @@ public class LoadIndex extends PartialIndex {
         return collections;
     }
 
-    public void setCollections(Collection<String> collections) {
+    public void setCollections(final Collection<String> collections) {
         this.collections = collections;
     }
 
@@ -60,7 +61,7 @@ public class LoadIndex extends PartialIndex {
         return versionTimestamp;
     }
 
-    public void setVersionTimestamp(long versionTimestamp) {
+    public void setVersionTimestamp(final long versionTimestamp) {
         this.versionTimestamp = versionTimestamp;
     }
 }

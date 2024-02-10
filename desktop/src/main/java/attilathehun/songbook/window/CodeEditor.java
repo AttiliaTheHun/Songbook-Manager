@@ -112,6 +112,9 @@ public class CodeEditor extends Stage implements CollectionListener {
         manager.removeListener(this);
         instances.remove(song);
         close();
+        if (!(hasInstanceOpen() || SongbookApplication.getMainWindow().isShowing())) {
+            Environment.getInstance().exit();
+        }
     }
 
     public static boolean hasInstanceOpen() {

@@ -43,7 +43,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     private static int SONG_ONE_INDEX;
     private static Song SONG_TWO;
     private static int SONG_TWO_INDEX;
-    private final HTMLGenerator generator = new HTMLGenerator();
+    private HTMLGenerator generator = new HTMLGenerator();
     @FXML
     private WebView webview;
     @FXML
@@ -405,7 +405,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
         }
         try {
-            URL url = new File(new HTMLGenerator().generatePageFile(SONG_ONE, SONG_TWO)).toURI().toURL();
+            URL url = new File(generator.generatePageFile(SONG_ONE, SONG_TWO)).toURI().toURL();
 
             Platform.runLater(() -> webview.getEngine().load(url.toExternalForm()));
         } catch (MalformedURLException e) {
@@ -438,6 +438,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
     @Override
     public void onRefresh() {
+        generator = new HTMLGenerator();
         refreshWebView();
     }
 

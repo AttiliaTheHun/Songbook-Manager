@@ -11,6 +11,8 @@ import java.util.concurrent.CompletableFuture;
  * as the environment is set up to work with this pattern.
  */
 public abstract class CollectionManager {
+    protected static final String COLLECTION_FILE_NAME = "%s_collection.json";
+    protected static final String RELATIVE_DATA_FILE_NAME = "songs/%s/";
     public static final int INVALID_SONG_ID = -1;
 
     public static final String FRONTPAGE_SONG_NAME = "frontpage";
@@ -329,6 +331,15 @@ public abstract class CollectionManager {
          */
         public String getCollectionFilePath() {
             return (String) get("COLLECTION_FILE_PATH");
+        }
+
+        /**
+         * Returns relative path to collection songs. Used for example in archives
+         *
+         * @return relative collection file path
+         */
+        public String getRelativeFilePath() {
+            return (String) get("RELATIVE_FILE_PATH");
         }
 
         /**

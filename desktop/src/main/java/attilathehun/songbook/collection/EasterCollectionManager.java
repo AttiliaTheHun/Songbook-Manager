@@ -42,15 +42,15 @@ import java.util.concurrent.CompletableFuture;
 
 
 public class EasterCollectionManager extends CollectionManager {
-
-    public static final String EASTER_SONG_DATA_FILE_PATH = Paths.get(Environment.getInstance().getSettings().get("DATA_FILE_PATH") + "/songs/egg/").toString();
     private static final Logger logger = LogManager.getLogger(EasterCollectionManager.class);
+    private final String collectionName = "easter";
+    public final String EASTER_SONG_DATA_FILE_PATH = Paths.get(Environment.getInstance().getSettings().get("SONGS_FILE_PATH") + "/" + collectionName + "/").toString();
     private static final List<CollectionListener> listeners = new ArrayList<>();
     private static final EasterCollectionManager INSTANCE = new EasterCollectionManager();
     private CollectionSettings settings = getDefaultSettings();
 
    
-    private final String collectionName = "easter";
+
     private ArrayList<Song> collection;
 
     private EasterCollectionManager() {
@@ -454,8 +454,9 @@ public class EasterCollectionManager extends CollectionManager {
     @Override
     public CollectionSettings getDefaultSettings() {
         CollectionSettings settings = new CollectionSettings();
-        settings.put("COLLECTION_FILE_PATH", Paths.get(Environment.getInstance().getSettings().get("DATA_FILE_PATH") + "/easter_collection.json").toString());
-        settings.put("SONG_DATA_FILE_PATH", Paths.get(Environment.getInstance().getSettings().get("DATA_FILE_PATH") + "/songs/egg/").toString());
+        settings.put("COLLECTION_FILE_PATH", Paths.get(Environment.getInstance().getSettings().get("DATA_FILE_PATH") + String.format(CollectionManager.COLLECTION_FILE_NAME, collectionName)).toString());
+        settings.put("RELATIVE_FILE_PATH", Paths.get(String.format(CollectionManager.RELATIVE_DATA_FILE_NAME, collectionName)).toString());
+        settings.put("SONG_DATA_FILE_PATH", Paths.get(EASTER_SONG_DATA_FILE_PATH));
         return settings;
     }
 

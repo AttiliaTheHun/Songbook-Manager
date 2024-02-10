@@ -15,6 +15,7 @@ import javafx.geometry.Orientation;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -28,7 +29,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 @TODO(priority = true)
-public class CollectionEditor extends Stage implements CollectionListener {
+public class CollectionEditor extends Stage {
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
     private static final CollectionEditor INSTANCE = new CollectionEditor();
     @FXML
@@ -79,9 +80,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
     private void initialize() {
         initTabbedPane();
         initBottomToolbar();
-
         addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, window -> hide());
-
     }
 
     public void postInit() {
@@ -109,19 +108,12 @@ public class CollectionEditor extends Stage implements CollectionListener {
         addSongButton.setFocusTraversable(true);
         addSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
-
-            /*if ( ActionEvent.    StandardCollectionManager.getINSTANCE().equals(selectedManager)) {
-                System.out.println("Yikes");
-                EasterCollectionManager.getINSTANCE().addSongFromTemplateDialog(selectedSong);
-            } else {*/
                 selectedManager.addSongDialog();
-           // }
-
         });
         editSongHTMLButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setParent(this).setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
+                new AlertDialog.Builder().setTitle("Collection Editor").setMessage("Select a song first!").setParent(this).setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 return;
             }
             if (selectedManager == null) {
@@ -132,7 +124,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
         editSongRecordButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setParent(this).setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
+                new AlertDialog.Builder().setTitle("Collection Editor").setMessage("Select a song first!").setParent(this).setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 return;
             }
 
@@ -151,7 +143,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
         viewSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setParent(this)
+                new AlertDialog.Builder().setTitle("Collection Editor").setMessage("Select a song first!").setParent(this)
                         .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 return;
             }
@@ -160,7 +152,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
         previewPDFButton.setOnAction(actionEvent -> {
 
             if (!Export.getInstance().getSettings().getEnabled()) {
-                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor")
+                new AlertDialog.Builder().setTitle("Collection Editor")
                         .setMessage("This feature is part of the Export plugin. You can enable the export plugin in settings.")
                         .setParent(this).setIcon(AlertDialog.Builder.Icon.WARNING).addOkButton().build().open();
                 return;
@@ -169,7 +161,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
             refreshStoredSelection();
 
             if (selectedSong == null) {
-                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setParent(this)
+                new AlertDialog.Builder().setTitle("Collection Editor").setMessage("Select a song first!").setParent(this)
                         .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 return;
             }
@@ -187,7 +179,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
         deleteSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
             if (selectedSong == null) {
-                new AlertDialog.Builder().setTitle("SongbookManager Collection Editor").setMessage("Select a song first!").setParent(this).setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
+                new AlertDialog.Builder().setTitle("Collection Editor").setMessage("Select a song first!").setParent(this).setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 return;
             }
 
@@ -207,7 +199,35 @@ public class CollectionEditor extends Stage implements CollectionListener {
     }
 
     public void initKeyboardShortcuts() {
-
+        this.getScene().addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> {
+            switch (keyEvent.getCode()) {
+                case DELETE -> {
+                    deleteSongButton.fire();
+                }
+                case R -> {
+                    if (keyEvent.isControlDown()) {
+                        refreshStoredSelection();
+                        refreshCurrentList();
+                    }
+                }
+                case ESCAPE -> {
+                    shut();
+                }
+                case N -> {
+                    refreshStoredSelection();
+                    if (keyEvent.isControlDown()) {
+                        if (keyEvent.isShiftDown()) {
+                            if (!selectedManager.equals(EasterCollectionManager.getInstance()) && selectedSong != null) {
+                                EasterCollectionManager.getInstance().addSongFromTemplateDialog(selectedSong);
+                                return;
+                            }
+                        }
+                        selectedManager.addSongDialog();
+                    }
+                }
+            }
+        });
+/*
         this.getScene().setOnKeyPressed(keyEvent -> {
             switch (keyEvent.getCode()) {
                 case DELETE -> {
@@ -222,8 +242,20 @@ public class CollectionEditor extends Stage implements CollectionListener {
                 case ESCAPE -> {
                     shut();
                 }
+                case N -> {
+                    refreshStoredSelection();
+                    if (keyEvent.isControlDown()) {
+                        if (keyEvent.isShiftDown()) {
+                            if (!selectedManager.equals(EasterCollectionManager.getInstance())) {
+                                EasterCollectionManager.getInstance().addSongFromTemplateDialog(selectedSong);
+                                return;
+                            }
+                        }
+                        selectedManager.addSongDialog();
+                    }
+                }
             }
-        });
+        });*/
     }
 
     private void refreshStoredSelection() {
@@ -233,36 +265,6 @@ public class CollectionEditor extends Stage implements CollectionListener {
 
     private void refreshCurrentList() {
         //((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).refresh();
-    }
-
-    @Override
-    public void onSongRemoved(Song s, CollectionManager m) {
-       /* for (Tab panel : tabbedPane.getTabs()) {
-            if (((CollectionPanel) panel).getManager().equals(m)) {
-                ((CollectionPanel) panel).refresh();
-                break;
-            }
-        }*/
-    }
-
-    @Override
-    public void onSongUpdated(Song s, CollectionManager m) {
-       /* for (Tab panel : tabbedPane.getTabs()) {
-            if (((CollectionPanel) panel).getManager().equals(m)) {
-                ((CollectionPanel) panel).refresh();
-                break;
-            }
-        }*/
-    }
-
-    @Override
-    public void onSongAdded(Song s, CollectionManager m) {
-       /* for (Tab panel : tabbedPane.getTabs()) {
-            if (((CollectionPanel) panel).getManager().equals(m)) {
-                ((CollectionPanel) panel).refresh();
-                break;
-            }
-        }*/
     }
 
     public static class CollectionPanel extends Tab implements CollectionListener {
@@ -304,17 +306,17 @@ public class CollectionEditor extends Stage implements CollectionListener {
         }
 
         @Override
-        public void onSongRemoved(Song s, CollectionManager m) {
+        public void onSongRemoved(final Song s, final CollectionManager m) {
             refresh();
         }
 
         @Override
-        public void onSongUpdated(Song s, CollectionManager m) {
+        public void onSongUpdated(final Song s, final CollectionManager m) {
             refresh();
         }
 
         @Override
-        public void onSongAdded(Song s, CollectionManager m) {
+        public void onSongAdded(final Song s, final CollectionManager m) {
             refresh();
         }
 
@@ -324,7 +326,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
             }
 
             @Override
-            public void updateItem(Song s, boolean empty) {
+            public void updateItem(final Song s, final boolean empty) {
                 super.updateItem(s, empty);
                 if (empty || s == null) {
                     setText(null);
@@ -338,7 +340,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
 
         // the actual listview item (one line)
         private class SongEntry extends HBox {
-            private SongEntry(Song s) {
+            private SongEntry(final Song s) {
                 if (s == null || s.getManager() == null) {
                     throw new IllegalArgumentException();
                 }
@@ -353,7 +355,7 @@ public class CollectionEditor extends Stage implements CollectionListener {
                 IDLabel.setPrefWidth(30);
                 this.getChildren().add(IDLabel);
                 Label URLLabel = new Label(s.getUrl());
-                URLLabel.setPrefWidth(450);
+                URLLabel.setPrefWidth(440);
                 this.getChildren().add(URLLabel);
                 CheckBox activityCheckBox = new CheckBox(null);
                 activityCheckBox.setSelected(s.isActive());

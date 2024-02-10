@@ -4,6 +4,8 @@ import attilathehun.songbook.Main;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.*;
 import attilathehun.songbook.plugin.PluginManager;
+import attilathehun.songbook.vcs.Client;
+import attilathehun.songbook.vcs.index.LoadIndex;
 import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
@@ -26,6 +28,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 
@@ -98,6 +102,28 @@ public class SongbookApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
 
+        LoadIndex index = LoadIndex.empty();
+        ArrayList<String> outdated = new ArrayList<>();
+        outdated.add("8.html");
+        outdated.add("4.html");
+        index.getOutdated().put("standard", outdated);
+        ArrayList<String> missing = new ArrayList<>();
+        missing.add("1.html");
+        missing.add("12.html");
+        index.getMissing().put("standard", missing);
+        index.getCollections().add("standard");
+
+        //Client.Result r = new Client().getCompleteLoadRequest("http://beta-hrabozpevnik.clanweb.eu/api/data/download/", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h");
+        Client.Result r = new Client().getPartialLoadRequest("http://beta-hrabozpevnik.clanweb.eu/api/data/download/", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h", index);
+        if (r.error() == null) {
+            System.out.println(r.message());
+        } else {
+            System.out.println(r.error());
+        }
+
+        if (true) {
+            System.exit(0);
+        }
 
         stage.setOnCloseRequest(t -> {
 
@@ -115,13 +141,12 @@ public class SongbookApplication extends Application {
 
         registerNativeHook();
 
-        stage.setTitle("Songbook Manager");
+        stage.setTitle("SongbookManager");
         stage.setScene(scene);
         initKeyboardShortcuts(stage);
         stage.show();
         // beware of caching and garbage collection
         mainWindow = stage;
-
     }
 
     private void initKeyboardShortcuts(Stage stage) {

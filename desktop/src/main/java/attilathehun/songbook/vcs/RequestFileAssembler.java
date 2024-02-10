@@ -39,7 +39,7 @@ public class RequestFileAssembler {
             throw new FileNotFoundException("Could not find the response file");
         }
         String responseFilesPath = ZipBuilder.extract(filePath);
-        File indexFile = new File(Paths.get(responseFilesPath, "index,json").toString());
+        File indexFile = new File(Paths.get(responseFilesPath, "index.json").toString());
         if (!indexFile.exists()) {
             throw new FileNotFoundException("Could not find the response load index file");
         }
@@ -72,20 +72,20 @@ public class RequestFileAssembler {
                 .setOutputPath(outputFilePath)) {
 
             for (Object s : (Collection) index.getAdditions().get(StandardCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), "/data/songs/html");
+                builder.addFile(new File(Paths.get(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), StandardCollectionManager.getInstance().getSettings().getRelativeFilePath());
             }
             for (Object s : (Collection) index.getAdditions().get(EasterCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(EasterCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), "/data/songs/egg");
+                builder.addFile(new File(Paths.get(EasterCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), EasterCollectionManager.getInstance().getSettings().getRelativeFilePath());
             }
 
             for (Object s : (Collection) index.getChanges().get(StandardCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), "/data/songs/html");
+                builder.addFile(new File(Paths.get(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), StandardCollectionManager.getInstance().getSettings().getRelativeFilePath());
             }
             for (Object s : (Collection) index.getChanges().get(EasterCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(EasterCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), "/data/songs/egg");
+                builder.addFile(new File(Paths.get(EasterCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), EasterCollectionManager.getInstance().getSettings().getRelativeFilePath());
             }
             for (String collection : collections) {
-                builder.addFile(new File(Environment.getInstance().getRegisteredManagers().get(collection).getSettings().getCollectionFilePath()), "/data");
+                builder.addFile(new File(Environment.getInstance().getRegisteredManagers().get(collection).getSettings().getCollectionFilePath()), "");
             }
 
             builder.addFile(new File((String) VCSAdmin.getInstance().getSettings().get("CHANGE_LOG_FILE_PATH")), "");

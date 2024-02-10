@@ -232,6 +232,7 @@ public final class Environment implements CollectionListener {
     public EnvironmentSettings getDefaultSettings() {
         EnvironmentSettings settings = new EnvironmentSettings();
         settings.put("DATA_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/data/").toString());
+        settings.put("SONGS_FILE_PATH", Paths.get(settings.get("DATA_FILE_PATH") + "/songs/").toString());
         settings.put("RESOURCES_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/resources/").toString());
         settings.put("CSS_RESOURCES_FILE_PATH", Paths.get(settings.get("RESOURCES_FILE_PATH") + "/css/").toString());
         settings.put("TEMPLATE_RESOURCES_FILE_PATH", Paths.get(settings.get("RESOURCES_FILE_PATH") + "/templates/").toString());

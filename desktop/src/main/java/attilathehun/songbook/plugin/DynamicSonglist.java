@@ -8,8 +8,8 @@ import org.apache.logging.log4j.Logger;
 public class DynamicSonglist extends Plugin {
 
     //TODO move MAX_SONG_PER_COLUMN to settings?
-    public static final int MAX_SONG_PER_COLUMN = 38;
-    public static final int MAX_SONG_PER_PAGE = 2 * MAX_SONG_PER_COLUMN;
+    public static final int MAX_SONGS_PER_COLUMN = 38;
+    public static final int MAX_SONGS_PER_PAGE = 2 * MAX_SONGS_PER_COLUMN;
     private static final Logger logger = LogManager.getLogger(DynamicSonglist.class);
     private static final DynamicSonglist instance = new DynamicSonglist();
 
@@ -60,10 +60,10 @@ public class DynamicSonglist extends Plugin {
 
     private int generateSonglist() {
         boolean isLastPageSingleColumn = false;
-        int songlistParts = Environment.getInstance().getCollectionManager().getDisplayCollection().size() / MAX_SONG_PER_PAGE;
-        if (Environment.getInstance().getCollectionManager().getDisplayCollection().size() % MAX_SONG_PER_PAGE != 0) {
+        int songlistParts = Environment.getInstance().getCollectionManager().getDisplayCollection().size() / MAX_SONGS_PER_PAGE;
+        if (Environment.getInstance().getCollectionManager().getDisplayCollection().size() % MAX_SONGS_PER_PAGE != 0) {
             songlistParts += 1;
-            isLastPageSingleColumn = Environment.getInstance().getCollectionManager().getDisplayCollection().size() % MAX_SONG_PER_PAGE <= MAX_SONG_PER_COLUMN;
+            isLastPageSingleColumn = Environment.getInstance().getCollectionManager().getDisplayCollection().size() % MAX_SONGS_PER_PAGE <= MAX_SONGS_PER_COLUMN;
         }
 
         HTMLGenerator generator = new HTMLGenerator();
@@ -73,12 +73,12 @@ public class DynamicSonglist extends Plugin {
         }
 
         int startIndex = 0;
-        int endIndex = (songlistParts == 1 && MAX_SONG_PER_PAGE > Environment.getInstance().getCollectionManager().getDisplayCollection().size()) ? Environment.getInstance().getCollectionManager().getDisplayCollection().size() : MAX_SONG_PER_PAGE;
+        int endIndex = (songlistParts == 1 && MAX_SONGS_PER_PAGE > Environment.getInstance().getCollectionManager().getDisplayCollection().size()) ? Environment.getInstance().getCollectionManager().getDisplayCollection().size() : MAX_SONGS_PER_PAGE;
 
         for (int i = 0; i < songlistParts; i++) {
             generator.generateSonglistSegmentFile(startIndex, endIndex, i);
-            startIndex += MAX_SONG_PER_PAGE;
-            endIndex = Math.min(endIndex + MAX_SONG_PER_PAGE, Environment.getInstance().getCollectionManager().getDisplayCollection().size());
+            startIndex += MAX_SONGS_PER_PAGE;
+            endIndex = Math.min(endIndex + MAX_SONGS_PER_PAGE, Environment.getInstance().getCollectionManager().getDisplayCollection().size());
         }
         logger.debug("Dynamic songlist generated");
         return songlistParts;
