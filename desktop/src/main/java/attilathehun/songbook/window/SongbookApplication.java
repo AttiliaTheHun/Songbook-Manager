@@ -5,7 +5,9 @@ import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.*;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.vcs.Client;
+import attilathehun.songbook.vcs.RequestFileAssembler;
 import attilathehun.songbook.vcs.index.LoadIndex;
+import attilathehun.songbook.vcs.index.SaveIndex;
 import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
@@ -46,13 +48,13 @@ public class SongbookApplication extends Application {
     private static Stage mainWindow;
 
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         PluginManager.getInstance().init();
         SettingsManager.init();
         Installer.runDiagnostics();
         EnvironmentManager.getInstance().autoLoad();
         Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
-        EnvironmentVerificator.automated();
+        //EnvironmentVerificator.automated();
         launch(args);
         logger.debug("Application started successfully");
     }
@@ -100,9 +102,18 @@ public class SongbookApplication extends Application {
     }
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(final Stage stage) throws IOException {
+       // StandardCollectionManager.getInstance().init();
+        ArrayList<String> collections = new ArrayList<>();
+        collections.add("standard");
 
-        LoadIndex index = LoadIndex.empty();
+        SaveIndex index = SaveIndex.empty(collections);
+
+        //RequestFileAssembler rfa = new RequestFileAssembler();
+        //String requestFilePath = rfa.assembleSaveFile(index, collections).getOutputFilePath();
+        String requestFilePath = "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\vcs\\save_request.zip";
+
+        /*LoadIndex index = LoadIndex.empty();
         ArrayList<String> outdated = new ArrayList<>();
         outdated.add("8.html");
         outdated.add("4.html");
@@ -111,10 +122,13 @@ public class SongbookApplication extends Application {
         missing.add("1.html");
         missing.add("12.html");
         index.getMissing().put("standard", missing);
-        index.getCollections().add("standard");
+        index.getCollections().add("standard");*/
 
+        Client.Result r = new Client().postSaveRequestFile("http://beta-hrabozpevnik.clanweb.eu/api/data/upload/",
+                "U28gZG8gYWxsIHdobyBsaXZlIHRvIHNlZSBzdWNoIHRpbWVzLCBidXQgaXQgaXMgbm90IGZvciB0aGVtIHRvIGRlY2lkZS4=",
+                requestFilePath);
         //Client.Result r = new Client().getCompleteLoadRequest("http://beta-hrabozpevnik.clanweb.eu/api/data/download/", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h");
-        Client.Result r = new Client().getPartialLoadRequest("http://beta-hrabozpevnik.clanweb.eu/api/data/download/", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h", index);
+       // Client.Result r = new Client().getPartialLoadRequest("http://beta-hrabozpevnik.clanweb.eu/api/data/download/", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h", index);
         if (r.error() == null) {
             System.out.println(r.message());
         } else {

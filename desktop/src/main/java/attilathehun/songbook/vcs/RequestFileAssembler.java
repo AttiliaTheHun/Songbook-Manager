@@ -28,7 +28,7 @@ public class RequestFileAssembler {
     private boolean disassemblySuccessful = false;
     private LoadIndex loadIndex = null;
 
-    public static RequestFileAssembler disassemble(String filePath) throws IOException {
+    public static RequestFileAssembler disassemble(final String filePath) throws IOException {
         RequestFileAssembler assembler = new RequestFileAssembler();
         if (filePath == null || filePath.length() == 0) {
             throw new IllegalArgumentException("Invalid response file path for disassembly!");
@@ -63,7 +63,7 @@ public class RequestFileAssembler {
      * @return this
      * @throws IOException
      */
-    public RequestFileAssembler assembleSaveFile(SaveIndex index, List<String> collections) throws IOException {
+    public RequestFileAssembler assembleSaveFile(final SaveIndex index, final List<String> collections) throws IOException {
         if (index == null) {
             throw new IllegalArgumentException();
         }
@@ -71,20 +71,16 @@ public class RequestFileAssembler {
         try (ZipBuilder builder = new ZipBuilder()
                 .setOutputPath(outputFilePath)) {
 
-            for (Object s : (Collection) index.getAdditions().get(StandardCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), StandardCollectionManager.getInstance().getSettings().getRelativeFilePath());
-            }
-            for (Object s : (Collection) index.getAdditions().get(EasterCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(EasterCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), EasterCollectionManager.getInstance().getSettings().getRelativeFilePath());
+            for (final CollectionManager manager : Environment.getInstance().getRegisteredManagers().values()) {
+                for (final Object s : (Collection) index.getAdditions().get(manager.getCollectionName())) {
+                    builder.addFile(new File(Paths.get(manager.getSettings().getSongDataFilePath(), (String) s).toUri()), manager.getSettings().getRelativeFilePath());
+                }
+                for (final Object s : (Collection) index.getChanges().get(manager.getCollectionName())) {
+                    builder.addFile(new File(Paths.get(manager.getSettings().getSongDataFilePath(), (String) s).toUri()), manager.getSettings().getRelativeFilePath());
+                }
             }
 
-            for (Object s : (Collection) index.getChanges().get(StandardCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), StandardCollectionManager.getInstance().getSettings().getRelativeFilePath());
-            }
-            for (Object s : (Collection) index.getChanges().get(EasterCollectionManager.getInstance().getCollectionName())) {
-                builder.addFile(new File(Paths.get(EasterCollectionManager.getInstance().getSettings().getSongDataFilePath(), (String) s).toUri()), EasterCollectionManager.getInstance().getSettings().getRelativeFilePath());
-            }
-            for (String collection : collections) {
+            for (final String collection : collections) {
                 builder.addFile(new File(Environment.getInstance().getRegisteredManagers().get(collection).getSettings().getCollectionFilePath()), "");
             }
 
@@ -96,6 +92,11 @@ public class RequestFileAssembler {
         return this;
     }
 
+    /**
+     * Returns the path to the file that was created through the {@link #assembleSaveFile(SaveIndex, List)} method. Returns null if no such file was created.
+     *
+     * @return path to the output file or null
+     */
     public String getOutputFilePath() {
         return outputFilePath;
     }

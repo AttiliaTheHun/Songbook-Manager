@@ -1,20 +1,34 @@
 package attilathehun.songbook.vcs;
 
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.collection.TestCollectionManager;
+import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.vcs.index.Index;
 import attilathehun.songbook.vcs.index.LoadIndex;
 import attilathehun.songbook.vcs.index.SaveIndex;
+import com.google.gson.Gson;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class IndexBuilderTest {
+    final String STANDARD_COLLECTION_NAME = "standard";
+    final String EASTER_COLLECTION_NAME = "easter";
+
+    @BeforeEach
+    public void init() {
+        MockitoAnnotations.openMocks(this);
+    }
 
     Index createTestLocalIndex(int timestamp) {
         Index local = Index.empty();
@@ -59,39 +73,72 @@ class IndexBuilderTest {
         IndexBuilder builder = new IndexBuilder();
         Index local = createTestLocalIndex(12);
         Index remote = createTestRemoteIndex(27);
-        LoadIndex index = builder.createLoadIndex(local, remote);
 
-        assertEquals(((ArrayList<String>) index.getMissing().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 0);
-        assertEquals(((ArrayList<String>) index.getMissing().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>) index.getMissing().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song3");
-        assertEquals(((ArrayList<String>) index.getOutdated().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>) index.getOutdated().get(StandardCollectionManager.getInstance().getCollectionName())).get(0), "song2");
-        assertEquals(((ArrayList<String>) index.getOutdated().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>) index.getOutdated().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song1");
-        assertEquals(index.getCollections().size(), 1);
-        assertEquals(((ArrayList<String>) index.getCollections()).get(0), EasterCollectionManager.getInstance().getCollectionName());
+        // init the mock
+        Environment environmentMock = mock(Environment.class);
+        HashMap<String, CollectionManager> fakeRegisteredManagers = new HashMap<>();
+        fakeRegisteredManagers.put(STANDARD_COLLECTION_NAME, new TestCollectionManager());
+        fakeRegisteredManagers.put(EASTER_COLLECTION_NAME, new TestCollectionManager());
+        when(environmentMock.getRegisteredManagers()).thenReturn(fakeRegisteredManagers);
+
+        try (MockedStatic<Environment> staticEnvironmentMock = mockStatic(Environment.class)) {
+            staticEnvironmentMock.when(Environment::getInstance).thenReturn(environmentMock);
+
+            // what we were waiting for all the time
+            LoadIndex index = builder.createLoadIndex(local, remote);
+
+            assertEquals(((ArrayList<String>) index.getMissing().get(STANDARD_COLLECTION_NAME)).size(), 0);
+            assertEquals(((ArrayList<String>) index.getMissing().get(EASTER_COLLECTION_NAME)).size(), 1);
+            assertEquals(((ArrayList<String>) index.getMissing().get(EASTER_COLLECTION_NAME)).get(0), "song3");
+            assertEquals(((ArrayList<String>) index.getOutdated().get(STANDARD_COLLECTION_NAME)).size(), 1);
+            assertEquals(((ArrayList<String>) index.getOutdated().get(STANDARD_COLLECTION_NAME)).get(0), "song2");
+            assertEquals(((ArrayList<String>) index.getOutdated().get(EASTER_COLLECTION_NAME)).size(), 1);
+            assertEquals(((ArrayList<String>) index.getOutdated().get(EASTER_COLLECTION_NAME)).get(0), "song1");
+            assertEquals(index.getCollections().size(), 1);
+            assertEquals(((ArrayList<String>) index.getCollections()).get(0), EASTER_COLLECTION_NAME);
+        }
 
     }
 
     @Test
     void createSaveIndexTest() {
+        final long CACHED_TIMESTAMP = 227;
         IndexBuilder builder = new IndexBuilder();
         Index local = createTestLocalIndex(27);
         Index remote = createTestRemoteIndex(12);
-        SaveIndex index = builder.createSaveIndex(local, remote);
-        assertEquals(((ArrayList<String>) index.getAdditions().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>) index.getAdditions().get(StandardCollectionManager.getInstance().getCollectionName())).get(0), "song3");
-        assertEquals(((ArrayList<String>) index.getAdditions().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 0);
-        assertEquals(((ArrayList<String>) index.getDeletions().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 0);
-        assertEquals(((ArrayList<String>) index.getDeletions().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>) index.getDeletions().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song3");
-        assertEquals(((ArrayList<String>) index.getChanges().get(StandardCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>) index.getChanges().get(StandardCollectionManager.getInstance().getCollectionName())).get(0), "song2");
-        assertEquals(((ArrayList<String>) index.getChanges().get(EasterCollectionManager.getInstance().getCollectionName())).size(), 1);
-        assertEquals(((ArrayList<String>) index.getChanges().get(EasterCollectionManager.getInstance().getCollectionName())).get(0), "song1");
-        assertEquals(index.getCollections().size(), 1);
-        assertEquals(((ArrayList<String>) index.getCollections()).get(0), EasterCollectionManager.getInstance().getCollectionName());
-        assertTrue(index.getVersionTimestamp() > -1);
+
+        // init the mocks
+        Environment environmentMock = mock(Environment.class);
+        HashMap<String, CollectionManager> fakeRegisteredManagers = new HashMap<>();
+        fakeRegisteredManagers.put(STANDARD_COLLECTION_NAME, new TestCollectionManager());
+        fakeRegisteredManagers.put(EASTER_COLLECTION_NAME, new TestCollectionManager());
+        when(environmentMock.getRegisteredManagers()).thenReturn(fakeRegisteredManagers);
+        CacheManager cacheManagerMock = mock(CacheManager.class);
+        when(cacheManagerMock.getCachedSongbookVersionTimestamp()).thenReturn(CACHED_TIMESTAMP);
+
+        try (
+                MockedStatic<Environment> staticEnvironmentMock = mockStatic(Environment.class);
+                MockedStatic<CacheManager> staticCacheManagerMock = mockStatic(CacheManager.class);
+                ) {
+            staticEnvironmentMock.when(Environment::getInstance).thenReturn(environmentMock);
+            staticCacheManagerMock.when(CacheManager::getInstance).thenReturn(cacheManagerMock);
+
+            SaveIndex index = builder.createSaveIndex(local, remote);
+
+            assertEquals(((ArrayList<String>) index.getAdditions().get(STANDARD_COLLECTION_NAME)).size(), 1);
+            assertEquals(((ArrayList<String>) index.getAdditions().get(STANDARD_COLLECTION_NAME)).get(0), "song3");
+            assertEquals(((ArrayList<String>) index.getAdditions().get(EASTER_COLLECTION_NAME)).size(), 0);
+            assertEquals(((ArrayList<String>) index.getDeletions().get(STANDARD_COLLECTION_NAME)).size(), 0);
+            assertEquals(((ArrayList<String>) index.getDeletions().get(EASTER_COLLECTION_NAME)).size(), 1);
+            assertEquals(((ArrayList<String>) index.getDeletions().get(EASTER_COLLECTION_NAME)).get(0), "song3");
+            assertEquals(((ArrayList<String>) index.getChanges().get(STANDARD_COLLECTION_NAME)).size(), 1);
+            assertEquals(((ArrayList<String>) index.getChanges().get(STANDARD_COLLECTION_NAME)).get(0), "song2");
+            assertEquals(((ArrayList<String>) index.getChanges().get(EASTER_COLLECTION_NAME)).size(), 1);
+            assertEquals(((ArrayList<String>) index.getChanges().get(EASTER_COLLECTION_NAME)).get(0), "song1");
+            assertEquals(index.getCollections().size(), 1);
+            assertEquals(((ArrayList<String>) index.getCollections()).get(0), EasterCollectionManager.getInstance().getCollectionName());
+            assertTrue(index.getVersionTimestamp() > -1);
+        }
     }
 
 }

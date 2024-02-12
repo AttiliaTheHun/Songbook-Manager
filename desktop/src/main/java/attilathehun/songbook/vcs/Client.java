@@ -2,6 +2,7 @@ package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.vcs.index.LoadIndex;
+import attilathehun.songbook.vcs.index.SaveIndex;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.SongbookApplication;
 import com.google.gson.Gson;
@@ -10,6 +11,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -19,7 +22,8 @@ import java.nio.file.Paths;
 
 public class Client {
     private static final Logger logger = LogManager.getLogger(Client.class);
-
+    private static final String HTTP_GET = "GET";
+    private static final String HTTP_POST = "POST";
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
     private static final String CONTENT_TYPE_ZIP = "application/zip";
     private static final String CONTENT_TYPE_JSON = "application/json";
@@ -27,13 +31,14 @@ public class Client {
     private static final String AUTHORIZATION_HEADER = "Authorization";
 
     public static final int OK = 200;
+    public static final int CREATED = 201;
     public static final int NO_CONTENT = 204;
     public static final int ACCESS_DENIED = 401;
     public static final int FORBIDDEN = 403;
     public static final int NOT_FOUND = 404;
     public static final int METHOD_NOT_ALLOWED = 405;
     public static final int I_AM_A_TEAPOT = 418;
-    public static final int NA = -248;
+    public static final int NA = -1;
 
 
     /**
@@ -74,7 +79,7 @@ public class Client {
 
         final URL url = new URL(endpoint);
         final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
+        conn.setRequestMethod(HTTP_GET);
         conn.setDoOutput(true);
         conn.setRequestProperty(AUTHORIZATION_HEADER, "Bearer " + token);
         if (index != null) {
@@ -116,11 +121,56 @@ public class Client {
                     .setMessage(String.format("HTTP response code: %s", conn.getResponseCode()))
                     .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
         }
+        conn.disconnect();
+
         return new Result(null, (conn.getErrorStream() != null) ? new String(conn.getErrorStream().readAllBytes()) : String.format("invalid response code: %d", conn.getResponseCode()));
 
     }
 
+    public Result postSaveRequestFile(final String endpoint, final String token, final String requestFilePath) throws IOException {
+        if (endpoint == null || endpoint.length() == 0) {
+            throw new IllegalArgumentException("endpoint must be specified");
+        }
+        if (token == null || token.length() == 0) {
+            throw new IllegalArgumentException("token must be specified");
+        }
+        if (requestFilePath == null || requestFilePath.length() == 0) {
+            throw new IllegalArgumentException("request file path must be specified");
+        }
 
+        final URL url = new URL(endpoint);
+        final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod(HTTP_POST);
+        conn.setDoOutput(true);
+        conn.setRequestProperty(AUTHORIZATION_HEADER, "Bearer " + token);
+
+        conn.setRequestProperty(CONTENT_TYPE_HEADER, CONTENT_TYPE_ZIP);
+        conn.setRequestProperty(CONTENT_DISPOSITION_HEADER, "attachment;filename=save_request.zip");
+
+        // send over the request file
+        try (final OutputStream outputStream = conn.getOutputStream()) {
+            Files.copy(Path.of(requestFilePath), outputStream);
+            outputStream.flush();
+        }
+
+        conn.connect();
+        conn.disconnect();
+        if (conn.getResponseCode() == CREATED) {
+            return new Result("success", null);
+        }
+        new AlertDialog.Builder().setTitle("Could not download the data").setIcon(AlertDialog.Builder.Icon.ERROR)
+                .setMessage(String.format("HTTP response code: %s", conn.getResponseCode()))
+                .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
+        return new Result(null, (conn.getErrorStream() != null) ? String.format("%d %s", conn.getResponseCode(), new String(conn.getErrorStream().readAllBytes())) : String.format("invalid response code: %d", conn.getResponseCode()));
+    }
+
+    /**
+     * The {@link Client} data structure.
+     *
+     * @param message any kind of {@link String} output (can be null)
+     * @param error any kind of error message (can be null)
+     * @param data data Object (can be null)
+     */
     public record Result(String message, String error, Object data) {
         public Result(final String message, final String error) {
             this(message, error, null);

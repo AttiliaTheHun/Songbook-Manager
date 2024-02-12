@@ -11,15 +11,14 @@ import java.util.HashMap;
 public class Property extends HashMap<String, Object> {
     private static final Logger logger = LogManager.getLogger(Property.class);
 
-    public Property() {
-    }
+    public Property() { }
 
-    public Property(HashMap<String, ? extends Object> data) {
+    public Property(final HashMap<String, ?> data) {
         this.putAll(data);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (o == this) {
             return true;
         }

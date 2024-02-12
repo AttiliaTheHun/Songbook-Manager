@@ -240,7 +240,7 @@ public final class VCSAdmin {
         RequestFileAssembler disassembler = RequestFileAssembler.disassemble(responseFilePath);
         if (disassembler.success()) {
             local = indexBuilder.createLocalIndex();
-            local.setVersionTimestamp(disassembler.index().getVersionTimestamp());
+            //local.setVersionTimestamp(disassembler.index().getVersionTimestamp());
             CacheManager.getInstance().cacheIndex(local);
             CacheManager.getInstance().cacheSongbookVersionTimestamp(local.getVersionTimestamp());
             new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO)

@@ -16,20 +16,14 @@ public class LoadIndex extends PartialIndex {
     private Property missing;
     private Property outdated;
     private Collection<String> collections;
-    @Deprecated(forRemoval = true)
-    @SerializedName("version_timestamp")
-    private long versionTimestamp;
 
-    public LoadIndex() {
-
-    }
+    public LoadIndex() { }
 
     public static LoadIndex empty() {
         LoadIndex index = new LoadIndex();
         index.setMissing(new Property());
         index.setOutdated(new Property());
         index.setCollections(new ArrayList<>());
-        index.versionTimestamp = -1;
         return index;
     }
 
@@ -57,11 +51,4 @@ public class LoadIndex extends PartialIndex {
         this.collections = collections;
     }
 
-    public long getVersionTimestamp() {
-        return versionTimestamp;
-    }
-
-    public void setVersionTimestamp(final long versionTimestamp) {
-        this.versionTimestamp = versionTimestamp;
-    }
 }

@@ -24,12 +24,17 @@ public class SaveIndex extends PartialIndex {
         this.versionTimestamp = versionTimestamp;
     }
 
-    public static SaveIndex empty() {
+    public static SaveIndex empty(final Collection<String> collections) {
         SaveIndex index = new SaveIndex(-1);
         index.setAdditions(new Property());
         index.setCollections(new ArrayList<>());
         index.setChanges(new Property());
         index.setDeletions(new Property());
+        for (final String collection : collections) {
+            index.getAdditions().put(collection, new ArrayList<>());
+            index.getDeletions().put(collection, new ArrayList<>());
+            index.getChanges().put(collection, new ArrayList<>());
+        }
         return index;
     }
 

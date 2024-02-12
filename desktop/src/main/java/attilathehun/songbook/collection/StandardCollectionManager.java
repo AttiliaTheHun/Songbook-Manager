@@ -475,7 +475,7 @@ public class StandardCollectionManager extends CollectionManager {
     @Override
     public CollectionSettings getDefaultSettings() {
         CollectionSettings settings = new CollectionSettings();
-        settings.put("COLLECTION_FILE_PATH", Paths.get(Environment.getInstance().getSettings().get("DATA_FILE_PATH") + String.format(CollectionManager.COLLECTION_FILE_NAME, collectionName)).toString());
+        settings.put("COLLECTION_FILE_PATH", Paths.get((String) Environment.getInstance().getSettings().get("DATA_FILE_PATH"), String.format(CollectionManager.COLLECTION_FILE_NAME, collectionName)).toString());
         settings.put("RELATIVE_FILE_PATH", Paths.get(String.format(CollectionManager.RELATIVE_DATA_FILE_NAME, collectionName)).toString());
         settings.put("SONG_DATA_FILE_PATH", Paths.get(STANDARD_SONG_DATA_FILE_PATH));
         return settings;

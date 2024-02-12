@@ -6,6 +6,7 @@ import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.util.SHA256HashGenerator;
 import attilathehun.songbook.vcs.index.*;
+import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,8 +32,8 @@ public class IndexBuilder {
      * @param remoteIndex the index to be compared
      * @return modified collection names list
      */
-    public static List<String> compareCollections(Index localIndex, Index remoteIndex) {
-        List<String> modifiedCollections = new ArrayList<>();
+    public static List<String> compareCollections(final Index localIndex, final Index remoteIndex) {
+        final List<String> modifiedCollections = new ArrayList<>();
         if (!localIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()).equals(remoteIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()))) {
             modifiedCollections.add(StandardCollectionManager.getInstance().getCollectionName());
         }
@@ -49,19 +50,19 @@ public class IndexBuilder {
      * @param remote remote songbook index
      * @return save index of the differences
      */
-    public SaveIndex createSaveIndex(Index local, Index remote) {
-        SaveIndex index = new SaveIndex(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
+    public SaveIndex createSaveIndex(final Index local, final Index remote) {
+        final SaveIndex index = new SaveIndex(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
         index.setAdditions(new Property());
         index.setDeletions(new Property());
         Collection<String> collectionAdditions;
         Collection<String> collectionDeletions;
-        for (String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
-            collectionAdditions = getExtraItems((Collection) remote.getData().get(collection), (Collection) local.getData().get(collection));
+        for (final String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
+            collectionAdditions = getExtraItems((Collection<String>) remote.getData().get(collection), (Collection<String>) local.getData().get(collection));
             index.getAdditions().put(collection, collectionAdditions);
-            collectionDeletions = getMissingItems((Collection) remote.getData().get(collection), (Collection) local.getData().get(collection));
+            collectionDeletions = getMissingItems((Collection<String>) remote.getData().get(collection), (Collection<String>) local.getData().get(collection));
             index.getDeletions().put(collection, collectionDeletions);
         }
-        Property changes = new Property(getChanges(local, remote));
+        final Property changes = new Property(getChanges(local, remote));
 
         index.setChanges(changes);
         index.setCollections(new ArrayList<>(compareCollections(local, remote)));
@@ -75,15 +76,18 @@ public class IndexBuilder {
      * @param remote remote songbook index
      * @return load index of the differences
      */
-    public LoadIndex createLoadIndex(Index local, Index remote) {
-        Property missing = new Property();
-        Collection<String> collectionMissing;
-        for (String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
-            collectionMissing = getMissingItems((Collection) remote.getData().get(collection), (Collection) local.getData().get(collection));
-            missing.put(collection, collectionMissing);
+    public LoadIndex createLoadIndex(final Index local, final Index remote) {
+        if (local == null || remote == null) {
+            throw new IllegalArgumentException("the index can not be null");
         }
-        Property outdated = new Property(getChanges(local, remote));
-        LoadIndex index = new LoadIndex();
+        final Property missing = new Property();
+        Collection<String> missingSongs;
+        for (final String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
+            missingSongs = getMissingItems((Collection<String>) remote.getData().get(collection), (Collection<String>) local.getData().get(collection));
+            missing.put(collection, missingSongs);
+        }
+        final Property outdated = new Property(getChanges(local, remote));
+        final LoadIndex index = new LoadIndex();
         index.setMissing(missing);
         index.setOutdated(outdated);
         index.setCollections(new ArrayList<>(compareCollections(local, remote)));
@@ -124,7 +128,7 @@ public class IndexBuilder {
      * @param dir target directory
      * @return list of file names
      */
-    private List<String> listFileNames(String dir) {
+    private List<String> listFileNames(final String dir) {
         if (dir == null) {
             throw new IllegalArgumentException();
         }
@@ -140,7 +144,7 @@ public class IndexBuilder {
      * @param dir target directory
      * @return list of file objects
      */
-    private List<File> listFiles(String dir) {
+    private List<File> listFiles(final String dir) {
         if (dir == null) {
             throw new IllegalArgumentException();
         }
@@ -156,9 +160,9 @@ public class IndexBuilder {
      * @param current to collection to compare
      * @return elements from old absent in current
      */
-    private Collection<String> getMissingItems(Collection<String> old, Collection<String> current) {
-        Collection<String> missing = new ArrayList<>();
-        for (String s : old) {
+    private Collection<String> getMissingItems(final Collection<String> old, final Collection<String> current) {
+        final Collection<String> missing = new ArrayList<>();
+        for (final String s : old) {
             if (!current.contains(s)) {
                 missing.add(s);
             }
@@ -173,8 +177,8 @@ public class IndexBuilder {
      * @param current to collection to compare
      * @return elements from current absent in old
      */
-    private Collection<String> getExtraItems(Collection<String> old, Collection<String> current) {
-        return getMissingItems(current, old);
+    private Collection<String> getExtraItems(final Collection<String> old, final Collection<String> current) {
+        return getMissingItems(current, old); // I sure do think I am smart
     }
 
     /**
@@ -185,20 +189,20 @@ public class IndexBuilder {
      * @param remoteIndex the index to be compared
      * @return a map of collections containing the actual changes
      */
-    private HashMap<String, Collection<String>> getChanges(Index localIndex, Index remoteIndex) {
-        HashMap<String, Collection<String>> changes = new HashMap<>();
+    private HashMap<String, Collection<String>> getChanges(final Index localIndex, final Index remoteIndex) {
+        final HashMap<String, Collection<String>> changes = new HashMap<>();
 
-        for (String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
+        for (final String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
 
             ArrayList<String> localSongs = (ArrayList<String>) localIndex.getData().get(collection);
             ArrayList<String> localSongHashes = (ArrayList<String>) localIndex.getHashes().get(collection);
             if (localSongs.size() != localSongHashes.size()) {
-                throw new MalformedIndexException("Song count and song hash count do not match!");
+                throw new MalformedIndexException("Local song count and song hash count do not match!");
             }
             ArrayList<String> remoteSongs = (ArrayList<String>) remoteIndex.getData().get(collection);
             ArrayList<String> remoteSongHashes = (ArrayList<String>) remoteIndex.getHashes().get(collection);
             if (remoteSongs.size() != remoteSongHashes.size()) {
-                throw new MalformedIndexException("Song count and song hash count do not match!");
+                throw new MalformedIndexException("Remote song count and song hash count do not match!");
             }
 
             HashMap<String, String> localSongData = new HashMap<>();
@@ -215,7 +219,7 @@ public class IndexBuilder {
 
             Collection<String> collectionChanges = new ArrayList<>();
 
-            for (String song : localSongData.keySet()) {
+            for (final String song : localSongData.keySet()) {
                 if (remoteSongData.get(song) == null) {
                     continue;
                 }
@@ -246,10 +250,10 @@ public class IndexBuilder {
          *
          * @param dequeData task input data
          */
-        private static void init(Collection<File> dequeData) {
+        static void init(final Collection<File> dequeData) {
             activeThreads = new AtomicInteger(0);
-            deque = new ConcurrentLinkedDeque<File>(dequeData);
-            map = Collections.synchronizedSortedMap(new TreeMap<String, String>());
+            deque = new ConcurrentLinkedDeque<>(dequeData);
+            map = Collections.synchronizedSortedMap(new TreeMap<>());
         }
 
         /**
@@ -270,7 +274,7 @@ public class IndexBuilder {
          *
          * @param collection task input data
          */
-        private static void spamCPUAndMemoryWithThreads(Collection<File> collection) {
+        static void spamCPUAndMemoryWithThreads(final Collection<File> collection) {
             init(collection);
             Thread[] threads = new Thread[(int) VCSAdmin.getInstance().getSettings().get("VCS_THREAD_COUNT")];
             for (int i = 0; i < threads.length; i++) {
