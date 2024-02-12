@@ -1,103 +1,13 @@
 [
   {
-    "id": 0,
-    "name": "1. Signální",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003dRuWfykUIlrY"
-  },
-  {
-    "id": 1,
-    "name": "Abeceda",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003dQX6rolYzt3M"
-  },
-  {
-    "id": 10,
-    "name": "Bláznova ukolébavka",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003dpPV6uMQYIFI"
-  },
-  {
-    "id": 11,
-    "name": "Blízko Little Big Hornu",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003dxsvfFBUEmXU\u0026ab_channel\u003dSUPRAPHON"
-  },
-  {
     "id": 12,
-    "name": "Bonsoir mademoisele Paris",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003dZ6AxwxvHDp4\u0026ab_channel\u003dTomasMate"
-  },
-  {
-    "id": 13,
-    "name": "Boty toulavý",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003dhomJ_xZjejQ\u0026ab_channel\u003dSingollodragon"
-  },
-  {
-    "id": 14,
-    "name": "Buchet je spousta",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003dUNHo7mPouoA\u0026ab_channel\u003dMichalKr%C3%A1l%C3%ADk"
-  },
-  {
-    "id": 15,
-    "name": "Buráky",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003d59qg3-bWJBQ\u0026ab_channel\u003dLiborKlenovec"
-  },
-  {
-    "id": 16,
-    "name": "Burlaci",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003dH0zC_juYGLs\u0026ab_channel\u003dWarnerMusicCzechRepublic"
-  },
-  {
-    "id": 2,
-    "name": "Amazonka",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003dplgFQPmf-DU"
-  },
-  {
-    "id": 3,
-    "name": "Anděl",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003djIPwzMgPVqE"
-  },
-  {
-    "id": 4,
-    "name": "Až zejtra",
+    "name": "Idaho",
     "active": true,
     "url": ""
   },
   {
-    "id": 5,
-    "name": "Balada o sedmi statečných",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003dCAQLHzY_Bww\u0026ab_channel\u003dSouda"
-  },
-  {
-    "id": 6,
-    "name": "Barbarské pobřeží",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003ds6AbHids66k\u0026ab_channel\u003dSouda"
-  },
-  {
-    "id": 7,
-    "name": "Batalion",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003djMTYMnMfD3w"
-  },
-  {
-    "id": 8,
-    "name": "Bedna od whisky",
-    "active": true,
-    "url": "https://www.youtube.com/watch?v\u003dx51afS_KDQE"
-  },
-  {
-    "id": 9,
-    "name": "Bilbova ukolébavka",
+    "id": 14,
+    "name": "Minnesota",
     "active": true,
     "url": ""
   }

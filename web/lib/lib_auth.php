@@ -9,24 +9,26 @@ class Token {
     private $name = "";
     private $created_at = "";
     private $frozen = false;
-	private $READ_PERMISSION = true;
-	private $WRITE_PERMISSION = false;
-	private $BACKUP_PERMISSION = false;
-	private $RESTORE_PERMISSION = false;
-	private $MANAGE_TOKENS_PERMISSION = false;
+    private $permissions = [
+        "READ_PERMISSION" => true,
+        "WRITE_PERMISSION" => false,
+        "BACKUP_PERMISSION" => false,
+        "RESTORE_PERMISSION" => false,
+        "MANAGE_TOKENS_PERMISSION" => false
+        ];
 	
 	public function __construct() {
 	    if (func_num_args() == 9) {
 	        
 	        $this->token = func_get_arg(0);
 	        $this->name = func_get_arg(1);
-	        $this->created_at = func_get_arg(2);;
+	        $this->created_at = func_get_arg(2);
 	        $this->frozen = func_get_arg(3);
-	        $this->READ_PERMISSION = func_get_arg(4);
-	        $this->WRITE_PERMISSION = func_get_arg(5);
-	        $this->BACKUP_PERMISSION = func_get_arg(6);
-	        $this->RESTORE_PERMISSION = func_get_arg(7);
-	        $this->MANAGE_TOKENS_PERMISSION = func_get_arg(8);
+	        $this->permissions['READ_PERMISSION'] = func_get_arg(4);
+	        $this->permissions['WRITE_PERMISSION'] = func_get_arg(5);
+	        $this->permissions['BACKUP_PERMISSION'] = func_get_arg(6);
+	        $this->permissions['RESTORE_PERMISSION'] = func_get_arg(7);
+	        $this->permissions['MANAGE_TOKENS_PERMISSION'] = func_get_arg(8);
 		    return;
 		} elseif (func_num_args() == 1) {
 		    $this->set(func_get_arg(0));
@@ -50,23 +52,23 @@ class Token {
 	}
 	
 	function has_read_permission() {
-	    return $this->READ_PERMISSION;
+	    return $this->frozen ? false : $this->permissions['READ_PERMISSION'];
 	}
 	
 	function has_write_permission() {
-	    return $this->WRITE_PERMISSION;
+	    return $this->frozen ? false : $this->permissions['WRITE_PERMISSION'];
 	}
 	
 	function has_backup_permission() {
-	    return $this->BACKUP_PERMISSION;
+	    return $this->frozen ? false : $this->permissions['BACKUP_PERMISSION'];
 	}
 	
 	function has_restore_permission() {
-	    return $this->RESTORE_PERMISSION;
+	    return $this->frozen ? false : $this->permissions['RESTORE_PERMISSION'];
 	}
 	
 	function has_manage_tokens_permission() {
-	    return $this->MANAGE_TOKENS_PERMISSION;
+	    return $this->frozen ? false : $this->permissions['MANAGE_TOKENS_PERMISSION'];
 	}
 	
 	function freeze() {
@@ -139,7 +141,6 @@ function auth_init() {
  **/
 function register_token(mixed $token) {
     array_push($GLOBALS['tokens'], $token);
-    file_put_contents($GLOBALS['tokens_file_path'], $GLOBALS['tokens']);
     save_tokens();
 }
 

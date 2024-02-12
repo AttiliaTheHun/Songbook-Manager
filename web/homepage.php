@@ -8,9 +8,14 @@
 include('./lib/lib_settings.php');
 
 if ($settings['homepage']['enabled'] == false) {
-    include './resources/pages/204.php';
-    http_response_code(204);
-    exit(0);
+    if ($settings['preview']['enabled']) {
+        header("Location: " . $settings['url'] . "/preview/");
+        exit(0);
+    } else {
+        include './resources/pages/204.php';
+        http_response_code(204);
+        exit(0);
+    }
 }
 ?>
 
@@ -37,10 +42,18 @@ if ($settings['homepage']['enabled'] == false) {
 <hr>
 <div class="content">
 <br>
-<a href="pageview.php">
-<span class="browse-songbook-button">
-<?php echo $strings['homepage']['browse_songbook_button_text']; ?>
-</a>
+
+<?php
+// when preview is disabled, there is no point in showing a link to it
+if ($settings['preview']['enabled']) {
+    echo '<a href="preview.php">';
+    echo '<span class="browse-songbook-button">';
+    echo $strings['homepage']['browse_songbook_button_text'];
+    echo '</a>';
+    echo '</span>';
+}
+?>
+
 <ul>
 <?php
 if ($settings["plugin"]["Export"]["enabled"] == true) {

@@ -1,6 +1,5 @@
 <?php
-//TODO fill in the code for easter songs
-//TODO implements the backup system
+//TODO implement the backup system
 
 include dirname(__FILE__) . '/lib_zip_util.php';
 include dirname(__FILE__) . '/lib_backup_restore.php';
@@ -8,12 +7,11 @@ include dirname(__FILE__) . '/lib_settings.php';
 include dirname(__FILE__) . '/lib_index.php';
 //include dirname(__FILE__) . '/lib_action_log.php';
 
-$data_path = dirname(__FILE__) . '/../data/songbook/';
+$data_path = dirname(__FILE__) . '/../data/';
 $temp_path = dirname(__FILE__) . '/../temp/';
-$request_collection_file = dirname(__FILE__) . '/../temp/collection.json';
-$request_easter_collection_file = dirname(__FILE__) . '/../temp/easter_collection.json';
 
-init_standard_collection(false);
+init_collections(false);
+init_index();
 
 /**
  * Archive the entire songbook data and save it to the temp path.
@@ -33,7 +31,7 @@ function create_complete_load_request_response_archive() {
         exit("Failed to create a response archive: <$filename>\n");
     }
     
-    $archive->addFolderContent($GLOBALS['data_path']);
+    $archive->addFolderContent($GLOBALS['songbook_data_path']);
     $archive->close();
     return $archive_name;
 }
@@ -59,13 +57,13 @@ function create_partial_load_request_response_archive(array $load_index) {
     
     foreach (array_keys($load_index['missing']) as $collection) {
         foreach (array_values($load_index['missing'][$collection]) as $file) {
-            $archive->addFile($GLOBALS['collection_data'][$collection]['data_path'] . $file, $GLOBALS['collection_data'][$collection]['relative_data_path'] . $file);
+            $archive->addFile($GLOBALS['collection_data'][$collection]['data_path'] . $file, $GLOBALS['collection_data'][$collection]['relative_path'] . $file);
         }
     }
     
     foreach (array_keys($load_index['outdated']) as $collection) {
         for ($x = 0; $x < count($load_index['outdated'][$collection]); $x++) {
-            $archive->addFile($GLOBALS['collection_data'][$collection]['data_path'] . $load_index['outdated'][$collection][$x], $GLOBALS['collection_data'][$collection]['relative_data_path'] . $load_index['outdated'][$collection][$x]);
+            $archive->addFile($GLOBALS['collection_data'][$collection]['data_path'] . $load_index['outdated'][$collection][$x], $GLOBALS['collection_data'][$collection]['relative_path'] . $load_index['outdated'][$collection][$x]);
         }
     }
     
@@ -76,6 +74,196 @@ function create_partial_load_request_response_archive(array $load_index) {
     $archive->close();
     return $archive_name;
 }
+
+
+function parse_save_request($request_archive_path) {
+    $archive = new ZipArchive();
+    $archive->open($request_archive_path);
+    
+    $index = $archive->getFromName("index.json");
+   // var_dump($index);
+    if ($index === false) {
+        return "request index not found";
+    } else {
+        $index = json_decode($index, true);
+    }
+   // var_dump($index);
+   // var_dump($index['version_timestamp']);
+    
+    // we should not allow an older version of the songbook to overwrite a newer one
+    if (isset($index['version_timestamp'])) {
+        if ($GLOBALS['index']->getMetadata()['version_timestamp'] > $index['version_timestamp']) {
+            return "cannot push from older version to newer";
+        }
+        // negative numbers can cause a great mess
+        if ($index['version_timestamp'] === -1) {
+            return "version timestamp cannot be negative";
+        }
+        $GLOBALS['temp_save_version_timestamp'] = $index['version_timestamp'];
+    } else {
+        return "version timestamp not found";
+    }
+    
+    $result = verify_collection_integrity($index, $archive);
+    
+    
+    if ($result !== true) {
+        $archive->close();
+        return $result;
+    }
+    $result = perform_save_request($index, $archive);
+    
+    $archive->close();
+    unset($GLOBALS['temp_save_version_timestamp']);
+    return $result;
+}
+
+/**
+ * Verifies the index data is compliant to the request file content and this save operation should not break the stored
+ * songbook.
+ * 
+ * @param $index the index (array)
+ * @param $archive ZipArchive object of the request
+ * @returns true on success, false or string otherwise
+ **/
+function verify_collection_integrity($index, $archive) {
+    // for every registered collection we check the information in the request adds up
+    foreach (array_keys($GLOBALS['collections']) as $collection_name) {
+        // for some operations such as adding it is necessary the client supplies an updated collection file
+        $has_collection_file = false;
+        $new_collection_state = $archive->getFromName($GLOBALS['collection_data'][$collection_name]['file_name']);
+        if ($new_collection_state !== false) {
+            $new_collection_state = json_decode($new_collection_state, true);
+            // we shall perform said operations on our collection and in the end our collection must be identical
+            // to the one the client gave us
+            $current_collection_state = $GLOBALS['collections'][$collection_name];
+            $has_collection_file = true;
+        }
+        
+        // first we check song additions
+        if (isset($index['additions'][$collection_name]) && count($index['additions'][$collection_name]) !== 0) {
+            if (!$has_collection_file) {
+                return "collection file must be included when adding songs";
+            }
+            
+            // we need to check that each new songs was provided with its .html file
+            foreach ($index['additions'][$collection_name] as $song) {
+                array_push($current_collection_state, song($song));
+                $song_content = $archive->getFromName($GLOBALS['collection_data'][$collection_name]['relative_path'] . $song);
+                if ($song_content === false) {
+                    return "song file must be included when adding a song";
+                }
+            }
+        }
+        
+        // now we check song deletions
+        if (isset($index['deletions'][$collection_name]) && count($index['deletions'][$collection_name]) !== 0) {
+            // technically we do not need to receive client's copy of the collection for deleting songs, but the one he
+            // gives us must match with the operations we are supposed to perform upon the colelction
+            if ($has_collection_file) {
+                foreach ($index['deletions'][$collection_name] as $song) {
+                    $GLOBALS['save_temp_song'] = $song;
+                    $current_collection_state = array_filter($current_collection_state, function($value) {
+                        return $value['id'] !== (int)str_replace(".html", "", $GLOBALS['save_temp_song']);
+                    });
+                }
+                
+            }
+            unset($GLOBALS['save_temp_song']);
+        }
+        
+        // finally we check changes to songs
+        if (isset($index['changes'][$collection_name]) && count($index['changes'][$collection_name]) !== 0) {
+            foreach ($index['changes'][$collection_name] as $song) {
+                // again, we must ensure that songs that have been updated (changed) were shipped with their updated .html files
+                $song_content = $archive->getFromName($GLOBALS['collection_data'][$collection_name]['relative_path'] . $song);
+                if ($song_content === false) {
+                    return "song file must be included when updating a song";
+                }
+            }
+        }
+        
+        // now we check if the provided collection will reflect with the changes we are about to make, if we are supposed to replace
+        // our collection file with it. Otherwise we might have a collection file that does not mirror the actual collecting.
+        // This can lead to some serious fun while debugging :)
+        if ($has_collection_file) {
+        
+            // we will be comparing only song ids, because on our side we can not know whether a name or url has not been changed
+            // and in that case we would not be able to compare these collections at all. Luckily, we don't need to
+            $current_collection_state_ids = array_map(function($value) {
+                return $value['id'];
+            }, $current_collection_state);
+            $new_collection_state_ids = array_map(function($value) {
+                return $value['id'];
+            }, $new_collection_state);
+            
+            // now we check both arrays are of teh same length and there are no extra elements in the second one compared to the first one
+            if (count($current_collection_state_ids) !== count($new_collection_state_ids) || !count(array_diff(array_values($current_collection_state_ids), array_values($new_collection_state_ids))) === 0) {
+                return "included collection file is incompatible with the changes made to the collection";
+            }
+    
+        }
+    
+    }
+    return true;
+}
+
+function perform_save_request($index, $archive) {
+    $version_timestamp = $index['version_timestamp'];
+    // again we go one collection at a time
+    foreach (array_keys($GLOBALS['collections']) as $collection_name) {
+        
+        // we delete what we ought to delete
+        if (isset($index['deletions'][$collection_name]) && count($index['deletions'][$collection_name]) !== 0) {
+            foreach ($index['deletions'][$collection_name] as $song) {
+                unlink($GLOBALS['collection_data'][$collection_name]['data_path'] . $song);
+            }
+        }
+        
+        // handle additions
+        if (isset($index['additions'][$collection_name]) && count($index['additions'][$collection_name]) !== 0) {
+            foreach ($index['additions'][$collection_name] as $song) {
+                $song_content = $archive->getFromName($GLOBALS['collection_data'][$collection_name]['relative_path'] . $song);
+                if ($song_content === false) {
+                    return "failed resolving additions";
+                }
+                file_put_contents($GLOBALS['collection_data'][$collection_name]['data_path'] . $song, $song_content, LOCK_EX);
+                touch($GLOBALS['collection_data'][$collection_name]['data_path'] . $song, $GLOBALS['temp_save_version_timestamp']);
+            }
+        }
+        
+        // handle changes
+        if (isset($index['changes'][$collection_name]) && count($index['changes'][$collection_name]) !== 0) {
+            foreach ($index['changes'][$collection_name] as $song) {
+                $song_content = $archive->getFromName($GLOBALS['collection_data'][$collection_name]['relative_path'] . $song);
+                if ($song_content === false) {
+                    return "failed resolving changes";
+                }
+                file_put_contents($GLOBALS['collection_data'][$collection_name]['data_path'] . $song, $song_content, LOCK_EX);
+                touch($GLOBALS['collection_data'][$collection_name]['data_path'] . $song, $GLOBALS['temp_save_version_timestamp']);
+                
+            }
+        }
+        
+        // finally, add the collection file if available
+        $new_collection = $archive->getFromName($GLOBALS['collection_data'][$collection_name]['file_name']);
+        if ($new_collection !== false) {
+            file_put_contents($GLOBALS['collection_data'][$collection_name]['file_path'], $new_collection, LOCK_EX);
+            touch($GLOBALS['collection_data'][$collection_name]['file_path'], $GLOBALS['temp_save_version_timestamp']);
+            
+        }
+    }
+    
+    return true;
+}
+
+
+function song($id) {
+    $id = (int)str_replace(".html", "", $id);
+    return ["id" => $id, "name" => "song", "active" => true, "url" => ""];
+}
+
+
 
 
 /*

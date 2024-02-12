@@ -11,10 +11,11 @@
         "licenses": "Licenses",
         "footer_credits_text": "Vytvořeno pomocí programu&nbsp;"
     },
-    "pageview": {
+    "preview": {
         "page_title": "Prohlížet zpěvník Hrabošů",
         "previous_song_button_text": "Předchozí",
-        "next_song_button_text": "Následující"
+        "next_song_button_text": "Následující",
+        "no_song_found": "Nebyla nalezena žádná píseň"
     },
     "site_description": "Zpěvník oddílu TOM Hraboši."
 }

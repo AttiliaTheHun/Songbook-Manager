@@ -1,36 +1,21 @@
+:root {
+	--font-size: 16px;
+	--chords-margin: -0.1em -0.5em -2em;
+    --chords-padding: 0.1em 0.5em 0.15em;
+	--line-margin-top: -65px;
+}
+
+
 html, body {
-	width: 100%;
-	height: 100%;
 	padding: 0;
 	margin: 0;
+	width: 100%;
+	height: 100%;
 	left: 0;
-	bottom: 0;
+	top: 0;
 	line-height: 0.8em;
 	position: static;
 	overflow: hidden;
-}
-
-p, h1 {
-    margin-left: 10px;
-}
-
-/*for small screens (mobile)*/
-@media only screen and (max-width: 40em) {
-    h1 {
-        font-size: 1.8em;
-    
-    }
-}
-
-
-@page {
-	size: a4 landscape;
-}
-
-
-img {
-    max-width: 100%;
-    height: 70%;
 }
 
 a,
@@ -45,242 +30,350 @@ a:hover {
     text-decoration: underline;
 }
 
-.navbar {
-    display: flex;
-    flex-direction: row;
+/*for small screens (mobile)*/
+@media only screen and (max-width: 40em) {
+    h1 {
+        font-size: 1.8em;
+    
+    }
+}
+
+@page {
+	size: a4 landscape;
 }
 
 .navbar a {
     margin: auto;
 }
 
-.image-wrapper {
-    max-height: 70%;
+div.song > img {
+    max-width: 100%;
+    height: 70%;
+	height: 210mm;
+    width: 148.5mm;
     margin: auto;
 }
 
-.song {
-	display: inline-block;
-	margin: 0;
-	bottom: 0;
-	top: 0;
-	padding: 0;
-	position: relative;
+.songlist-wrapper {
+	display: table;
+	table-layout: fixed;
+	text-align: center;
 	width: 100%;
-	height: 100%;
-	text-align: center;
-}
-
-.song-text-wrapper {
-	text-align: center;
-	display: grid;
 	margin: 0;
-	margin-top: -20px;
 	padding: 0;
+	border: 1px solid brick;
 }
 
-.short-song {
-	
+ul {
+	text-align: left;
 }
 
-.long-song {
-	grid-template-columns: 1fr 1fr;
+.songlist-column {
+	text-align: center;
+	display: table-cell;
+	border: 1px solid cyan;
+	overflow: visible;
+	min-width: 50%;
 }
 
-.song_title {
-	padding: 0;
-	margin-bottom: 0;
-	font-family: "Roboto Mono", "Courier New", monospace;
+.songlist-formatting {
+	display: block;
+	position: relative;
+	width: fit-content;
+	block-size: fit-content;
+	overflow: visible;
+	z-index: 0;
+    font-family: Roboto Mono,Courier New,monospace;
+    line-height: 1em;
+    font-size: 15px;
+	margin: auto;
+	border: 1px solid purple;
+}
+
+
+.song-title {
+	//font-size: 32px; /* h1 default */
+	display: block;
 }
 
 .song-author {
 	text-align: right;
 	padding: 0;
-	margin: 0;
+	//margin: 0;
 	margin-right: 10%;
+	margin-left: 10%;
+	margin-top: -10px;
 	color: gray;
 	z-index: 1;
-}
-
-.song-text {
-	font-family: "Roboto Mono", "Courier New", monospace;
-    line-height: 1.4em;
-	text-align: center;
-	margin: auto;
-	padding: 0;
-	position: relative;
-	width: fit-content;
-	block-size: fit-content;
-	overflow: visible;
-	z-index: 0;
-	border: none;
-}
-
-.song-text-long {
-	font-family: "Roboto Mono", "Courier New", monospace;
-    line-height: 1.4em;
-	text-align: center;
-	margin: auto;
-	padding: 0;
-	position: relative;
-	width: fit-content;
-	block-size: fit-content;
-	overflow: visible;
-	z-index: 0;
-	border: none;
-	font-size: 15px;
-}
-
-.song-text-long-plus-one {
-	font-family: "Roboto Mono", "Courier New", monospace;
-    line-height: 1.4em;
-	text-align: center;
-	margin: auto;
-	padding: 0;
-	position: relative;
-	width: fit-content;
-	block-size: fit-content;
-	overflow: visible;
-	z-index: 0;
-	border: none;
-	font-size: 14px;
-}
-
-.song-text-slaboch {
-	font-family: "Roboto Mono", "Courier New", monospace;
-    line-height: 1.4em;
-	text-align: center;
-	margin: auto;
-	padding: 0;
-	position: relative;
-	width: fit-content;
-	block-size: fit-content;
-	overflow: visible;
-	z-index: 0;
-	border: none;
-	font-size: 11.5px;
-}
-
-.line {
+	//font-size: 16px; /* h4 default */
 	display: block;
+	border: 1px solid orange;
+}
+
+.songbook-page {
+	display: table;
+	table-layout: fixed;
+	height: 100%;
 	width: 100%;
-	color: #212121;
+	min-width: 100%;
+	margin: 0;
 	padding: 0;
-	margin-top: -45px;
-	text-align: left;
+	border-spacing: 0;
+	border-collapse: collapse;
 }
 
-.chords {
-	border-radius: 2px;
-    cursor: default;
-    font-weight: 700;
-    margin: -0.1em -0.5em -0.15em;
-    padding: 0.1em 0.5em 0.15em;
-    position: relative;
-	text-align: left;
-}
+/*.songbook-page::after {
+	content: "";
+	clear: both;
+	display: table;
+}*/
 
-.chords-long {
-	border-radius: 2px;
-    cursor: default;
-    font-weight: 700;
-    margin: -0.1em -0.5em -0.15em;
-    padding: 0.15em 0.5em 0.15em;
-    position: relative;
-	text-align: left;
-}
-
-.chords-long-plus-one {
-	border-radius: 2px;
-    cursor: default;
-    font-weight: 700;
-    margin: -0.15em -0.5em -0.15em;
-    padding: 0.15em 0.5em 0.15em;
-    position: relative;
-	text-align: left;
-}
-
-.chords-slaboch {
-	border-radius: 2px;
-    cursor: default;
-    font-weight: 700;
-    margin: -0.1em -0.5em -0.15em;
-    padding: 0.2em 0.5em 0.15em;
-    position: relative;
-	text-align: left;
-}
-
-.lyrics {
-	
-}
-
-pre {
+.song-text-formatting {
+	font-family: "Roboto Mono", "Courier New", monospace;
 	display: block;
-	white-space: pre-wrap;       /* css-3 */
-	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
-	white-space: -pre-wrap;      /* Opera 4-6 */
-	white-space: -o-pre-wrap;    /* Opera 7 */
-	word-wrap: break-word;       /* Internet Explorer 5.5+ */
+	line-height: 1.4em;
+	margin: auto;
 	margin-top: 0;
 	margin-bottom: 0;
 	padding: 0;
+	min-width: 50%;
+	position: relative;
+	width: fit-content;
+	block-size: fit-content;
+	overflow: visible;
+	z-index: 0;
+	white-space: pre-wrap;
+	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+	white-space: -pre-wrap;      /* Opera 4-6 */
+	white-space: -o-pre-wrap;    /* Opera 7 */
+	word-wrap: break-word;
+	text-align: center;
+	font-size: var(--font-size);
+	border: 1px solid grey;
 }
 
-.songbook-view {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
+.song-text-wrapper {
+	display: table;
+	table-layout: fixed;
+	text-align: center;
 	width: 100%;
-	height: 100%;
+	border: 1px solid red;
 }
 
-.song-embed {
-	width: 100%;
-	height: 100%;
-	border: none;
+
+.song-text-column {
+	display: table-cell;
+	min-width: 50%;
+	border: 1px solid green;
+}
+
+.song {
+	text-align: center;
+	vertical-align: top;
+	display: table-cell;
+	min-width: 50%;
+	//max-width: 50%;
+	border: 1px solid black;
+}
+
+.line {
 	overflow: hidden;
+	margin: auto;
+	margin-top: var(--line-margin-top);
+	//margin-bottom: -20px;
+	text-align: left;
+	display: block;
+	color: #212121;
+	padding: 0;
+	border: 1px solid blue;
+	position: relative;
+}
+
+.lyrics {
+	border: 1px solid aquamarine;
+	position: relative;
+	display: block;
+}
+
+.chords {
+	display: block;
+	border-radius: 2px;
+    cursor: default;
+    font-weight: 700;
+	position: relative;
+	text-align: left;
+	margin: var(--chords-margin);
+	padding: var(--chords-padding);
+	border: 1px solid pink;
+}
+
+.font-size-12-px {
+	--font-size: 12px;
+	--chords-margin: -0.1em -0.5em -2em;
+    --chords-padding: 0.1em 0.5em 0.25em;
+	--line-margin-top: -50px;
+}
+
+.font-size-13-px {
+	--font-size: 13px;
+	--chords-margin: -0.1em -0.5em -2em;
+    --chords-padding: 0.1em 0.5em 0.25em;
+	--line-margin-top: -55px;
+}
+
+.font-size-14-px {
+	--font-size: 14px;
+	--chords-margin: -0.1em -0.5em -2em;
+    --chords-padding: 0.1em 0.5em 0.25em;
+	--line-margin-top: -55px;
+}
+
+.font-size-15-px {
+	--font-size: 15px;
+	--chords-margin: -0.1em -0.5em -2.05em;
+    --chords-padding: 0.1em 0.5em 0.25em;
+	--line-margin-top: -60px;
 }
 
 
-.little-smaller-br {
-	margin-top: -50px;
+
+/* Legacy classes to use when CSS variables are not an option */
+
+/* to replace the .chords class */
+.chords-12-px {
+	display: block;
+	border-radius: 2px;
+    cursor: default;
+    font-weight: 700;
+	position: relative;
+	text-align: left;
+	margin: -0.1em -0.5em -2em;
+    padding: 0.1em 0.5em 0.25em;
 }
 
-.smaller-br {
-	margin-top: -55px;
+.chords-13-px {
+	display: block;
+	border-radius: 2px;
+    cursor: default;
+    font-weight: 700;
+	position: relative;
+	text-align: left;
+	margin: -0.1em -0.5em -2em;
+    padding: 0.1em 0.5em 0.25em;
 }
 
-.small-br {
-	margin-top: -70px;
+.chords-14-px {
+	display: block;
+	border-radius: 2px;
+    cursor: default;
+    font-weight: 700;
+	position: relative;
+	text-align: left;
+	margin: -0.1em -0.5em -2em;
+    padding: 0.1em 0.5em 0.25em;
 }
 
-.very-small-br {
-	margin-top: -80px;
+.chords-15-px {
+	display: block;
+	border-radius: 2px;
+    cursor: default;
+    font-weight: 700;
+	position: relative;
+	text-align: left;
+	margin: -0.1em -0.5em -2.05em;
+    padding: 0.1em 0.5em 0.25em;
 }
 
-.ultra-small-br {
-	margin-top: -100px;
+/* to replace the .song-text-formatting class */
+
+.song-text-formatting-12-px {
+	font-family: "Roboto Mono", "Courier New", monospace;
+	display: block;
+	line-height: 1.4em;
+	margin: auto;
+	margin-top: 0;
+	margin-bottom: 0;
+	padding: 0;
+	min-width: 50%;
+	position: relative;
+	width: fit-content;
+	block-size: fit-content;
+	overflow: visible;
+	z-index: 0;
+	white-space: pre-wrap;
+	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+	white-space: -pre-wrap;      /* Opera 4-6 */
+	white-space: -o-pre-wrap;    /* Opera 7 */
+	word-wrap: break-word;
+	text-align: center;
+	font-size: 12px;
 }
 
-.default-br {
-	margin-top: 0px;
+.song-text-formatting-13-px {
+	font-family: "Roboto Mono", "Courier New", monospace;
+	display: block;
+	line-height: 1.4em;
+	margin: auto;
+	margin-top: 0;
+	margin-bottom: 0;
+	padding: 0;
+	min-width: 50%;
+	position: relative;
+	width: fit-content;
+	block-size: fit-content;
+	overflow: visible;
+	z-index: 0;
+	white-space: pre-wrap;
+	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+	white-space: -pre-wrap;      /* Opera 4-6 */
+	white-space: -o-pre-wrap;    /* Opera 7 */
+	word-wrap: break-word;
+	text-align: center;
+	font-size: 13px;
 }
 
-.little-bigger-br {
-	margin-top: 5px;
+.song-text-formatting-14-px {
+	font-family: "Roboto Mono", "Courier New", monospace;
+	display: block;
+	line-height: 1.4em;
+	margin: auto;
+	margin-top: 0;
+	margin-bottom: 0;
+	padding: 0;
+	min-width: 50%;
+	position: relative;
+	width: fit-content;
+	block-size: fit-content;
+	overflow: visible;
+	z-index: 0;
+	white-space: pre-wrap;
+	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+	white-space: -pre-wrap;      /* Opera 4-6 */
+	white-space: -o-pre-wrap;    /* Opera 7 */
+	word-wrap: break-word;
+	text-align: center;
+	font-size: 14px;
 }
 
-.bigger-br {
-	margin-top: 15px;
-}
-
-.big-br {
-	margin-top: 30px;
-}
-
-.very-big-br {
-	margin-top: 50px;
-}
-
-.ultra-big-br {
-	margin-top: 70px;
+.song-text-formatting-15-px {
+	font-family: "Roboto Mono", "Courier New", monospace;
+	display: block;
+	line-height: 1.4em;
+	margin: auto;
+	margin-top: 0;
+	margin-bottom: 0;
+	padding: 0;
+	min-width: 50%;
+	position: relative;
+	width: fit-content;
+	block-size: fit-content;
+	overflow: visible;
+	z-index: 0;
+	white-space: pre-wrap;
+	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+	white-space: -pre-wrap;      /* Opera 4-6 */
+	white-space: -o-pre-wrap;    /* Opera 7 */
+	word-wrap: break-word;
+	text-align: center;
+	font-size: 15px;
 }

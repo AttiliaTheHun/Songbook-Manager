@@ -44,14 +44,45 @@ if ($request_body == NULL || strlen($request_body) == 0) {
     exit(0);
     
 } else {
+    // we need to verify the data we received now
+    // first we check the HTTP headers
+    $content_type_correct = false;
+    $content_disposition_correct = false;
+    $headers = apache_request_headers();
+
+    foreach ($headers as $header => $value) {
+        if ($header == 'Content-Type' && $value == 'application/json') {
+            $content_type_correct = true;
+            continue;
+        }
+        if ($header == 'Content-Disposition' && $value == 'attachment;filename=index.json') {
+            $content_disposition_correct = true;
+            continue;
+        }
+    }
+    // headers are weird, abort
+    if (!$content_type_correct || !$content_disposition_correct) {
+        http_response_code(400); // Bad request
+        echo "invalid request headers";
+        die();
+    }
+    
     $request_index = json_decode($request_body, true);
+    
+    // the index can not be parsed to an associated array, abort
+    if (!is_array($request_index)) {
+        http_response_code(400); // Bad request
+        echo "invalid request index";
+        die();
+    }
+    
     $archive_name = create_partial_load_request_response_archive($request_index);
     // now we sent the archive to the client
     header('HTTP/1.1 200 Ok');
     header('Content-Type: application/zip');         
     header("Content-Disposition: attachment;filename=load_request.zip"); 
     readfile($archive_name);
-    
+    // no need to store the file locally
     unlink($archive_name);
     log_action(ACTION_DOWNLOAD, $token);
     exit(0);
