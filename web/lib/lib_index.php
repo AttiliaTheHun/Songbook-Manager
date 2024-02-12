@@ -1,8 +1,12 @@
 <?php
+/**
+ * A library that allows work with songbook indices.
+ **/
+
 require_once dirname(__FILE__).'/lib_hash.php';
 require_once dirname(__FILE__).'/lib_init.php';
 
-class Index {
+class Index implements JsonSerializable {
     private $data = [];
     private $hashes = [];
     private $metadata = [];
@@ -14,20 +18,45 @@ class Index {
 		}
 	}
 	
+	public function jsonSerialize() {
+        return [
+            'data' => $this->data,
+            'hashes' => $this->hashes,
+            'metadata' => $this->metadata,
+            'collections' => $this->collections
+            ];
+    }
+	
 	public function getData() {
 	    return $this->data;
+	}
+	
+	public function pushData($item) {
+	    array_push($this->data, $item);
 	}
 	
 	public function getHashes() {
 	    return $this->hashes;
 	}
 	
+	public function pushHashes($item) {
+	    array_push($this->hashes, $item);
+	}
+	
 	public function getMetadata() {
 	    return $this->metadata;
 	}
 	
+	public function addMetadata($key, $value) {
+	    $this->metadata[$key] = $value;
+	}
+	
 	public function getCollections() {
 	    return $this->collections;
+	}
+	
+	public function pushCollection($item) {
+	    array_push($this->collections, $item);
 	}
     
     public function set($data) {
@@ -45,6 +74,7 @@ function init_index() {
         $GLOBALS['index'] = new Index(json_decode($index_file_contents, true));
     } else {
         $GLOBALS['index'] = generate_index();
+        save_index();
     }
 }
 
@@ -52,87 +82,56 @@ function init_index() {
  * Saves the index in $GLOBALS['index'] into a file.
  **/
 function save_index() {
-    file_put_contents($index_file_path, json_encode($GLOBALS['index']));
+    file_put_contents($GLOBALS['index_file_path'], json_encode($GLOBALS['index']));
 }
 
-function set_version_timestamp(long $version_timestamp) {
-    $metadata = $GLOBALS['index']->getMetadata();
-    $metadata['version_timestamp'] = $version_timestamp;
-    $GLOBALS['index']->set(array("metadata" => $metadata));
-}
-
-function index_new_songs(array $songs) {
-    $current_songs = $GLOBALS['index']->getData()['standard'];
-    $current_songs_hashes = $GLOBALS['index']->getHashes()['standard'];
-    $mixed = array_combine($current_songs, $current_songs_hashes);
-    for ($x = 0; $x < len($songs); $x++) {
-        $mixed[$songs[$x]] = get_file_hash($GLOBALS['song_data_path '].$songs[$x]);
-    }
-    ksort($mixed, SORT_NATURAL);
-    $temp_data = $GLOBALS['index']->getData();
-    $temp_data['standard'] = array_keys($mixed);
-    $GLOBALS['index']->set(json_encode($temp_data));
-    $temp_hashes = $GLOBALS['index']->getHashes();
-    $temp_hashes['standard'] = array_values($mixed);
-    $GLOBALS['index']->set(json_encode($temp_hashes));
-}
-
-function index_song_changes() {
-    
-}
-
-function unindex_songs() {
-    
-}
-
-function index_collections() {
-    $collections = $GLOBALS['index']->getCollections();
-    $collections['standard'] = get_file_hash($GLOBALS['collection_file_path']);
-    if (file_exists($GLOBALS['easter_collection_file_path'])) {
-        $collections['easter'] = get_file_hash($GLOBALS['easter_collection_file_path']);
-    }
-    $GLOBALS['index']->set($collections);
-}
-
-function index_new_easter_songs(array $songs) {
-  
-}
-
-function index_easter_song_changes() {
-    
-}
-
-function unindex_easter_songs() {
-    
-}
-
+/**
+ * Generates an index that corresponds to the current state of the songbook
+ * 
+ * @returns an Index object that is the index to the songbook
+ **/
 function generate_index() {
     $index = new Index();
-    $GLOBALS['index_temp_version_timestamp'] = -1;
-    foreach (array_keys($GLOBALS['collections']) as $collection) {
-        $index->getCollections()[$collection] = get_file_hash($GLOBALS['collection_data'][$collection]['file_path']);
-        $map = create_file_hash_map($GLOBALS['collection_data'][$collection]['data_path']);
-        $index->getData()[$collection] = array_keys($map);
-        $index->getHashes()[$collection] = array_values($map);
-        if (filemtime($GLOBALS['collection_data'][$collection]['data_path']) > $GLOBALS['index_temp_version_timestamp']) {
-                $GLOBALS['index_temp_version_timestamp'] = filemtime($GLOBALS['collection_data'][$collection]['data_path']);
-            }
+    $version_timestamp = -1;
+    // we will index every registered collection
+    foreach (array_keys($GLOBALS['collections']) as $collection_name) {
+        $songs = [];
+        $hashes = [];
+        $collection_record;
+          
+        // add collection file hash
+        $collection_record = [$collection_name => get_file_hash($GLOBALS['collection_data'][$collection_name]['file_path'])];
+        $tempstamp = filemtime($GLOBALS['collection_data'][$collection_name]['file_path']);
+        $version_timestamp = max($version_timestamp, $tempstamp);
+ 
+        // we index every song in the collection by mapping it with its hash
+        // we also need to keep track of file modification dates throughout the process
+        foreach ($GLOBALS['collections'][$collection_name] as $song) {
+            $filename = $song['id'] . '.html';
+            array_push($songs, $filename);
+            array_push($hashes, get_file_hash($GLOBALS['collection_data'][$collection_name]['data_path'] . $filename));
+            $tempstamp = filemtime($GLOBALS['collection_data'][$collection_name]['data_path'] . $filename);
+            $version_timestamp = max($version_timestamp, $tempstamp);
+            
+        }
+        // now we write what we found to the index
+        $index->pushData([$collection_name => $songs]);
+        $index->pushHashes([$collection_name => $hashes]);
+        $index->pushCollection($collection_record);
     }
-    $index->getMetadata()['version_timestamp'] = $GLOBALS['index_temp_version_timestamp'];
+    
+    // finally set the timestamp
+    $index->addMetadata('version_timestamp', $version_timestamp);
+
     return $index;
 }
 
-
-function create_file_hash_map($path) {
-    $map = array();
-    while ($file = readdir($path)) {
-            if ($file == '.' || $file == '..') continue;
-            $map[$file] = get_file_hash($file);
-            if (filemtime($file) > $GLOBALS['index_temp_version_timestamp']) {
-                $GLOBALS['index_temp_version_timestamp'] = filemtime($file);
-            }
-    }
-    return $map;
+/**
+ * What do you think? 
+ **/
+function regenerate_index() {
+    $GLOBALS['index'] = generate_index();
+    save_index();
 }
 
 ?>

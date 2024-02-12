@@ -21,9 +21,9 @@ if ($token == null || !$token->has_read_permission()) {
     
     
 $filename = 'index.json';
-require require '../../lib/lib_env_var.php';
+require '../../lib/lib_init.php';
 header('HTTP/1.1 200 Ok');
 header('Content-Type: application/json');         
 header("Content-Disposition: attachment;filename=$filename"); 
-readfile($index_file_path); 
+echo(json_encode($GLOBALS['index'], JSON_PRETTY_PRINT));
 ?>

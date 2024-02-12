@@ -9,9 +9,7 @@ if ( $_SERVER['REQUEST_METHOD'] !== 'GET') {
     die();
 }
 
-require '../../lib/lib_index.php';
+require '../../lib/lib_init.php';
 
-init_index();
-
-echo $index->get_metadata()['version_timestamp'];
+echo $index->getMetadata()['version_timestamp'];
 ?>

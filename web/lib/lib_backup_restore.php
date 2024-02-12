@@ -27,7 +27,7 @@ function backup($index) {
 /**
  * Creates a backup of the entire songbook along with the index and returns the name of the backup file.
  * 
- * @returns name of the backu file
+ * @returns name of the backup file (not path)
  **/
 function create_complete_backup() {
     
@@ -44,6 +44,12 @@ function create_complete_backup() {
     return $archive_name;
 }
 
+/**
+ * Creates a backup that can be used to reverse the last save request.
+ * 
+ * @param $index the request index
+ * @returns name of the backup file (not path)
+ **/
 function create_inverse_backup($index) {
     $archive_name = get_backup_file_name('inverse_backup_');
     
@@ -56,6 +62,12 @@ function create_inverse_backup($index) {
     return $archive_name;
 }
 
+/**
+ * Adds the necessary files to the inverse backup archive
+ * 
+ * @param $index the request index
+ * @param $archive the backup file ZipArchive object
+ **/
 function fill_inverse_backup_file($index, $archive) {
     
     foreach (array_keys($GLOBALS['collections']) as $collection_name) {
