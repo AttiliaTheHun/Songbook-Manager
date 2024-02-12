@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'POST
 }
 
 // first we need to authenticate the user
-include '../../lib/lib_auth.php';
+require '../../lib/lib_auth.php';
 auth_init();
 
 // if the token is invalid, we abort
@@ -23,8 +23,8 @@ if ($token == NULL || !$token->has_read_permission()) {
 
 // getting here means everything is ok and we can actually process the request
     
-include '../../lib/lib_save_load.php';
-include '../../lib/lib_action_log.php';
+require '../../lib/lib_save_load.php';
+require '../../lib/lib_action_log.php';
 
 $request_body = file_get_contents('php://input');
 

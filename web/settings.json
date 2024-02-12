@@ -1,8 +1,8 @@
 {
     "backup": {
         "auto_backup": true,
-	    "max_backup_count": 10,
-	    "backup_requests": true
+	    "max_backup_count": 3,
+	    "backup_type": "INVERSE"
     },
 	"plugin": {
 	    "Frontpage": {

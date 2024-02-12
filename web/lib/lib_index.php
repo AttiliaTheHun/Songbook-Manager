@@ -1,6 +1,6 @@
 <?php
-include dirname(__FILE__).'/lib_hash.php';
-include dirname(__FILE__).'/lib_collection.php';
+require_once dirname(__FILE__).'/lib_hash.php';
+require_once dirname(__FILE__).'/lib_init.php';
 
 class Index {
     private $data = [];
@@ -34,10 +34,6 @@ class Index {
         foreach ($data AS $key => $value) $this->{$key} = $value;
     }
 }
-
-$index_file_path = dirname(__FILE__) . '/../data/index.json';
-$song_data_path = dirname(__FILE__).('/../data/songbook/songs/html/');
-$easter_song_data_path = dirname(__FILE__).('/../data/songbook/songs/egg/');
 
 /**
  * Initializes the index of the data either from a file or by generating a new one. The index is then available

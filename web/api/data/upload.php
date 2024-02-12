@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // first we need to authenticate the user
-include '../../lib/lib_auth.php';
+require '../../lib/lib_auth.php';
 auth_init();
 
 // if the token is invalid, we abort
@@ -29,8 +29,8 @@ if ($request_body == NULL || strlen($request_body) == 0) {
     die();
 }
 
-include '../../lib/lib_save_load.php';
-include '../../lib/lib_action_log.php';
+require '../../lib/lib_save_load.php';
+require '../../lib/lib_action_log.php';
 
 // if such a file already existed for a parallel request, we do not want to accidentally overwrite it
 $num = -1;
@@ -47,8 +47,8 @@ $success = parse_save_request($archive_name);
 // we no longer need the file
 unlink($archive_name);
 
-if ($success === true) {
-    log_action(ACTION_UPLOAD, $token);
+if (is_array($success) && $success[0] === true) {
+    log_action(ACTION_UPLOAD, $token, $success[1]);
     http_response_code(201); // 201 Created
     exit(0);
 } else {

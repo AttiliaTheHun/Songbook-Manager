@@ -9,7 +9,7 @@ if ( $_SERVER['REQUEST_METHOD'] !== 'GET') {
     die();
 }
 
-include '../../lib/lib_index.php';
+require '../../lib/lib_index.php';
 
 init_index();
 

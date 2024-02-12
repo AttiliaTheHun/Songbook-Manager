@@ -1,17 +1,9 @@
 <?php
 //TODO implement the backup system
+require_once dirname(__FILE__) . '/lib_init.php';
+require_once dirname(__FILE__) . '/lib_zip_util.php';
+require_once dirname(__FILE__) . '/lib_backup_restore.php';
 
-include dirname(__FILE__) . '/lib_zip_util.php';
-include dirname(__FILE__) . '/lib_backup_restore.php';
-include dirname(__FILE__) . '/lib_settings.php';
-include dirname(__FILE__) . '/lib_index.php';
-//include dirname(__FILE__) . '/lib_action_log.php';
-
-$data_path = dirname(__FILE__) . '/../data/';
-$temp_path = dirname(__FILE__) . '/../temp/';
-
-init_collections(false);
-init_index();
 
 /**
  * Archive the entire songbook data and save it to the temp path.
@@ -75,7 +67,12 @@ function create_partial_load_request_response_archive(array $load_index) {
     return $archive_name;
 }
 
-
+/**
+ * Processes a save request archive, verifies its content and eventually performs the saving.
+ * 
+ * @param $request_archive_path path to the request archive file
+ * @returns array of true and name of the corresponding backup file on success and string with error message otherwise
+ **/
 function parse_save_request($request_archive_path) {
     $archive = new ZipArchive();
     $archive->open($request_archive_path);
@@ -87,34 +84,45 @@ function parse_save_request($request_archive_path) {
     } else {
         $index = json_decode($index, true);
     }
-   // var_dump($index);
-   // var_dump($index['version_timestamp']);
+   
+   if ($index === NULL) {
+       return "error parsing request index";
+   }
     
     // we should not allow an older version of the songbook to overwrite a newer one
     if (isset($index['version_timestamp'])) {
         if ($GLOBALS['index']->getMetadata()['version_timestamp'] > $index['version_timestamp']) {
             return "cannot push from older version to newer";
         }
+        if ($GLOBALS['index']->getMetadata()['version_timestamp'] == $index['version_timestamp']) {
+            return "version timestamp match";
+        }
         // negative numbers can cause a great mess
-        if ($index['version_timestamp'] === -1) {
+        if ($index['version_timestamp'] < 0) {
             return "version timestamp cannot be negative";
         }
+        // do not update the timestamp just yet, we will still need the old one for backup
         $GLOBALS['temp_save_version_timestamp'] = $index['version_timestamp'];
     } else {
         return "version timestamp not found";
     }
     
     $result = verify_collection_integrity($index, $archive);
-    
-    
     if ($result !== true) {
         $archive->close();
         return $result;
     }
+    
+    // we need to backup the original data, before performing the operation
+    $backup_file = backup($index);
+    
     $result = perform_save_request($index, $archive);
     
     $archive->close();
     unset($GLOBALS['temp_save_version_timestamp']);
+    if ($result === true) {
+        return [$result, $backup_file];
+    }
     return $result;
 }
 
@@ -138,6 +146,11 @@ function verify_collection_integrity($index, $archive) {
             // to the one the client gave us
             $current_collection_state = $GLOBALS['collections'][$collection_name];
             $has_collection_file = true;
+            // this is a problem since the backup library functions do not have access to the request archive, but rather
+            // to the request index
+            if (!in_array( $collection_name, $index['collections'], true)) {
+                return "collection file is provided but not registered in the index";
+            }
         }
         
         // first we check song additions
@@ -205,6 +218,7 @@ function verify_collection_integrity($index, $archive) {
         }
     
     }
+    
     return true;
 }
 

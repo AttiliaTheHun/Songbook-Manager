@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     die();
 }
 
-include '../../lib/lib_auth.php';
+require '../../lib/lib_auth.php';
 auth_init();
 
 if ($token == null || !$token->has_read_permission()) {
@@ -21,9 +21,9 @@ if ($token == null || !$token->has_read_permission()) {
     
     
 $filename = 'index.json';
-$file = '../../data/index.json';
+require require '../../lib/lib_env_var.php';
 header('HTTP/1.1 200 Ok');
 header('Content-Type: application/json');         
 header("Content-Disposition: attachment;filename=$filename"); 
-readfile($file); 
+readfile($index_file_path); 
 ?>
