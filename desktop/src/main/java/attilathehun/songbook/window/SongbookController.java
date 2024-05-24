@@ -6,6 +6,7 @@ import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.environment.EnvironmentStateListener;
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.export.PDFGenerator;
 import attilathehun.songbook.plugin.Export;
 import attilathehun.songbook.util.HTMLGenerator;
@@ -18,10 +19,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.web.WebView;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,6 +50,8 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     private HTMLGenerator generator = new HTMLGenerator();
     @FXML
     private WebView webview;
+    @FXML
+    private ImageView openSettingsButton;
     @FXML
     private TextField songOneIdField;
     @FXML
@@ -97,6 +103,8 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
         initCollectionEditor();
 
+        initSettingsEditor();
+
         initUIComponents();
     }
 
@@ -130,8 +138,23 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
      * {@link CollectionEditor#open()}.
      */
     private void initCollectionEditor() {
-        CollectionEditor editorController = CollectionEditor.getInstance();
-        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("collection-editor.fxml"));
+        final CollectionEditor editorController = CollectionEditor.getInstance();
+        final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("collection-editor.fxml"));
+        fxmlLoader.setController(editorController);
+        Scene scene;
+        try {
+            scene = new Scene(fxmlLoader.load());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        scene.getStylesheets().add(Main.class.getResource("/css/style.css").toExternalForm());
+        editorController.setScene(scene);
+        editorController.postInit();
+    }
+
+    private void initSettingsEditor() {
+        final SettingsEditor editorController = SettingsEditor.getInstance();
+        final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("settings-editor.fxml"));
         fxmlLoader.setController(editorController);
         Scene scene;
         try {
@@ -149,6 +172,22 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         songOneIdField.setText(SONG_ONE.getDisplayId());
         songTwoIdField.setText(SONG_TWO.getDisplayId());
 
+        openSettingsButton.setImage(new Image(Main.class.getResourceAsStream("/assets/gear.png")));
+
+
+        // doesn't work, fix?
+        openSettingsButton.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
+            openSettingsButton.setStyle("-fx-background-color:#dae7f3;");
+        });
+
+        openSettingsButton.addEventHandler(MouseEvent.MOUSE_EXITED, event -> {
+            openSettingsButton.setStyle("-fx-background-color:transparent;");
+        });
+
+        openSettingsButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            SettingsEditor.open();
+            event.consume();
+        });
 
         editCollectionButton.setOnAction(event -> {
             CollectionEditor.open();
@@ -252,7 +291,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         editSongOneHTML.setOnAction(event -> {
             if (SONG_ONE.id() < 0) {
                 new AlertDialog.Builder().setTitle("Message").setIcon(AlertDialog.Builder.Icon.INFO)
-                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH")))
+                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH")))
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
@@ -263,7 +302,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         editSongTwoHTML.setOnAction(event -> {
             if (SONG_TWO.id() < 0) {
                 new AlertDialog.Builder().setTitle("Message").setIcon(AlertDialog.Builder.Icon.INFO)
-                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH")))
+                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH")))
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
@@ -326,7 +365,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
         });
 
-        if (Environment.EnvironmentSettings.IS_IT_EASTER_ALREADY) {
+        if (Environment.IS_IT_EASTER_ALREADY) {
             easterSwitch.setManaged(true);
             easterSwitch.setVisible(true);
         } else {

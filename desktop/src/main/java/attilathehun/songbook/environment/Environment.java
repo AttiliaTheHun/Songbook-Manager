@@ -26,12 +26,13 @@ import java.util.*;
 import static javax.swing.JOptionPane.showMessageDialog;
 
 public final class Environment implements CollectionListener {
-
     private static final Logger logger = LogManager.getLogger(Environment.class);
+    public static final String SETTINGS_FILE_PATH = "settings.json";
+    private static final String EASTER_EXE_FILE_PATH = "easter.exe";
+    public static final boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
     private static final List<EnvironmentStateListener> listeners = new ArrayList<EnvironmentStateListener>();
     private static final Environment INSTANCE = new Environment();
     public static boolean FLAG_IGNORE_SEGMENTS = false;
-    private EnvironmentSettings settings = getDefaultSettings();
     private final Map<String, CollectionManager> collectionManagers = new HashMap<>();
 
     private CollectionManager selectedCollectionManager;
@@ -148,7 +149,7 @@ public final class Environment implements CollectionListener {
 
     public void refresh() {
         try {
-            for (File f : new File((String) settings.get("TEMP_FILE_PATH")).listFiles()) {
+            for (File f : new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).listFiles()) {
                 if (FLAG_IGNORE_SEGMENTS && f.getName().startsWith("segment")) {
                     continue;
                 }
@@ -226,35 +227,10 @@ public final class Environment implements CollectionListener {
 
     public void exit() {
         SettingsManager.getInstance().save();
-        Platform.exit();
-    }
-
-    public EnvironmentSettings getDefaultSettings() {
-        EnvironmentSettings settings = new EnvironmentSettings();
-        settings.put("DATA_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/data/").toString());
-        settings.put("SONGS_FILE_PATH", Paths.get(settings.get("DATA_FILE_PATH") + "/songs/").toString());
-        settings.put("RESOURCES_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/resources/").toString());
-        settings.put("CSS_RESOURCES_FILE_PATH", Paths.get(settings.get("RESOURCES_FILE_PATH") + "/css/").toString());
-        settings.put("TEMPLATE_RESOURCES_FILE_PATH", Paths.get(settings.get("RESOURCES_FILE_PATH") + "/templates/").toString());
-        settings.put("DATA_ZIP_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/data.zip").toString());
-        settings.put("TEMP_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/temp/").toString());
-        settings.put("TEMP_TIMESTAMP_FILE_PATH", Paths.get(settings.get("TEMP_FILE_PATH") + "/session_timestamp.txt").toString());
-        settings.put("ASSETS_RESOURCES_FILE_PATH", Paths.get(settings.get("RESOURCES_FILE_PATH") + "/assets/").toString());
-        settings.put("OUTPUT_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/pdf/").toString());
-        settings.put("LOG_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/log.txt").toString());
-        settings.put("SCRIPTS_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/scripts/").toString());
-        return settings;
-    }
-
-    public EnvironmentSettings getSettings() {
-        return settings;
-    }
-
-    public void setSettings(final EnvironmentSettings s) {
-        if (s == null) {
-            throw new IllegalArgumentException("settings are null");
+        for (final CollectionManager m : getRegisteredManagers().values()) {
+            m.save();
         }
-        settings = s;
+        Platform.exit();
     }
 
     @Override
@@ -271,14 +247,5 @@ public final class Environment implements CollectionListener {
     public void onSongAdded(final Song s, final CollectionManager m) {
         refresh();
     }
-
-    public static final class EnvironmentSettings extends HashMap<String, Object> implements Serializable {
-        private static final Logger logger = LogManager.getLogger(attilathehun.songbook.environment.Environment.EnvironmentSettings.class);
-        public static final String SETTINGS_FILE_PATH = "settings.json";
-        private static final String EASTER_EXE_FILE_PATH = "easter.exe";
-        public static final boolean IS_IT_EASTER_ALREADY = new File(EASTER_EXE_FILE_PATH).exists() && new File(EASTER_EXE_FILE_PATH).length() == 0;
-
-    }
-
 
 }

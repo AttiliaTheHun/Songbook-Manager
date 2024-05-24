@@ -1,6 +1,7 @@
 package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.vcs.index.LoadIndex;
 import attilathehun.songbook.vcs.index.SaveIndex;
 import attilathehun.songbook.window.AlertDialog;
@@ -108,7 +109,7 @@ public class Client {
             }
 
             final String filename = contentDisposition.substring(contentDisposition.indexOf("=") + 1);
-            final Path outputPath = Paths.get((String) Environment.getInstance().getSettings().get("TEMP_FILE_PATH"), filename);
+            final Path outputPath = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH"), filename);
 
             final InputStream in = conn.getInputStream();
             Files.copy(in, outputPath);
@@ -218,7 +219,7 @@ public class Client {
 
         conn.connect();
         if (conn.getResponseCode() == OK) {
-            Path outputPath = Paths.get((String) Environment.getInstance().getSettings().get("TEMP_FILE_PATH"), "response.zip");
+            Path outputPath = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH"), "response.zip");
             String fileContent = String.join("\n", Files.readAllLines(Paths.get(indexFileUrl)));
             OutputStream outputStream = conn.getOutputStream();
             outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));

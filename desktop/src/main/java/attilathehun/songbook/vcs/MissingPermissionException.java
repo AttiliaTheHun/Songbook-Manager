@@ -1,7 +1,7 @@
 package attilathehun.songbook.vcs;
 
 public class MissingPermissionException extends RuntimeException {
-    public MissingPermissionException(String message) {
+    public MissingPermissionException(final String message) {
         super(message);
     }
 }

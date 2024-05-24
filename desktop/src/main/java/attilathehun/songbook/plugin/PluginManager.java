@@ -1,6 +1,6 @@
 package attilathehun.songbook.plugin;
 
-import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.util.DynamicSonglist;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -9,15 +9,14 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-@SupportedAnnotationTypes(value = "attilathehun.songbook.plugin.AutoRegister")
-public final class PluginManager extends AbstractProcessor {
+@Deprecated
+public final class PluginManager {
 
     private static final Logger logger = LogManager.getLogger(PluginManager.class);
 
@@ -31,59 +30,10 @@ public final class PluginManager extends AbstractProcessor {
     }
 
 
-    @Deprecated
-    @Override
-    public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        System.out.println("processing annotations");
-        System.out.println(Arrays.toString(annotations.toArray()));
-        for (final TypeElement annotation : annotations) {
-            Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
-            System.out.println(Arrays.toString(annotatedElements.toArray()));
-            if (annotation.getQualifiedName().contentEquals(AutoRegister.class.getName())) {
-                for (final Element element : annotatedElements) {
-                    if (element.getEnclosedElements().get(0) instanceof Plugin) {
-                        ((Plugin) element.getEnclosedElements().get(0)).register();
-                    }
-                }
-            }
 
-        }
 
-        return true;
-    }
 
-    public void init() {
-        try {
-            autoRegisterPlugins();
-        } catch (Exception e) {
-            logger.error("automatic plugin registration failed", e);
-            e.printStackTrace();
-        }
 
-    }
-
-    /**
-     * Automatically registers {@link Plugin}s that are marked for registration. This action is meant to be performed only
-     * once, at startup.
-     */
-    private void autoRegisterPlugins() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-       /* Iterable<Class<?>> autoRegisterPlugins = ClassIndex.getAnnotated(AutoRegister.class);
-
-        for (final Class c : autoRegisterPlugins) {
-            System.out.println(c.getSimpleName());
-            if (c.getSuperclass() != null && c.getSuperclass().equals(Plugin.class)) {
-                ((Plugin)c.getMethod("getInstance").invoke(null)).register();
-            }
-        }*/
-    }
-
-    @Deprecated(forRemoval = true)
-    public static void loadPlugins() {
-        DynamicSonglist.getInstance();
-        Frontpage.getInstance();
-        Export.getInstance();
-        SML.getInstance();
-    }
 
     public static PluginManager getInstance() {
         return instance;

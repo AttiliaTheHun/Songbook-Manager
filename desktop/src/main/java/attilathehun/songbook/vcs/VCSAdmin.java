@@ -2,6 +2,7 @@ package attilathehun.songbook.vcs;
 
 import attilathehun.annotation.TODO;
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.misc.Misc;
 import attilathehun.songbook.vcs.index.Index;
 import attilathehun.songbook.vcs.index.LoadIndex;
@@ -25,11 +26,14 @@ import java.util.HashMap;
  * The parts of the version control system are not meant to be used directly.
  */
 public final class VCSAdmin {
-
     private static final Logger logger = LogManager.getLogger(VCSAdmin.class);
 
+    private static final String REQUEST_ZIP_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH"), "request.zip").toString();
+    private static final String LOCAL_INDEX_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_FILE_PATH"), "index.json").toString();
+    private static final String CHANGE_LOG_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("DATA_FILE_PATH"), "change_log.txt").toString();
+    private static final String VERSION_TIMESTAMP_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_FILE_PATH"), "timestamp.txt").toString();
+
     private static final VCSAdmin INSTANCE = new VCSAdmin();
-    private VCSSettings settings = getDefaultSettings();
 
     private VCSAgent defaultAgent = null;
 
@@ -80,7 +84,7 @@ public final class VCSAdmin {
     }
 
     private void saveLocalChanges(VCSAgent a) throws IOException, NoSuchAlgorithmException {
-        if (!(Boolean) settings.get("REMOTE_SAVE_LOAD_ENABLED")) {
+        if (!(Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             new AlertDialog.Builder().setTitle("Remote saving and loading disabled").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage("Remote saving and loading is disabled. You can enable it in settings.")
                     .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
@@ -146,7 +150,7 @@ public final class VCSAdmin {
         }
         RequestFileAssembler RFAssembler = new RequestFileAssembler().assembleSaveFile(new IndexBuilder().createSaveIndex(local, remote), IndexBuilder.compareCollections(local, remote));
         Client client = new Client();
-        client.postRequestFile((String) settings.get("REMOTE_DATA_UPLOAD_URL"), RFAssembler.getOutputFilePath(), token);
+        client.postRequestFile(SettingsManager.getInstance().getValue("REMOTE_DATA_UPLOAD_URL"), RFAssembler.getOutputFilePath(), token);
 
         if (client.getStatus().getCode() == Client.Status.SUCCESS) {
             new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO)
@@ -161,7 +165,7 @@ public final class VCSAdmin {
 
     @TODO
     public void loadRemoteChanges(VCSAgent a) throws IOException, NoSuchAlgorithmException {
-        if (!(Boolean) settings.get("REMOTE_SAVE_LOAD_ENABLED")) {
+        if (!(Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             new AlertDialog.Builder().setTitle("Remote saving and loading disabled").setIcon(AlertDialog.Builder.Icon.INFO)
                             .setMessage("Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation.")
                                     .addOkButton().build().open();
@@ -226,10 +230,10 @@ public final class VCSAdmin {
             return;
         }
         LoadIndex index = indexBuilder.createLoadIndex(local, remote);
-        String indexFilePath = Paths.get((String) Environment.getInstance().getSettings().get("TEMP_FILE_PATH"), "index.json").toString();
+        String indexFilePath = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH"), "index.json").toString();
         Misc.saveObjectToFileInJSON(index, new File(indexFilePath));
         Client client = new Client();
-        String responseFilePath = client.getResponseFile((String) settings.get("REMOTE_DATA_UPLOAD_URL"), indexFilePath, token);
+        String responseFilePath = client.getResponseFile(SettingsManager.getInstance().getValue("REMOTE_DATA_UPLOAD_URL"), indexFilePath, token);
 
         if (client.getStatus().getCode() != Client.Status.SUCCESS) {
             new AlertDialog.Builder().setTitle("Failure").setIcon(AlertDialog.Builder.Icon.ERROR)
@@ -270,43 +274,13 @@ public final class VCSAdmin {
     }
 
     private void updateSongbookChangeLog() throws IOException {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        LocalDateTime now = LocalDateTime.ofInstant(Instant.ofEpochMilli(CacheManager.getInstance().getCachedSongbookVersionTimestamp()), ZoneId.systemDefault());
+        final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        final LocalDateTime now = LocalDateTime.ofInstant(Instant.ofEpochMilli(CacheManager.getInstance().getCachedSongbookVersionTimestamp()), ZoneId.systemDefault());
         final String date = dtf.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(CacheManager.getInstance().getCachedSongbookVersionTimestamp()), ZoneId.systemDefault()));
         final String username = System.getProperty("user.name");
-        PrintWriter printWriter = new PrintWriter(new FileWriter((String) settings.get("CHANGE_LOG_FILE_PATH"), true));
+        final PrintWriter printWriter = new PrintWriter(new FileWriter((String) SettingsManager.getInstance().getValue("CHANGE_LOG_FILE_PATH"), true));
         printWriter.write(date + " " + username + "\n");
         printWriter.close();
     }
 
-    public VCSSettings getDefaultSettings() {
-        VCSSettings settings = new VCSSettings();
-        settings.put("REMOTE_DATA_DOWNLOAD_URL", "http://beta-hrabozpevnik.clanweb.eu/api/data/download/");
-        settings.put("REMOTE_DATA_UPLOAD_URL", "http://beta-hrabozpevnik.clanweb.eu/api/data/upload/");
-        settings.put("REMOTE_DATA_INDEX_URL", "http://beta-hrabozpevnik.clanweb.eu/api/data/index/");
-        settings.put("REMOTE_DATA_VERSION_TIMESTAMP_URL", "http://beta-hrabozpevnik.clanweb.eu/api/data/version-timestamp/");
-        settings.put("REMOTE_SAVE_LOAD_ENABLED", Boolean.FALSE);
-        settings.put("REQUEST_ZIP_TEMP_FILE_PATH", Paths.get((String) Environment.getInstance().getSettings().get("TEMP_FILE_PATH"), "request.zip").toString());
-        settings.put("VCS_CACHE_FILE_PATH", Paths.get(System.getProperty("user.dir"), "vcs").toString());
-        settings.put("LOCAL_INDEX_FILE_PATH", Paths.get((String) settings.get("VCS_CACHE_FILE_PATH"), "index.json").toString());
-        settings.put("VCS_THREAD_COUNT", 20);
-        settings.put("CHANGE_LOG_FILE_PATH", Paths.get((String) Environment.getInstance().getSettings().get("DATA_FILE_PATH"), "change_log.txt").toString());
-        settings.put("VERSION_TIMESTAMP_FILE_PATH", Paths.get((String) settings.get("VCS_CACHE_FILE_PATH"), "timestamp.txt").toString());
-        return settings;
-    }
-
-    public VCSSettings getSettings() {
-        return settings;
-    }
-
-    public void setSettings(final VCSSettings s) {
-        if (s == null) {
-            return;
-        }
-        settings = s;
-    }
-
-    public static class VCSSettings extends HashMap<String, Object> implements Serializable {
-        private static final Logger logger = LogManager.getLogger(VCSSettings.class);
-    }
 }

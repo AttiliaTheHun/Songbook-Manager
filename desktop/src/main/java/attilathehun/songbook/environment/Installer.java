@@ -24,8 +24,8 @@ public class Installer {
 
     public static void runDiagnostics() {
         logger.info("Running installer diagnostics...");
-        Installer installer = new Installer();
-        EnvironmentVerificator verificator = new EnvironmentVerificator();
+        final Installer installer = new Installer();
+        final EnvironmentVerificator verificator = new EnvironmentVerificator();
         if (!verificator.verifyResources()) {
             installer.installResources();
         }
@@ -36,7 +36,7 @@ public class Installer {
     }
 
     private static long downloadRemoteFile(String url, String fileName) throws IOException {
-        try (InputStream in = URI.create(url).toURL().openStream()) {
+        try (final InputStream in = URI.create(url).toURL().openStream()) {
             return Files.copy(in, Paths.get(fileName));
         }
     }
@@ -53,7 +53,7 @@ public class Installer {
                 IS_TEMP_RESOURCES_ZIP_FILE = true;
                 downloadRemoteFile(REMOTE_RESOURCES_ZIP_FILE, "resources.zip");
             }
-            ZipBuilder.extract(RESOURCES_ZIP_FILE_PATH, (String) Environment.getInstance().getDefaultSettings().get("RESOURCE_FILE_PATH"));
+            ZipBuilder.extract(RESOURCES_ZIP_FILE_PATH, SettingsManager.getInstance().getValue("RESOURCE_FILE_PATH"));
             if (IS_TEMP_RESOURCES_ZIP_FILE) {
                 new File(RESOURCES_ZIP_FILE_PATH).delete();
             }
@@ -79,7 +79,7 @@ public class Installer {
                 downloadRemoteFile(REMOTE_SCRIPTS_ZIP_FILE, "scripts.zip");
             }
             if (IS_TEMP_SCRIPTS_ZIP_FILE) {
-                ZipBuilder.extract(SCRIPTS_ZIP_FILE_PATH, (String) Environment.getInstance().getSettings().get("SCRIPTS_FILE_PATH"));
+                ZipBuilder.extract(SCRIPTS_ZIP_FILE_PATH, SettingsManager.getInstance().getValue("SCRIPTS_FILE_PATH"));
             }
             logger.info("Finished installing scripts");
         } catch (IOException e) {

@@ -3,10 +3,9 @@ package attilathehun.songbook.util;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
-import attilathehun.songbook.environment.EnvironmentManager;
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.export.PDFGenerator;
 import attilathehun.songbook.misc.Misc;
-import attilathehun.songbook.plugin.DynamicSonglist;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.window.AlertDialog;
 import org.apache.logging.log4j.LogManager;
@@ -30,16 +29,16 @@ public class HTMLGenerator {
 
     private static final Logger logger = LogManager.getLogger(HTMLGenerator.class);
 
-    private static final String SONGLIST_TEMPLATE_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH") + "/songlist.html").toString();
-    private static final String HEAD_TEMPLATE_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH") + "/head.html").toString();
-    private static final String FRONTPAGE_TEMPLATE_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH") + "/frontpage.html").toString();
-    private static final String PAGEVIEW_TEMPLATE_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH") + "/pageview.html").toString();
-    private static final String SONG_TEMPLATE_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH") + "/song.html").toString();
-    private static final String SONG_WRAPPER_TEMPLATE_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH") + "/song_wrapper.html").toString();
-    private static final String TEMP_SONGLIST_PART_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMP_FILE_PATH") + "/songlist_part_%d.html").toString();
-    private static final String TEMP_FRONTPAGE_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMP_FILE_PATH") + "/frontpage.html").toString();
-    private static final String TEMP_PAGEVIEW_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMP_FILE_PATH") + "/current_page.html").toString();
-    private static final String BASE_STYLE_FILE_PATH = Paths.get(Environment.getInstance().getSettings().get("CSS_RESOURCES_FILE_PATH") + "/style.css").toString();
+    private static final String SONGLIST_TEMPLATE_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH") + "/songlist.html").toString();
+    private static final String HEAD_TEMPLATE_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH") + "/head.html").toString();
+    private static final String FRONTPAGE_TEMPLATE_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH") + "/frontpage.html").toString();
+    private static final String PAGEVIEW_TEMPLATE_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH") + "/pageview.html").toString();
+    private static final String SONG_TEMPLATE_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH") + "/song.html").toString();
+    private static final String SONG_WRAPPER_TEMPLATE_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH") + "/song_wrapper.html").toString();
+    private static final String TEMP_SONGLIST_PART_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH") + "/songlist_part_%d.html").toString();
+    private static final String TEMP_FRONTPAGE_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH") + "/frontpage.html").toString();
+    private static final String TEMP_PAGEVIEW_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH") + "/current_page.html").toString();
+    private static final String BASE_STYLE_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("CSS_RESOURCES_FILE_PATH") + "/style.css").toString();
     private static final String SHADOW_SONG_HTML = "<div class=\"song\"></div>";
     private static final String NAVBAR_REPLACE_MARK = "<replace \"navbar\">";
     private static final String HEAD_REPLACE_MARK = "<replace \"head\">";
@@ -54,16 +53,16 @@ public class HTMLGenerator {
     private static final String SONG_ACTIVE_REPLACE_MARK = "<replace \"songactive\">";
     private static final String SONG_LIST_REPLACE_MARK = "<replace \"unorderedlist\">";
     private static final String FRONTPAGE_PICTURE_PATH_REPLACE_MARK = "<replace \"frontpagepic\">";
-    private static final String FRONTPAGE_PICTURE_PATH = Paths.get(Environment.getInstance().getSettings().get("ASSETS_RESOURCES_FILE_PATH") + "/frontpage.png").toString();
+    private static final String FRONTPAGE_PICTURE_PATH = Paths.get(SettingsManager.getInstance().getValue("ASSET_RESOURCES_FILE_PATH") + "/frontpage.png").toString();
 
-    private static final String SHADOW_SONG_PATH = Paths.get(Environment.getInstance().getSettings().get("TEMP_FILE_PATH") + "/shadow_song.html").toString();
+    private static final String SHADOW_SONG_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH") + "/shadow_song.html").toString();
 
     /**
      * The default constructor. Upon instantiation the default style file and a shadow song file are created in the temp folder.
      */
     public HTMLGenerator() {
         try {
-            Files.copy(Paths.get(BASE_STYLE_FILE_PATH), Paths.get(Environment.getInstance().getSettings().get("TEMP_FILE_PATH") + "/style.css"), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(Paths.get(BASE_STYLE_FILE_PATH), Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH") + "/style.css"), StandardCopyOption.REPLACE_EXISTING);
             createShadowSongFile();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
@@ -121,14 +120,16 @@ public class HTMLGenerator {
             throw new IllegalArgumentException();
         }
 
+        final int MAX_SONGS_PER_COLUMN = SettingsManager.getInstance().getValue("DYNAMIC_SONGLIST_SONGS_PER_COLUMN");
+
         Path path = Paths.get(SONGLIST_TEMPLATE_PATH);
 
         String html = String.join("\n", Files.readAllLines(path));
         ArrayList<Song> collection = Environment.getInstance().getCollectionManager().getDisplayCollection();
         StringBuilder payload = new StringBuilder();
-        int columns = (endIndex - startIndex > DynamicSonglist.MAX_SONGS_PER_COLUMN) ? 2 : 1;
+        int columns = (endIndex - startIndex > MAX_SONGS_PER_COLUMN) ? 2 : 1;
         int columnStartIndex = startIndex;
-        int columnEndIndex = Math.min(startIndex + DynamicSonglist.MAX_SONGS_PER_COLUMN, endIndex);
+        int columnEndIndex = Math.min(startIndex + MAX_SONGS_PER_COLUMN, endIndex);
         for (int j = 1; j < columns + 1; j++) {
 
             payload.append("<div class=\"songlist-column\">\n<ul class=\"songlist-formatting\">");
@@ -149,7 +150,7 @@ public class HTMLGenerator {
             payload.append("</ul></div>\n");
 
             columnStartIndex = columnEndIndex;
-            columnEndIndex = Math.min(columnEndIndex + DynamicSonglist.MAX_SONGS_PER_COLUMN, endIndex);
+            columnEndIndex = Math.min(columnEndIndex + MAX_SONGS_PER_COLUMN, endIndex);
         }
 
         html = html.replace(SONG_LIST_REPLACE_MARK, payload.toString());
@@ -239,7 +240,7 @@ public class HTMLGenerator {
         html = html.replace(HEAD_REPLACE_MARK, getHead());
         html = html.replace(SONG_ONE_REPLACE_MARK, songOneHTML);
         html = html.replace(SONG_TWO_REPLACE_MARK, songTwoHTML);
-        html = html.replace(LANGUAGE_REPLACE_MARK, Locale.of((String) EnvironmentManager.getInstance().getSongbookSettings().get("LANGUAGE")).getDisplayName());
+        html = html.replace(LANGUAGE_REPLACE_MARK, Locale.of(SettingsManager.getInstance().getValue("SONGBOOK_LANGUAGE")).getDisplayName());
         return html;
     }
 
@@ -283,7 +284,7 @@ public class HTMLGenerator {
             File songFile;
             songFile = new File(manager.getSongFilePath(s));
 
-            File songTemplate = new File(Environment.getInstance().getSettings().get("TEMPLATE_RESOURCES_FILE_PATH") + "/song.html");
+            File songTemplate = new File(SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH") + "/song.html");
             if (!songFile.createNewFile() && songFile.length() != 0) {
                 new AlertDialog.Builder().setTitle("Data Loss Prevented").setIcon(AlertDialog.Builder.Icon.ERROR)
                         .setMessage("File already exists but is not empty.").addOkButton().build().open();
@@ -339,7 +340,7 @@ public class HTMLGenerator {
      */
     public void generateFrontpageFile() {
         try {
-            Files.copy(Paths.get(FRONTPAGE_PICTURE_PATH), Paths.get(Environment.getInstance().getSettings().get("TEMP_FILE_PATH") + "/frontpage.png"), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(Paths.get(FRONTPAGE_PICTURE_PATH), Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH") + "/frontpage.png"), StandardCopyOption.REPLACE_EXISTING);
             String path = TEMP_FRONTPAGE_PATH;
             if (Misc.fileExists(path)) {
                 return;

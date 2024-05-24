@@ -92,7 +92,7 @@ public class CollectionEditor extends Stage {
             throw new IllegalStateException();
         }
         tabbedPane.getTabs().add(new CollectionPanel(StandardCollectionManager.getInstance()));
-        if (Environment.EnvironmentSettings.IS_IT_EASTER_ALREADY && EasterCollectionManager.getInstance().getCollection() != null) {
+        if (Environment.IS_IT_EASTER_ALREADY && EasterCollectionManager.getInstance().getCollection() != null) {
             tabbedPane.getTabs().add(new CollectionPanel(EasterCollectionManager.getInstance()));
         }
 

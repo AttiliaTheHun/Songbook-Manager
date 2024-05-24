@@ -4,6 +4,7 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.SHA256HashGenerator;
 import attilathehun.songbook.vcs.index.*;
 import com.google.gson.Gson;
@@ -110,9 +111,9 @@ public class IndexBuilder {
         Map<String, String> collectionSongs;
         String collectionHash;
         for (CollectionManager collectionManager : Environment.getInstance().getRegisteredManagers().values()) {
-            BuildWorker.spamCPUAndMemoryWithThreads(listFiles(collectionManager.getSettings().getSongDataFilePath()));
+            BuildWorker.spamCPUAndMemoryWithThreads(listFiles(collectionManager.getSongDataFilePath()));
             collectionSongs = BuildWorker.map;
-            collectionHash = hashGenerator.getHash(new File(collectionManager.getSettings().getCollectionFilePath()));
+            collectionHash = hashGenerator.getHash(new File(collectionManager.getCollectionFilePath()));
             index.getData().put(collectionManager.getCollectionName(), collectionSongs.keySet());
             index.getHashes().put(collectionManager.getCollectionName(), collectionSongs.values());
             index.getCollections().put(collectionManager.getCollectionName(), collectionHash);
@@ -276,7 +277,7 @@ public class IndexBuilder {
          */
         static void spamCPUAndMemoryWithThreads(final Collection<File> collection) {
             init(collection);
-            Thread[] threads = new Thread[(int) VCSAdmin.getInstance().getSettings().get("VCS_THREAD_COUNT")];
+            Thread[] threads = new Thread[(int) SettingsManager.getInstance().getValue("VCS_THREAD_COUNT")];
             for (int i = 0; i < threads.length; i++) {
                 threads[i] = new Thread(new BuildWorker());
                 threads[i].start();
@@ -298,7 +299,7 @@ public class IndexBuilder {
         public void run() {
             activeThreads.incrementAndGet();
             try {
-                SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
+                final SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
                 File file;
                 while (deque.size() > 0) {
                     file = deque.pollLast();

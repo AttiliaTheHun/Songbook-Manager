@@ -28,9 +28,6 @@ public class EnvironmentManager {
 
     private static final EnvironmentManager INSTANCE = new EnvironmentManager();
 
-    private SongbookSettings songbookSettings = getDefaultSongbookSettings();
-    private UserSettings userSettings = getDefaultUserSettings();
-
     private EnvironmentManager() {}
 
     public static EnvironmentManager getInstance() {
@@ -38,6 +35,7 @@ public class EnvironmentManager {
     }
 
 
+    @Deprecated
     public SongbookSettings getDefaultSongbookSettings() {
         SongbookSettings settings = new SongbookSettings();
         settings.put("BIND_SONG_TITLES", Boolean.TRUE);
@@ -46,44 +44,15 @@ public class EnvironmentManager {
     }
 
 
-    public SongbookSettings getSongbookSettings() {
-        return songbookSettings;
-    }
 
-
-    public void setSongbookSettings(final SongbookSettings p) {
-        if (p == null) {
-            return;
-        }
-        songbookSettings = p;
-    }
-
-    public UserSettings getDefaultUserSettings() {
-        UserSettings settings = new UserSettings();
-        settings.put("AUTO_LOAD_DATA", Boolean.FALSE);
-        settings.put("DEFAULT_READ_TOKEN", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h");
-        settings.put("AUTH_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/.auth").toString());
-        return settings;
-    }
-
-    public UserSettings getUserSettings() {
-        return userSettings;
-    }
-
-    public void setUserSettings(final UserSettings u) {
-        if (u == null) {
-            return;
-        }
-        userSettings = u;
-    }
 
     public void load() {
-        if ((Boolean) VCSAdmin.getInstance().getSettings().get("REMOTE_SAVE_LOAD_ENABLED")) {
+        if ((Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             VCSAdmin.getInstance().pull();
             return;
         }
         logger.info("Importing a local data zip file...");
-        if (!new File((String) Environment.getInstance().getSettings().get("DATA_ZIP_FILE_PATH")).exists()) {
+        if (!new File((String) SettingsManager.getInstance().getValue("DATA_ZIP_FILE_PATH")).exists()) {
             logger.info("Import aborted: file not found!");
             new AlertDialog.Builder().setTitle("Error").setMessage("Could not find a local data zip file. Make sure it is in the same directory as the program.")
             .setIcon(AlertDialog.Builder.Icon.WARNING).addOkButton().build().open();
@@ -102,7 +71,7 @@ public class EnvironmentManager {
 
     private boolean extractLocalDataFile() {
         try {
-            ZipBuilder.extract((String) Environment.getInstance().getSettings().get("DATA_ZIP_FILE_PATH"), (String) Environment.getInstance().getDefaultSettings().get("DATA_FILE_PATH"));
+            ZipBuilder.extract(SettingsManager.getInstance().getValue("DATA_ZIP_FILE_PATH"), SettingsManager.getInstance().getValue("DATA_FILE_PATH"));
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setMessage("Could not extract the data. For complete error message view the log file.")
@@ -113,7 +82,7 @@ public class EnvironmentManager {
     }
 
     public void save() {
-        if ((Boolean) VCSAdmin.getInstance().getSettings().get("REMOTE_SAVE_LOAD_ENABLED")) {
+        if ((Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             VCSAdmin.getInstance().push();
             return;
         }
@@ -131,8 +100,8 @@ public class EnvironmentManager {
 
     private boolean archiveDataToLocalFile() {
         try (ZipBuilder builder = new ZipBuilder()) {
-            builder.setOutputPath((String) Environment.getInstance().getSettings().get("DATA_ZIP_FILE_PATH"));
-            builder.addFolderContent(new File((String) Environment.getInstance().getSettings().get("DATA_FILE_PATH"), ""));
+            builder.setOutputPath((String) SettingsManager.getInstance().getValue("DATA_ZIP_FILE_PATH"));
+            builder.addFolderContent(new File((String) SettingsManager.getInstance().getValue("DATA_FILE_PATH"), ""));
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setMessage("Could not archive the data.")
@@ -145,9 +114,9 @@ public class EnvironmentManager {
 
     public void createNewSongbook() {
         try {
-            File songDataFolder = new File(StandardCollectionManager.getInstance().getSettings().getSongDataFilePath());
+            File songDataFolder = new File(StandardCollectionManager.getInstance().getSongDataFilePath());
             songDataFolder.mkdirs();
-            File collectionJSONFile = new File(StandardCollectionManager.getInstance().getSettings().getCollectionFilePath());
+            File collectionJSONFile = new File(StandardCollectionManager.getInstance().getCollectionFilePath());
             collectionJSONFile.createNewFile();
             PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
             printWriter.write("[]");
@@ -171,7 +140,7 @@ public class EnvironmentManager {
 
     @Deprecated
     public void loadSongbook() {
-        if ((Boolean) VCSAdmin.getInstance().getSettings().get("REMOTE_SAVE_LOAD_ENABLED")) {
+        if ((Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             VCSAdmin.getInstance().pull();
             return;
         }
@@ -185,7 +154,7 @@ public class EnvironmentManager {
     }
 
     public void autoLoad() {
-        if ((Boolean) userSettings.get("AUTO_LOAD_DATA")) {
+        if ((Boolean) SettingsManager.getInstance().getValue("AUTO_LOAD_DATA")) {
             load();
         }
     }

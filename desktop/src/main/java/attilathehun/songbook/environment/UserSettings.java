@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.nio.file.Paths;
 import java.util.HashMap;
 
+@Deprecated
 public final class UserSettings extends HashMap<String, Object> implements Serializable {
     private static final Logger logger = LogManager.getLogger(UserSettings.class);
 

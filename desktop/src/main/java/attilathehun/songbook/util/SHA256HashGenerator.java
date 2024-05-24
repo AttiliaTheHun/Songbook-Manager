@@ -23,10 +23,10 @@ public class SHA256HashGenerator {
      * @return hexadecimal hash String
      * @source <a href="https://www.baeldung.com/sha-256-hashing-java">Baeldung</a>
      */
-    private static String bytesToHex(byte[] hash) {
-        StringBuilder hexString = new StringBuilder(2 * hash.length);
+    private static String bytesToHex(final byte[] hash) {
+        final StringBuilder hexString = new StringBuilder(2 * hash.length);
         for (int i = 0; i < hash.length; i++) {
-            String hex = Integer.toHexString(0xff & hash[i]);
+            final String hex = Integer.toHexString(0xff & hash[i]);
             if (hex.length() == 1) {
                 hexString.append('0');
             }
@@ -35,13 +35,13 @@ public class SHA256HashGenerator {
         return hexString.toString();
     }
 
-    public String getHash(String message) {
-        byte[] encodedhash = digest.digest(
+    public String getHash(final String message) {
+        final byte[] encodedhash = digest.digest(
                 message.getBytes(StandardCharsets.UTF_8));
         return bytesToHex(encodedhash);
     }
 
-    public String getHash(File file) throws IOException {
+    public String getHash(final File file) throws IOException {
         return getHash(String.join("\n", Files.readAllLines(file.toPath())));
     }
 

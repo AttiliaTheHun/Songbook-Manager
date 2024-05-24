@@ -66,7 +66,7 @@ public class AlertDialog extends Stage {
     public CompletableFuture<Integer> awaitResult() {
         show();
         toFront();
-        CompletableFuture<Integer> result = new CompletableFuture<>();
+        final CompletableFuture<Integer> result = new CompletableFuture<>();
         if (okButton != null) {
             okButton.setOnAction((event) -> {
                 if (okButtonAction == null) {
@@ -116,7 +116,7 @@ public class AlertDialog extends Stage {
     public CompletableFuture<Pair<Integer, ArrayList<Node>>> awaitData() {
         show();
         toFront();
-        CompletableFuture<Pair<Integer, ArrayList<Node>>> result = new CompletableFuture<>();
+        final CompletableFuture<Pair<Integer, ArrayList<Node>>> result = new CompletableFuture<>();
         if (okButton != null) {
             okButton.setOnAction((event) -> {
                 if (okButtonAction == null) {
@@ -209,7 +209,7 @@ public class AlertDialog extends Stage {
         this.closeButtonAction = closeButtonAction;
         this.extraButtonAction = extraButtonAction;
         this.nodes = nodes;
-        BorderPane root = new BorderPane();
+        final BorderPane root = new BorderPane();
         // We create the layout for the custom nodes
         GridPane customContentContainer = null;
         if (nodes.size() != 0) {
@@ -260,8 +260,8 @@ public class AlertDialog extends Stage {
             // In case we want to add icon, we need to modify the layout accordingly by adding another node and wrapping
             // both of these in an HBox
             if (icon != null && icon.length() != 0) {
-                ImageView image = new ImageView(icon);
-                HBox rootBorderPaneCenterContainer = new HBox();
+                final ImageView image = new ImageView(icon);
+                final HBox rootBorderPaneCenterContainer = new HBox();
                 HBox.setHgrow(rootBorderPaneCenterContainer, Priority.ALWAYS);
                 rootBorderPaneCenterContainer.setAlignment(Pos.CENTER_LEFT);
                 rootBorderPaneCenterContainer.setPadding(new Insets(8, 8, 8, 8)); // top, right, bottom, left
@@ -271,7 +271,7 @@ public class AlertDialog extends Stage {
                 if (customContentContainer == null) {
                     rootBorderPaneCenterContainer.getChildren().add(messageField);
                 } else {
-                    VBox box = new VBox(messageField, customContentContainer);
+                    final VBox box = new VBox(messageField, customContentContainer);
                     HBox.setHgrow(box, Priority.ALWAYS);
                     rootBorderPaneCenterContainer.getChildren().add(box);
                 }
@@ -281,7 +281,7 @@ public class AlertDialog extends Stage {
                 if (customContentContainer == null) {
                     root.setCenter(messageField);
                 } else {
-                    VBox box = new VBox(messageField, customContentContainer);
+                    final VBox box = new VBox(messageField, customContentContainer);
                     root.setCenter(box);
                 }
             }
@@ -293,7 +293,7 @@ public class AlertDialog extends Stage {
 
         // Now we add the buttons
 
-        GridPane buttonBar = new GridPane();
+        final GridPane buttonBar = new GridPane();
         buttonBar.setPadding(new Insets(8, 8, 8, 8));
 
         // we want to add only the buttons that are desired (their text is not empty)
@@ -322,7 +322,7 @@ public class AlertDialog extends Stage {
 
         buttonBar.getChildren().addAll(buttons);
         // create a VBox, so we can include the separator to the BorderPane's bottom rather than to the center
-        VBox bottomWrapper = new VBox();
+        final VBox bottomWrapper = new VBox();
         bottomWrapper.getChildren().add(new Separator());
         bottomWrapper.getChildren().add(buttonBar);
         if (buttonBar.getChildren().size() != 0) {
@@ -607,12 +607,12 @@ public class AlertDialog extends Stage {
             if (label == null) {
                 label = "";
             }
-            Label l = new Label(label);
+            final Label l = new Label(label);
             l.setWrapText(true);
             if (defaultText == null) {
                 defaultText = "";
             }
-            TextField inputField = new TextField(defaultText);
+            final TextField inputField = new TextField(defaultText);
             if (hintText != null && hintText.length() != 0) {
                 inputField.setPromptText(hintText);
             }
@@ -644,7 +644,7 @@ public class AlertDialog extends Stage {
          * @return the output AlertDialog
          */
         public AlertDialog build() {
-            AlertDialog target = new AlertDialog(title);
+            final AlertDialog target = new AlertDialog(title);
 
             target.createScene(message, okButtonText, closeButtonText, extraButtonText, icon, okButtonAction, closeButtonAction, extraButtonAction, nodes);
             if (parent != null) {

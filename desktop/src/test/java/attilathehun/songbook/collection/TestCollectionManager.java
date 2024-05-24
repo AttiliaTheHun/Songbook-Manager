@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 public class TestCollectionManager extends CollectionManager {
 
     private final List<CollectionListener> listeners = new ArrayList<>();
-    private CollectionSettings settings = getDefaultSettings();
+
     private static int instanceNumber = 0;
     private final String collectionName = String.format("test%d", instanceNumber);
 
@@ -179,20 +179,18 @@ public class TestCollectionManager extends CollectionManager {
     }
 
     @Override
-    public CollectionSettings getDefaultSettings() {
-        CollectionSettings settings = new CollectionSettings();
-        settings.put("COLLECTION_FILE_PATH", "path");
-        settings.put("SONG_DATA_FILE_PATH", "path2");
-        return settings;
+    public String getCollectionFilePath() {
+        return "path1";
     }
 
     @Override
-    public CollectionSettings getSettings() {
-        return settings;
+    public String getRelativeFilePath() {
+        return "path2";
     }
 
     @Override
-    public void setSettings(CollectionSettings c) {
-        settings = c;
+    public String getSongDataFilePath() {
+        return "path3";
     }
+
 }

@@ -1,64 +1,16 @@
-package attilathehun.songbook.plugin;
+package attilathehun.songbook.util;
 
 import attilathehun.songbook.environment.Environment;
-import attilathehun.songbook.util.HTMLGenerator;
+import attilathehun.songbook.environment.SettingsManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class DynamicSonglist extends Plugin {
-
-    //TODO move MAX_SONG_PER_COLUMN to settings?
-    public static final int MAX_SONGS_PER_COLUMN = 38;
-    public static final int MAX_SONGS_PER_PAGE = 2 * MAX_SONGS_PER_COLUMN;
+public class DynamicSonglist{
     private static final Logger logger = LogManager.getLogger(DynamicSonglist.class);
-    private static final DynamicSonglist instance = new DynamicSonglist();
 
-    private PluginSettings settings = getDefaultSettings();
-
-    private DynamicSonglist() {
-        PluginManager.getInstance().registerPlugin(this);
-    }
-
-    public static Plugin getInstance() {
-        return instance;
-    }
-
-    @Override
-    public String getName() {
-        return DynamicSonglist.class.getSimpleName();
-    }
-
-    @Override
-    public Object execute() {
-        return generateSonglist();
-    }
-
-    @Override
-    public void register() {
-
-    }
-
-    @Override
-    public Plugin.PluginSettings getDefaultSettings() {
-        Plugin.PluginSettings settings = new Plugin.PluginSettings();
-        settings.put("enabled", Boolean.TRUE);
-        return settings;
-    }
-
-    @Override
-    public PluginSettings getSettings() {
-        return settings;
-    }
-
-    @Override
-    public void setSettings(final PluginSettings p) {
-        if (p == null) {
-            throw new IllegalArgumentException("plugin settings cannot be null");
-        }
-        settings = p;
-    }
-
-    private int generateSonglist() {
+    public static int generateSonglist() {
+        final int MAX_SONGS_PER_COLUMN = SettingsManager.getInstance().getValue("DYNAMIC_SONGLIST_SONGS_PER_COLUMN");
+        final int MAX_SONGS_PER_PAGE = 2 * MAX_SONGS_PER_COLUMN;
         boolean isLastPageSingleColumn = false;
         int songlistParts = Environment.getInstance().getCollectionManager().getDisplayCollection().size() / MAX_SONGS_PER_PAGE;
         if (Environment.getInstance().getCollectionManager().getDisplayCollection().size() % MAX_SONGS_PER_PAGE != 0) {

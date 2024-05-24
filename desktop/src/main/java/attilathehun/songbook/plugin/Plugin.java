@@ -6,6 +6,7 @@ import java.util.HashMap;
 /**
  * Base class for all Songbook Manager plugins.
  */
+@Deprecated
 public abstract class Plugin {
 
     /**

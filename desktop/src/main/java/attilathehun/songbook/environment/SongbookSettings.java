@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Locale;
 
+@Deprecated
 public final class SongbookSettings extends HashMap<String, Object> implements Serializable {
     private static final Logger logger = LogManager.getLogger(SongbookSettings.class);
 

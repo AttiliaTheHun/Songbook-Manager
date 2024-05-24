@@ -4,6 +4,7 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.misc.Misc;
 import attilathehun.songbook.util.ZipBuilder;
 import attilathehun.songbook.vcs.index.LoadIndex;
@@ -29,25 +30,23 @@ public class RequestFileAssembler {
     private LoadIndex loadIndex = null;
 
     public static RequestFileAssembler disassemble(final String filePath) throws IOException {
-        RequestFileAssembler assembler = new RequestFileAssembler();
+        final RequestFileAssembler assembler = new RequestFileAssembler();
         if (filePath == null || filePath.length() == 0) {
             throw new IllegalArgumentException("Invalid response file path for disassembly!");
         }
-        File file = new File(filePath);
+        final File file = new File(filePath);
 
         if (!file.exists()) {
             throw new FileNotFoundException("Could not find the response file");
         }
-        String responseFilesPath = ZipBuilder.extract(filePath);
-        File indexFile = new File(Paths.get(responseFilesPath, "index.json").toString());
+        final String responseFilesPath = ZipBuilder.extract(filePath);
+        final File indexFile = new File(Paths.get(responseFilesPath, "index.json").toString());
         if (!indexFile.exists()) {
             throw new FileNotFoundException("Could not find the response load index file");
         }
-        String json = String.join("", Files.readAllLines(indexFile.toPath()));
-        Type targetClassType = new TypeToken<LoadIndex>() {
-        }.getType();
-        LoadIndex index = new Gson().fromJson(json, targetClassType);
-
+        final String json = String.join("", Files.readAllLines(indexFile.toPath()));
+        final Type targetClassType = new TypeToken<LoadIndex>(){}.getType();
+        final LoadIndex index = new Gson().fromJson(json, targetClassType);
 
         assembler.loadIndex = index;
         assembler.disassemblySuccessful = true;
@@ -67,25 +66,25 @@ public class RequestFileAssembler {
         if (index == null) {
             throw new IllegalArgumentException();
         }
-        outputFilePath = (String) VCSAdmin.getInstance().getSettings().get("REQUEST_ZIP_TEMP_FILE_PATH");
+        outputFilePath =  SettingsManager.getInstance().getValue("REQUEST_ZIP_TEMP_FILE_PATH");
         try (ZipBuilder builder = new ZipBuilder()
                 .setOutputPath(outputFilePath)) {
 
             for (final CollectionManager manager : Environment.getInstance().getRegisteredManagers().values()) {
                 for (final Object s : (Collection) index.getAdditions().get(manager.getCollectionName())) {
-                    builder.addFile(new File(Paths.get(manager.getSettings().getSongDataFilePath(), (String) s).toUri()), manager.getSettings().getRelativeFilePath());
+                    builder.addFile(new File(Paths.get(manager.getSongDataFilePath(), (String) s).toUri()), manager.getRelativeFilePath());
                 }
                 for (final Object s : (Collection) index.getChanges().get(manager.getCollectionName())) {
-                    builder.addFile(new File(Paths.get(manager.getSettings().getSongDataFilePath(), (String) s).toUri()), manager.getSettings().getRelativeFilePath());
+                    builder.addFile(new File(Paths.get(manager.getSongDataFilePath(), (String) s).toUri()), manager.getRelativeFilePath());
                 }
             }
 
             for (final String collection : collections) {
-                builder.addFile(new File(Environment.getInstance().getRegisteredManagers().get(collection).getSettings().getCollectionFilePath()), "");
+                builder.addFile(new File(Environment.getInstance().getRegisteredManagers().get(collection).getCollectionFilePath()), "");
             }
 
-            builder.addFile(new File((String) VCSAdmin.getInstance().getSettings().get("CHANGE_LOG_FILE_PATH")), "");
-            File saveIndexTemp = new File(Paths.get((String) Environment.getInstance().getSettings().get("TEMP_FILE_PATH"), "index.json").toString());
+            builder.addFile(new File((String) SettingsManager.getInstance().getValue("CHANGE_LOG_FILE_PATH")), "");
+            final File saveIndexTemp = new File(Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH"), "index.json").toString());
             Misc.saveObjectToFileInJSON(index, saveIndexTemp);
             builder.addFile(saveIndexTemp, "");
         }

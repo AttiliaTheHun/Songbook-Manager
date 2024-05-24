@@ -4,6 +4,7 @@ import attilathehun.annotation.TODO;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.environment.EnvironmentVerificator;
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.HTMLGenerator;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.CodeEditor;
@@ -41,15 +42,12 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 
-public class EasterCollectionManager extends CollectionManager {
+public final class EasterCollectionManager extends CollectionManager {
     private static final Logger logger = LogManager.getLogger(EasterCollectionManager.class);
     private final String collectionName = "easter";
-    public final String EASTER_SONG_DATA_FILE_PATH = Paths.get(Environment.getInstance().getSettings().get("SONGS_FILE_PATH") + "/" + collectionName + "/").toString();
     private static final List<CollectionListener> listeners = new ArrayList<>();
     private static final EasterCollectionManager INSTANCE = new EasterCollectionManager();
-    private CollectionSettings settings = getDefaultSettings();
 
-   
 
     private ArrayList<Song> collection;
 
@@ -69,9 +67,9 @@ public class EasterCollectionManager extends CollectionManager {
     public void init() {
         Environment.getInstance().registerCollectionManager(this);
         try {
-            File collectionJSONFile = new File(settings.getCollectionFilePath());
+            File collectionJSONFile = new File(getCollectionFilePath());
             if (!collectionJSONFile.exists()) {
-                File songDataFolder = new File(settings.getSongDataFilePath());
+                File songDataFolder = new File(getSongDataFilePath());
                 if (songDataFolder.exists() && songDataFolder.isDirectory()) {
                     repairCollectionDialog();
                 } else {
@@ -108,7 +106,7 @@ public class EasterCollectionManager extends CollectionManager {
     public void save() {
         try {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(settings.getCollectionFilePath());
+            FileWriter writer = new FileWriter(getCollectionFilePath());
             gson.toJson(collection, writer);
             writer.close();
         } catch (IOException e) {
@@ -190,7 +188,7 @@ public class EasterCollectionManager extends CollectionManager {
     public void removeSong(Song s) {
         collection.remove(getCollectionSongIndex(s));
         save();
-        File songFile = new File(String.format(EASTER_SONG_DATA_FILE_PATH + "/%d.html", s.id()));
+        File songFile = new File(String.format(getSongDataFilePath() + "/%d.html", s.id()));
         if (songFile.delete()) {
             new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO)
                     .setMessage(String.format("Easter Egg Song '%s' id: %d deleted. Ave Caesar!", s.name(), s.id()))
@@ -318,7 +316,7 @@ public class EasterCollectionManager extends CollectionManager {
 
     @Override
     public String getSongFilePath(int id) {
-        return Paths.get(String.format("%s/%d.html", EASTER_SONG_DATA_FILE_PATH, id)).toString();
+        return Paths.get(String.format("%s/%d.html", getSongDataFilePath(), id)).toString();
     }
 
     @Override
@@ -452,25 +450,18 @@ public class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
-    public CollectionSettings getDefaultSettings() {
-        CollectionSettings settings = new CollectionSettings();
-        settings.put("COLLECTION_FILE_PATH", Paths.get(Environment.getInstance().getSettings().get("DATA_FILE_PATH") + String.format(CollectionManager.COLLECTION_FILE_NAME, collectionName)).toString());
-        settings.put("RELATIVE_FILE_PATH", Paths.get(String.format(CollectionManager.RELATIVE_DATA_FILE_NAME, collectionName)).toString());
-        settings.put("SONG_DATA_FILE_PATH", Paths.get(EASTER_SONG_DATA_FILE_PATH));
-        return settings;
+    public String getCollectionFilePath() {
+        return Paths.get(SettingsManager.getInstance().getValue("DATA_FILE_PATH"), String.format(CollectionManager.COLLECTION_FILE_NAME, collectionName)).toString();
     }
 
     @Override
-    public CollectionSettings getSettings() {
-        return settings;
+    public String getRelativeFilePath() {
+        return Paths.get(String.format(CollectionManager.RELATIVE_DATA_FILE_NAME, collectionName)).toString();
     }
 
     @Override
-    public void setSettings(final CollectionSettings c) {
-        if (c == null) {
-            return;
-        }
-        settings = c;
+    public String getSongDataFilePath() {
+        return Paths.get(SettingsManager.getInstance().getValue("SONGS_FILE_PATH"),  collectionName).toString();
     }
 
     @Override
@@ -616,7 +607,7 @@ public class EasterCollectionManager extends CollectionManager {
     private void repairMissingCollectionFile() {
         logger.info("Repairing easter collection");
         collection = new ArrayList<>();
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(EASTER_SONG_DATA_FILE_PATH))) {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(getSongDataFilePath()))) {
             for (Path path : stream) {
 
                 if (!Files.isDirectory(path) && path.toString().trim().endsWith(".html")) {
@@ -639,9 +630,9 @@ public class EasterCollectionManager extends CollectionManager {
 
     private void createNewCollection() {
         try {
-            File songDataFolder = new File(EASTER_SONG_DATA_FILE_PATH);
+            File songDataFolder = new File(getSongDataFilePath());
             songDataFolder.mkdirs();
-            File collectionJSONFile = new File(settings.getCollectionFilePath());
+            File collectionJSONFile = new File(getCollectionFilePath());
             collectionJSONFile.createNewFile();
             collection = new ArrayList<Song>();
             PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));

@@ -1,6 +1,7 @@
 package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.vcs.index.Index;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.SongbookApplication;
@@ -34,7 +35,7 @@ public class VCSAgent {
                 CacheManager.getInstance().cacheSongbookVersionTimestamp();
             }
             Client client = new Client();
-            String resp = client.httpGet((String) VCSAdmin.getInstance().getSettings().get("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
+            String resp = client.httpGet((String) SettingsManager.getInstance().getValue("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
 
             if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
                 logger.info("Running diagnostics - Invalid server response value");
@@ -68,7 +69,7 @@ public class VCSAgent {
     public int compare() {
         try {
             Client client = new Client();
-            String resp = client.httpGet((String) VCSAdmin.getInstance().getSettings().get("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
+            String resp = client.httpGet(SettingsManager.getInstance().getValue("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
 
             if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
                 logger.info(String.join(resp));
@@ -100,7 +101,7 @@ public class VCSAgent {
     public boolean verifyRemoteChanges() throws Exception {
         try {
             Client client = new Client();
-            String resp = client.httpGet((String) VCSAdmin.getInstance().getDefaultSettings().get("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
+            String resp = client.httpGet(SettingsManager.getInstance().getValue("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
 
             if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
                 logger.info("Running diagnostics - Invalid server response value");
@@ -126,7 +127,7 @@ public class VCSAgent {
     public boolean verifyLocalChanges() throws Exception {
         try {
             Client client = new Client();
-            String resp = client.httpGet((String) VCSAdmin.getInstance().getSettings().get("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
+            String resp = client.httpGet(SettingsManager.getInstance().getValue("REMOTE_DATA_VERSION_TIMESTAMP_URL"));
 
             if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
                 logger.info("Running diagnostics - Invalid server response value");
@@ -154,11 +155,10 @@ public class VCSAgent {
      * @return remote songbook index
      * @throws IOException
      */
-    public Index getRemoteIndex(String token) throws IOException {
-        Client client = new Client();
-        Type targetClassType = new TypeToken<Index>() {
-        }.getType();
-        String resp = client.httpGet((String) VCSAdmin.getInstance().getSettings().get("REMOTE_DATA_INDEX_URL"), token);
+    public Index getRemoteIndex(final String token) throws IOException {
+        final Client client = new Client();
+        final Type targetClassType = new TypeToken<Index>() {}.getType();
+        final String resp = client.httpGet(SettingsManager.getInstance().getValue("REMOTE_DATA_INDEX_URL"), token);
         if (client.getStatus().getCode() != Client.Status.SUCCESS && client.getStatus().getError().length() != 0) {
             return null;
         }

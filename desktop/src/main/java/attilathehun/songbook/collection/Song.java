@@ -90,7 +90,7 @@ public class Song implements Serializable {
 
     // TODO does it make sense to compare the active property?
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (o == null || !o.getClass().equals(Song.class)) {
             return false;
         } else if (!(((Song) o).id == this.id)) {

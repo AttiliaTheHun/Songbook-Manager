@@ -36,11 +36,11 @@ import java.util.concurrent.CompletableFuture;
 
 
 public class SongbookApplication extends Application {
+    private static final Logger logger = LogManager.getLogger(SongbookApplication.class);
+
     static {
         System.setProperty("log4j2.configurationFile", Main.class.getResource("log4j2.yaml").toString());
     }
-
-    private static final Logger logger = LogManager.getLogger(SongbookApplication.class);
 
     private static boolean CONTROL_PRESSED = false;
     private static boolean SHIFT_PRESSED = false;
@@ -49,13 +49,11 @@ public class SongbookApplication extends Application {
 
 
     public static void main(final String[] args) {
-        PluginManager.getInstance().init();
         SettingsManager.init();
         Installer.runDiagnostics();
-        EnvironmentManager.getInstance().autoLoad();
         Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
-        //EnvironmentVerificator.automated();
-        launch(args);
+        EnvironmentVerificator.automated();
+        Application.launch(SongbookApplication.class, args);
         logger.debug("Application started successfully");
     }
 
@@ -103,41 +101,7 @@ public class SongbookApplication extends Application {
 
     @Override
     public void start(final Stage stage) throws IOException {
-       // StandardCollectionManager.getInstance().init();
-        ArrayList<String> collections = new ArrayList<>();
-        collections.add("standard");
-
-        SaveIndex index = SaveIndex.empty(collections);
-
-        //RequestFileAssembler rfa = new RequestFileAssembler();
-        //String requestFilePath = rfa.assembleSaveFile(index, collections).getOutputFilePath();
-        String requestFilePath = "C:\\Users\\Jaroslav\\Programs\\Git\\Songbook-Manager\\desktop\\vcs\\save_request.zip";
-
-        /*LoadIndex index = LoadIndex.empty();
-        ArrayList<String> outdated = new ArrayList<>();
-        outdated.add("8.html");
-        outdated.add("4.html");
-        index.getOutdated().put("standard", outdated);
-        ArrayList<String> missing = new ArrayList<>();
-        missing.add("1.html");
-        missing.add("12.html");
-        index.getMissing().put("standard", missing);
-        index.getCollections().add("standard");*/
-
-        Client.Result r = new Client().postSaveRequestFile("http://beta-hrabozpevnik.clanweb.eu/api/data/upload/",
-                "U28gZG8gYWxsIHdobyBsaXZlIHRvIHNlZSBzdWNoIHRpbWVzLCBidXQgaXQgaXMgbm90IGZvciB0aGVtIHRvIGRlY2lkZS4=",
-                requestFilePath);
-        //Client.Result r = new Client().getCompleteLoadRequest("http://beta-hrabozpevnik.clanweb.eu/api/data/download/", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h");
-       // Client.Result r = new Client().getPartialLoadRequest("http://beta-hrabozpevnik.clanweb.eu/api/data/download/", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h", index);
-        if (r.error() == null) {
-            System.out.println(r.message());
-        } else {
-            System.out.println(r.error());
-        }
-
-        if (true) {
-            System.exit(0);
-        }
+        StandardCollectionManager.getInstance().init();
 
         stage.setOnCloseRequest(t -> {
 
@@ -148,10 +112,10 @@ public class SongbookApplication extends Application {
         });
 
 
-        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("songbook-view.fxml"));
+        final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("songbook-view.fxml"));
         AnchorPane root = fxmlLoader.load();
         stage.setMaximized(true);
-        Scene scene = new Scene(root, 1000, 800);
+        final Scene scene = new Scene(root, 1000, 800);
 
         registerNativeHook();
 
@@ -221,7 +185,7 @@ public class SongbookApplication extends Application {
         final boolean songTwoHasURL = !SongbookController.getSongTwo().getUrl().equals("");
         // both song have a link
         if (songOneHasURL && songTwoHasURL) {
-            CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Open associated link?").setMessage("Both of the songs have an associated link, which one do you want to open? You can manage the links in the Collection Editor.")
+            final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Open associated link?").setMessage("Both of the songs have an associated link, which one do you want to open? You can manage the links in the Collection Editor.")
                     .addOkButton(SongbookController.getSongOne().name()).addCloseButton(SongbookController.getSongTwo().name())
                     .build().awaitResult();
             result.thenAccept(dialogResult -> {
@@ -241,7 +205,7 @@ public class SongbookApplication extends Application {
         }
         // only song one has a link
         if (songOneHasURL) {
-            CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Open associated link?")
+            final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Open associated link?")
                     .setMessage(String.format("Do you want to open the link associated to song '%s' (id: %d)?. You can manage the links in the Collection Editor.", SongbookController.getSongOne().name(), SongbookController.getSongOne().id()))
                     .addOkButton("Open link").addCloseButton("Cancel")
                     .build().awaitResult();
@@ -261,7 +225,7 @@ public class SongbookApplication extends Application {
 
         // only song two has a link
         if (songTwoHasURL) {
-            CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Open associated link?")
+            final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Open associated link?")
                     .setMessage(String.format("Do you want to open the link associated to song '%s' (id: %d)?. You can manage the links in the Collection Editor.", SongbookController.getSongTwo().name(), SongbookController.getSongTwo().id()))
                     .addOkButton("Open link").addCloseButton("Cancel")
                     .build().awaitResult();

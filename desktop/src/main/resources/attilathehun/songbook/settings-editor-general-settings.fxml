@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox prefHeight="600.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <HBox layoutX="2.0" prefWidth="650.0">
+         <children>
+            <Label text="Songbook settings">
+               <HBox.margin>
+                  <Insets left="2.0" right="2.0" />
+               </HBox.margin></Label>
+            <Separator prefHeight="20.0" HBox.hgrow="ALWAYS" />
+         </children>
+         <VBox.margin>
+            <Insets top="5.0" />
+         </VBox.margin>
+      </HBox>
+      <VBox layoutX="20.0">
+         <HBox prefWidth="650.0">
+            <children>
+               <Label text="Songbook language">
+                  <HBox.margin>
+                     <Insets right="5.0" top="3.0" />
+                  </HBox.margin></Label>
+               <TextField fx:id="songbookLanguageField" />
+            </children>
+         </HBox>
+         <CheckBox fx:id="bindSongTitlesSwitch" mnemonicParsing="false" text="Bind song titles">
+            <VBox.margin>
+               <Insets top="5.0" />
+            </VBox.margin></CheckBox>
+         <CheckBox fx:id="enableFrontpageSwitch" mnemonicParsing="false" text="Enable frontpage">
+            <VBox.margin>
+               <Insets top="5.0" />
+            </VBox.margin></CheckBox>
+         <CheckBox fx:id="enableDynamicSonglistSwitch" mnemonicParsing="false" text="Enable dynamic songlist">
+            <VBox.margin>
+               <Insets top="5.0" />
+            </VBox.margin></CheckBox>
+         <HBox prefWidth="650.0">
+            <children>
+               <Label text="Songs per column">
+                  <HBox.margin>
+                     <Insets right="5.0" top="3.0" />
+                  </HBox.margin></Label>
+               <TextField fx:id="dynamicSonglistSongsPerColumnField" />
+            </children>
+            <VBox.margin>
+               <Insets top="5.0" />
+            </VBox.margin>
+         </HBox>
+         <VBox.margin>
+            <Insets left="20.0" top="10.0" />
+         </VBox.margin>
+      </VBox>
+      <HBox layoutX="2.0" prefWidth="650.0">
+         <children>
+            <Label text="User settings">
+               <HBox.margin>
+                  <Insets left="2.0" right="2.0" />
+               </HBox.margin></Label>
+            <Separator prefHeight="20.0" HBox.hgrow="ALWAYS" />
+         </children>
+         <VBox.margin>
+            <Insets top="5.0" />
+         </VBox.margin>
+      </HBox>
+      <VBox prefWidth="100.0">
+         <children>
+            <CheckBox fx:id="autoLoadDataSwitch" mnemonicParsing="false" text="Load data on startup">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+            </CheckBox>
+            <HBox prefWidth="200.0">
+               <children>
+                  <Label text="Default read token">
+                     <HBox.margin>
+                        <Insets right="5.0" top="3.0" />
+                     </HBox.margin></Label>
+                  <TextField fx:id="defaultReadTokenField" HBox.hgrow="ALWAYS">
+                     <HBox.margin>
+                        <Insets right="60.0" />
+                     </HBox.margin></TextField>
+               </children>
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+            </HBox>
+            <HBox prefWidth="200.0">
+               <children>
+                  <Label text="Auth file path">
+                     <HBox.margin>
+                        <Insets right="5.0" top="3.0" />
+                     </HBox.margin></Label>
+                  <TextField fx:id="authFilePathField" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="browseFilesForAuthFileButton" mnemonicParsing="false" text="Browse">
+                     <HBox.margin>
+                        <Insets right="5.0" />
+                     </HBox.margin></Button>
+               </children>
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+            </HBox>
+         </children>
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+         <VBox.margin>
+            <Insets left="20.0" top="10.0" />
+         </VBox.margin>
+      </VBox>
+
+
+   </children>
+</VBox>

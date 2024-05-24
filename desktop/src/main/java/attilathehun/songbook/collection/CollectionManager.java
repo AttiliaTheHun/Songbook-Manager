@@ -119,7 +119,7 @@ public abstract class CollectionManager {
 
     /**
      * Returns a collection modified to a presentable form for output purposes. Deactivated songs are excluded,
-     * but some other pages may be added depending on plugins. The WebView driver as well as the PDFGenerator class
+     * but some other pages may be added depending on plugins. The WebView driver as well as the {@link PDFGenerator} class
      * work with this collection format.
      *
      * @return production form of the collection
@@ -277,14 +277,14 @@ public abstract class CollectionManager {
     public abstract Song getPlaceholderSong();
 
     /**
-     * Add a listener for collection events. Depending on the implementation, this action may throw the UnsupportedOperationException.
+     * Add a listener for collection events. Depending on the implementation, this action may throw {@link UnsupportedOperationException}.
      *
      * @param listener the listening object
      */
     public abstract void addListener(CollectionListener listener);
 
     /**
-     * Removes a listener of collection events. Depending on the implementation, this action may throw the UnsupportedOperationException.
+     * Removes a listener of collection events. Depending on the implementation, this action may throw {@link UnsupportedOperationException}.
      *
      * @param listener the listening object
      */
@@ -307,49 +307,25 @@ public abstract class CollectionManager {
      */
     public abstract CompletableFuture<Song> editSongDialog(Song s);
 
-    public abstract CollectionSettings getDefaultSettings();
-
     /**
-     * Returns CollectionSettings for the collection manager
+     * Returns path to the collection's .json file.
      *
-     * @return the collection manager collection settings
+     * @return collection file path
      */
-    public abstract CollectionSettings getSettings();
-
-    public abstract void setSettings(final CollectionSettings c);
-
+    public abstract String getCollectionFilePath();
 
     /**
-     * Represents settings for a single collection such as file paths.
+     * Returns relative path to collection songs. Used for example in archives
+     *
+     * @return relative collection file path
      */
-    public static class CollectionSettings extends HashMap<String, Object> implements Serializable {
+    public abstract String getRelativeFilePath();
 
-        /**
-         * Returns path to the collection's .json file.
-         *
-         * @return collection file path
-         */
-        public String getCollectionFilePath() {
-            return (String) get("COLLECTION_FILE_PATH");
-        }
-
-        /**
-         * Returns relative path to collection songs. Used for example in archives
-         *
-         * @return relative collection file path
-         */
-        public String getRelativeFilePath() {
-            return (String) get("RELATIVE_FILE_PATH");
-        }
-
-        /**
-         * Returns the path where the collection song html files are stored.
-         *
-         * @return collection song data file path
-         */
-        public String getSongDataFilePath() {
-            return (String) get("SONG_DATA_FILE_PATH");
-        }
-    }
+    /**
+     * Returns the path where the collection song html files are stored.
+     *
+     * @return collection song data file path
+     */
+    public abstract String getSongDataFilePath();
 
 }

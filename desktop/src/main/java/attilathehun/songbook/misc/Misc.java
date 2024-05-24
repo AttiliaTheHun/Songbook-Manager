@@ -44,8 +44,8 @@ public class Misc {
 
     public static void saveObjectToFileInJSON(final Serializable s, final File target) {
         try {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(target);
+            final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            final FileWriter writer = new FileWriter(target);
             gson.toJson(s, writer);
             writer.close();
         } catch (IOException e) {
