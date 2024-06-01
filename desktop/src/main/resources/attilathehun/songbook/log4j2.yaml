@@ -12,6 +12,6 @@ Configuration:
         Pattern: ${DefaultPattern}
   Loggers:
     Root:
-      level: info
+      level: debug
       AppenderRef:
         ref: Default_Appender

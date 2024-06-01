@@ -1,10 +1,11 @@
 package attilathehun.songbook;
 
+import attilathehun.songbook.window.SongbookApplication;
+import javafx.application.Application;
+
 public class Main {
 
-    public static void main(String[] args) {
-        System.setProperty("log4j.configurationFile", Main.class.getResource("log4j2.yaml").toString());
-        /*PluginManager.loadPlugins();
-        SongbookApplication.main(args);*/
+    public static void main(final String[] args) {
+        SongbookApplication.main(args);
     }
 }

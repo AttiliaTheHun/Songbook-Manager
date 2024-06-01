@@ -10,12 +10,13 @@ import java.nio.file.Paths;
 import java.util.prefs.Preferences;
 
 @TODO(description = "Replace hardcoded paths with win path variables like %ProgramFile(x86)%")
+@Deprecated
 // TODO I do not have chromium installed so I can not test whether this is working, or the usual install paths
 public class ChromiumPathResolver extends BrowserPathResolver {
     public static final String CHROMIUM_PATH_VARIABLE = "export.browser.chromium.path";
     //windows
-    static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe"; // yup, it is same as with chrome
-    static final String EXECUTABLE_NAME_LINUX = "chromium-browser";
+    private static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe"; // yup, it is same as with chrome
+    private static final String EXECUTABLE_NAME_LINUX = "chromium-browser";
     private static final Logger logger = LogManager.getLogger(ChromiumPathResolver.class);
     private static final String[] WHERE_COMMAND = {"where", EXECUTABLE_NAME_WINDOWS};
     private static final String DEFAULT_PATH_WIN11 = "C:\\Program Files (x86)\\Chromium";
@@ -29,7 +30,7 @@ public class ChromiumPathResolver extends BrowserPathResolver {
     private static final String[] WHEREIS_COMMAND_2 = {"whereis", EXECUTABLE_NAME_LINUX_2};
     private static final String[] LOCATE_COMMAND_2 = {"locate", EXECUTABLE_NAME_LINUX_2};
 
-    private final Preferences preferences = Preferences.userRoot().node(BrowserWrapper.class.getName());
+    private final Preferences preferences = Preferences.userRoot().node(BrowserHandle.class.getName());
 
     /**
      * This method is untested for I do not have chromium...
@@ -39,7 +40,16 @@ public class ChromiumPathResolver extends BrowserPathResolver {
      */
     @Override
     public String resolve() throws IOException {
-        final String executable = (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) ? EXECUTABLE_NAME_WINDOWS : EXECUTABLE_NAME_LINUX;
+        final String savedPath = preferences.get(CHROMIUM_PATH_VARIABLE, null);
+        if (savedPath != null) {
+            if (new File(savedPath).exists()) {
+                return savedPath;
+            }
+            unsave();
+        }
+
+        final String executable = (BrowserHandle.getOS().equals(BrowserHandle.OS_WINDOWS)) ? EXECUTABLE_NAME_WINDOWS : EXECUTABLE_NAME_LINUX;
+
 
         // First try if any of the default paths won't do
         File file;
@@ -51,8 +61,8 @@ public class ChromiumPathResolver extends BrowserPathResolver {
             if (path != null && path.length() != 0) {
                 file = new File(Paths.get(path, executable).toString());
                 if (file.exists()) {
-                    savePath(file.getParent());
-                    return file.getParent();
+                    savePath(file.getAbsolutePath());
+                    return file.getAbsolutePath();
                 }
             }
         }
@@ -61,8 +71,8 @@ public class ChromiumPathResolver extends BrowserPathResolver {
         // We are gonna try to find the executable on our own now, using our very good friend, the shell
         // since this is untested, there is no reason to actually run it, let's just leave it here for later
         /*
-        final String shell = (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) ? SHELL_LOCATION_WINDOWS : SHELL_LOCATION_LINUX;
-        final String delimeter = (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) ? SHELL_DELIMETER_WINDOWS : SHELL_DELIMETER_LINUX;
+        final String shell = (BrowserHandle.getOS().equals(BrowserHandle.OS_WINDOWS)) ? SHELL_LOCATION_WINDOWS : SHELL_LOCATION_LINUX;
+        final String delimeter = (BrowserHandle.getOS().equals(BrowserHandle.OS_WINDOWS)) ? SHELL_DELIMETER_WINDOWS : SHELL_DELIMETER_LINUX;
 
         String[][] commands = initCommands();
 
@@ -98,12 +108,12 @@ public class ChromiumPathResolver extends BrowserPathResolver {
             if (path.contains(delimeter)) { // means this is the line that executed the command (this is actually our input from before)
                 continue;
             }
-            if (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) { // this relates to windows-specific commands
+            if (BrowserHandle.getOS().equals(BrowserHandle.OS_WINDOWS)) { // this relates to windows-specific commands
                 if (counter < 2) { // Skip the microsoft copyright stuff
                     counter++;
                     continue;
                 }
-            } else if (BrowserWrapper.getOS().equals(BrowserWrapper.OS_LINUX)) {
+            } else if (BrowserHandle.getOS().equals(BrowserHandle.OS_LINUX)) {
                 //TODO
                 // need to check what the commands output on linux and implements similar path extracting as done for windows
             }
@@ -135,7 +145,7 @@ public class ChromiumPathResolver extends BrowserPathResolver {
     }
 
     private String[] initPaths() {
-        if (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) {
+        if (BrowserHandle.getOS().equals(BrowserHandle.OS_WINDOWS)) {
             return new String[]{
                     preferences.get(CHROMIUM_PATH_VARIABLE, null),
                     DEFAULT_PATH_WIN11_2,
@@ -151,7 +161,7 @@ public class ChromiumPathResolver extends BrowserPathResolver {
     }
 
     private String[][] initCommands() {
-        if (BrowserWrapper.getOS().equals((BrowserWrapper.OS_WINDOWS))) {
+        if (BrowserHandle.getOS().equals((BrowserHandle.OS_WINDOWS))) {
             return new String[][]{
                     WHERE_COMMAND,
             };
@@ -165,8 +175,12 @@ public class ChromiumPathResolver extends BrowserPathResolver {
         };
     }
 
-    private void savePath(String path) {
+    private void savePath(final String path) {
         preferences.put(CHROMIUM_PATH_VARIABLE, path);
+    }
+
+    private void unsave() {
+        preferences.remove(CHROMIUM_PATH_VARIABLE);
     }
 
 }

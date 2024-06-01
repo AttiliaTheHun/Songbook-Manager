@@ -18,7 +18,7 @@ public class DynamicSonglist{
             isLastPageSingleColumn = Environment.getInstance().getCollectionManager().getDisplayCollection().size() % MAX_SONGS_PER_PAGE <= MAX_SONGS_PER_COLUMN;
         }
 
-        HTMLGenerator generator = new HTMLGenerator();
+        final HTMLGenerator generator = new HTMLGenerator();
         if (songlistParts == 0) {
             generator.generateSonglistSegmentFile(0, 0, 0);
             return 1;

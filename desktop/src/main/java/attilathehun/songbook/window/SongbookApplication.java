@@ -1,8 +1,11 @@
 package attilathehun.songbook.window;
 
 import attilathehun.songbook.Main;
+import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.*;
+import attilathehun.songbook.export.BrowserFactory;
+import attilathehun.songbook.export.BrowserHandle;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.vcs.Client;
 import attilathehun.songbook.vcs.RequestFileAssembler;
@@ -21,6 +24,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import java.awt.Desktop;
 
@@ -49,12 +53,7 @@ public class SongbookApplication extends Application {
 
 
     public static void main(final String[] args) {
-        SettingsManager.init();
-        Installer.runDiagnostics();
-        Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
-        EnvironmentVerificator.automated();
         Application.launch(SongbookApplication.class, args);
-        logger.debug("Application started successfully");
     }
 
     private static void registerNativeHook() {
@@ -101,19 +100,24 @@ public class SongbookApplication extends Application {
 
     @Override
     public void start(final Stage stage) throws IOException {
+        SettingsManager.init();
+        Installer.runDiagnostics();
+        Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
         StandardCollectionManager.getInstance().init();
+        EasterCollectionManager.getInstance().init();
+        BrowserFactory.getInstance().init();
+        EnvironmentVerificator.automated();
 
         stage.setOnCloseRequest(t -> {
-
             if (!CodeEditor.hasInstanceOpen()) {
+                mainWindow = null;
                 Environment.getInstance().exit();
             }
-
         });
 
 
         final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("songbook-view.fxml"));
-        AnchorPane root = fxmlLoader.load();
+        final HBox root = fxmlLoader.load();
         stage.setMaximized(true);
         final Scene scene = new Scene(root, 1000, 800);
 
@@ -125,9 +129,10 @@ public class SongbookApplication extends Application {
         stage.show();
         // beware of caching and garbage collection
         mainWindow = stage;
+        logger.debug("Application started successfully");
     }
 
-    private void initKeyboardShortcuts(Stage stage) {
+    private void initKeyboardShortcuts(final Stage stage) {
         stage.getScene().setOnKeyPressed(keyEvent -> {
             switch (keyEvent.getCode()) {
                 case LEFT, PAGE_DOWN -> {
@@ -139,9 +144,7 @@ public class SongbookApplication extends Application {
                 }
                 case R -> { // refresh
                     if (keyEvent.isControlDown()) {
-                        Environment.getInstance().getCollectionManager().init();
-                        Environment.getInstance().refresh();
-                        EnvironmentVerificator.automated();
+                        Environment.getInstance().hardRefresh();
                     }
                 }
                 case S -> { // save
@@ -158,7 +161,7 @@ public class SongbookApplication extends Application {
                     if (keyEvent.isControlDown()) {
                         try {
                             Desktop.getDesktop().browse(new URL("https://github.com/AttiliaTheHun/Songbook-Manager/wiki/English").toURI());
-                        } catch (Exception e) {
+                        } catch (final Exception e) {
                             logger.error(e.getMessage(), e);
                         }
                     }
@@ -233,7 +236,7 @@ public class SongbookApplication extends Application {
                 if (dialogResult == AlertDialog.RESULT_OK) {
                     try {
                         Desktop.getDesktop().browse(new URL(SongbookController.getSongTwo().getUrl()).toURI());
-                    } catch (Exception e) {
+                    } catch (final Exception e) {
                         logger.error(e.getMessage(), e);
                         new AlertDialog.Builder().setTitle("Error").setMessage("Could not open the associated link, maybe there is a typo.")
                                 .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open();
@@ -244,8 +247,10 @@ public class SongbookApplication extends Application {
         }
         // none of the songs has a link
         new AlertDialog.Builder().setTitle("SongbookManager").setMessage("Neither of the songs has an associated link. You can manage the links in the Collection Editor.")
-                .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton("Close").addCloseButton("Open Collection Editor", CollectionEditor::open)
-                .build().open();
+                .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton("Close").addCloseButton("Open Collection Editor", (result) -> {
+                    CollectionEditor.open();
+                    return true;
+                }).build().open();
     }
 
 }

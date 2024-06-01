@@ -154,6 +154,7 @@ public final class Setting<T> implements Serializable {
                     return false;
                 }
             }
+            // TODO does not work for file paths
             case TYPE_URL -> {
                 try {
                     if (s.length() == 0) {

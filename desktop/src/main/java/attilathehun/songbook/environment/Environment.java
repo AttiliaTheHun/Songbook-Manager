@@ -4,10 +4,16 @@ import attilathehun.songbook.collection.CollectionListener;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.export.BrowserFactory;
+import attilathehun.songbook.export.BrowserHandle;
 import attilathehun.songbook.export.PDFGenerator;
 import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.vcs.CacheManager;
 import attilathehun.songbook.vcs.VCSAdmin;
 import attilathehun.songbook.window.AlertDialog;
+import attilathehun.songbook.window.CollectionEditor;
+import attilathehun.songbook.window.SettingsEditor;
+import attilathehun.songbook.window.SongbookApplication;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -60,7 +66,7 @@ public final class Environment implements CollectionListener {
         if (s.getManager() != null && !s.getManager().equals(getInstance().getCollectionManager())) {
             getInstance().setCollectionManager(s.getManager());
         }
-        int index = getInstance().getCollectionManager().getFormalCollectionSongIndex(s);
+        final int index = getInstance().getCollectionManager().getFormalCollectionSongIndex(s);
         if (index % 2 == 0) {
             notifyOnSongOneSet(getInstance().getCollectionManager().getFormalCollection().get(index));
             if (index + 1 >= getInstance().getCollectionManager().getFormalCollection().size()) {
@@ -102,37 +108,37 @@ public final class Environment implements CollectionListener {
     }
 
     private static void notifyOnRefresh() {
-        for (EnvironmentStateListener listener : listeners) {
+        for (final EnvironmentStateListener listener : listeners) {
             listener.onRefresh();
         }
     }
 
     public static void notifyOnPageTurnedBack() {
-        for (EnvironmentStateListener listener : Environment.getListeners()) {
+        for (final EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onPageTurnedBack();
         }
     }
 
     public static void notifyOnPageTurnedForward() {
-        for (EnvironmentStateListener listener : Environment.getListeners()) {
+        for (final EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onPageTurnedForward();
         }
     }
 
     public static void notifyOnSongOneSet(final Song s) {
-        for (EnvironmentStateListener listener : Environment.getListeners()) {
+        for (final EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onSongOneSet(s);
         }
     }
 
     public static void notifyOnSongTwoSet(final Song s) {
-        for (EnvironmentStateListener listener : Environment.getListeners()) {
+        for (final EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onSongTwoSet(s);
         }
     }
 
     private static void notifyOnCollectionManagerChanged(final CollectionManager m) {
-        for (EnvironmentStateListener listener : Environment.getListeners()) {
+        for (final EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onCollectionManagerChanged(m);
         }
     }
@@ -147,9 +153,13 @@ public final class Environment implements CollectionListener {
        return null;
     }
 
+    /**
+     * A soft refresh to ensure the environment is working with the latest sure-to-change data. This operation is relatively lightweight as it updates
+     * only the components whose working data changes often during runtime, such as the webview source data. For a more thorough refresh use {@link #hardRefresh()}. Emits {@link EnvironmentStateListener#onRefresh()}.
+     */
     public void refresh() {
         try {
-            for (File f : new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).listFiles()) {
+            for (final File f : new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).listFiles()) {
                 if (FLAG_IGNORE_SEGMENTS && f.getName().startsWith("segment")) {
                     continue;
                 }
@@ -160,11 +170,45 @@ public final class Environment implements CollectionListener {
                 }
             }
 
-            logger.debug("Environment refresh()");
-        } catch (NullPointerException npe) {
+            logger.debug("environment soft refreshed");
+        } catch (final NullPointerException npe) {
             logger.error(npe.getMessage(), npe);
         }
         notifyOnRefresh();
+    }
+
+    /**
+     * Performs a complete refresh of the environment without restarting it. This operation is quite heavy and may result in crash of the program. It is designed
+     * to be used only when absolute necessary, for example when loading a new songbook at runtime. If you only need to mae sure some changes in the configuration
+     * or in the collections are applied, use {@link #refresh()} which is much lighter and much less likely to crash the application. Emits {@link EnvironmentStateListener#onRefresh()}.
+     */
+    public void hardRefresh() {
+        SettingsManager.getInstance().load();
+        try {
+            for (final File f : new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).listFiles()) {
+                if (!f.delete()) {
+                    new AlertDialog.Builder().setTitle("Refreshing error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                            .setMessage("Cannot clean temp folder!").addOkButton().build().open();
+                    logger.error("failed to clean temp folder on full refresh");
+                    exit();
+                }
+            }
+        } catch (final NullPointerException e) {
+            logger.error(e.getMessage(), e);
+        }
+
+        for (final CollectionManager manager : collectionManagers.values()) {
+            manager.init();
+        }
+
+        CollectionEditor.refresh();
+        CacheManager.getInstance().clearCache();
+        BrowserFactory.getInstance().init();
+        EnvironmentVerificator.automated();
+
+        notifyOnRefresh();
+
+        logger.info("environment hard refreshed");
     }
 
     /**
@@ -203,7 +247,6 @@ public final class Environment implements CollectionListener {
             throw new IllegalArgumentException("manager is null");
         }
         collectionManagers.put(collectionManager.getCollectionName(), collectionManager);
-        SettingsManager.getInstance().save();
     }
 
     public void unregisterCollectionManager(final CollectionManager collectionManager) {
@@ -211,7 +254,6 @@ public final class Environment implements CollectionListener {
             throw new IllegalArgumentException("manager is null");
         }
         collectionManagers.remove(collectionManager.getCollectionName());
-        SettingsManager.getInstance().save();
     }
 
     public Map<String, CollectionManager> getRegisteredManagers() {
@@ -230,7 +272,15 @@ public final class Environment implements CollectionListener {
         for (final CollectionManager m : getRegisteredManagers().values()) {
             m.save();
         }
+        BrowserFactory.close();
+        CollectionEditor.getInstance().close();
+        SettingsEditor.getInstance().close();
+        if (SongbookApplication.getMainWindow() != null) {
+            SongbookApplication.getMainWindow().close();
+        }
+        logger.info("environment destroyed");
         Platform.exit();
+        System.exit(0);
     }
 
     @Override

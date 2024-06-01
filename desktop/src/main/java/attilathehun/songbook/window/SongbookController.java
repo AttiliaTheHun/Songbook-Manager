@@ -282,10 +282,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         });
 
         refreshButton.setOnAction(event -> {
-            //WARNING only the active manager is refreshed
-            Environment.getInstance().getCollectionManager().init();
-            Environment.getInstance().refresh();
-            refreshWebView();
+            Environment.getInstance().hardRefresh();
         });
 
         editSongOneHTML.setOnAction(event -> {
@@ -309,14 +306,13 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             CodeEditor.open(SONG_TWO, Environment.getInstance().getCollectionManager());
         });
 
-        exportButton.setOnAction(event -> {
-            if (!Export.getInstance().getSettings().getEnabled()) {
+        exportButton.showingProperty().addListener((event) -> {
+            if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
                 new AlertDialog.Builder().setTitle("Exporting disabled").setIcon(AlertDialog.Builder.Icon.WARNING)
                         .setMessage("It seems like the Export plugin is disabled. You can enabled it in settings.")
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
-
         });
 
         exportButton.addEventHandler(new ActionEvent().getEventType(), new EventHandler<ActionEvent>() {
@@ -326,17 +322,23 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
         });
 
-
-        if (!Export.getInstance().getSettings().getEnabled()) {
+        if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
             singlepageSelection.setVisible(false);
             defaultSelection.setVisible(false);
             printableSelection.setVisible(false);
         }
 
+
+
+
         singlepageSelection.setOnAction(event -> {
             try {
                 new PDFGenerator().generateSinglepage();
-            } catch (Exception e) {
+            } catch (final Exception e) {
+                if ("ignore".equals(e.getMessage())) {
+                    return;
+                }
+                logger.error(e.getLocalizedMessage(), e);
                 new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                         .setMessage(e.getMessage())
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
@@ -347,7 +349,11 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         defaultSelection.setOnAction(event -> {
             try {
                 new PDFGenerator().generateDefault();
-            } catch (Exception e) {
+            } catch (final Exception e) {
+                if ("ignore".equals(e.getMessage())) {
+                    return;
+                }
+                logger.error(e.getLocalizedMessage(), e);
                 new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                         .setMessage(e.getMessage())
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
@@ -357,8 +363,11 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         printableSelection.setOnAction(event -> {
             try {
                 new PDFGenerator().generatePrintable();
-            } catch (Exception e) {
-
+            } catch (final Exception e) {
+                if ("ignore".equals(e.getMessage())) {
+                    return;
+                }
+                logger.error(e.getLocalizedMessage(), e);
                 new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                         .setMessage(e.getMessage())
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
@@ -385,9 +394,9 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
         previewButton.setOnAction(event -> {
 
-            if (!Export.getInstance().getSettings().getEnabled()) {
+            if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
                 new AlertDialog.Builder().setTitle("Action Aborted").setIcon(AlertDialog.Builder.Icon.WARNING)
-                        .setMessage("This feature is a part of the Export plugin. You can enable the plugin in the settings.")
+                        .setMessage("Exporting has been disabled in the settings.")
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
@@ -395,7 +404,10 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             try {
 
                 Desktop.getDesktop().open(new File(new PDFGenerator().generatePreview(SONG_ONE, SONG_TWO)));
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
+                if (ex.getMessage().equals("ignore")) {
+                    return;
+                }
                 logger.error(ex.getMessage(), ex);
                 new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                         .setMessage(ex.getLocalizedMessage()).setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
@@ -444,10 +456,10 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
         }
         try {
-            URL url = new File(generator.generatePageFile(SONG_ONE, SONG_TWO)).toURI().toURL();
+            final URL url = new File(generator.generatePageFile(SONG_ONE, SONG_TWO)).toURI().toURL();
 
             Platform.runLater(() -> webview.getEngine().load(url.toExternalForm()));
-        } catch (MalformedURLException e) {
+        } catch (final MalformedURLException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("WebView Configuration Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage("Error refreshing webview.").setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
@@ -478,6 +490,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     @Override
     public void onRefresh() {
         generator = new HTMLGenerator();
+        webview.getEngine().reload();
         refreshWebView();
     }
 

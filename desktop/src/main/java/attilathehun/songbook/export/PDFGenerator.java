@@ -9,10 +9,15 @@ import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.util.HTMLGenerator;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.SongbookApplication;
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+import javafx.concurrent.Task;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
+import org.controlsfx.dialog.ProgressDialog;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,40 +28,41 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PDFGenerator {
-
+    private static final Logger logger = LogManager.getLogger(PDFGenerator.class);
     public static final int PREVIEW_SEGMENT_NUMBER = -1;
     public static final String DEFAULT_SEGMENT_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH") + "/segment%d%s").toString();
     public static final String PREVIEW_SEGMENT_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH") + "/segment_preview%s").toString();
     public static final String EXTENSION_HTML = ".html";
     public static final String EXTENSION_PDF = ".pdf";
-    private static final Logger logger = LogManager.getLogger(PDFGenerator.class);
+
     private static final int EXPORT_OPTION_DEFAULT = 0;
     private static final int EXPORT_OPTION_PRINTABLE = 1;
     private static final int EXPORT_OPTION_SINGLEPAGE = 2;
     private static final int EXPORT_OPTION_PREVIEW = 4;
-    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(SettingsManager.getInstance().getValue("OUTPUT_FILE_PATH"), (String) Export.getInstance().getSettings().get("defaultExportName")).toString();
-    private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(SettingsManager.getInstance().getValue("OUTPUT_FILE_PATH"), (String) Export.getInstance().getSettings().get("singlepageExportName")).toString();
-    private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(SettingsManager.getInstance().getValue("OUTPUT_FILE_PATH"), (String) Export.getInstance().getSettings().get("printableExportName")).toString();
-    private CollectionManager manager;
+    private static final String DEFAULT_PDF_OUTPUT_PATH = Paths.get(SettingsManager.getInstance().getValue("EXPORT_FILE_PATH"), (String) SettingsManager.getInstance().getValue("EXPORT_DEFAULT_FILE_NAME")).toString();
+    private static final String SINGLEPAGE_PDF_OUTPUT_PATH = Paths.get(SettingsManager.getInstance().getValue("EXPORT_FILE_PATH"), (String) SettingsManager.getInstance().getValue("EXPORT_SINGLEPAGE_FILE_NAME")).toString();
+    private static final String PRINTABLE_PDF_OUTPUT_PATH = Paths.get(SettingsManager.getInstance().getValue("EXPORT_FILE_PATH"), (String) SettingsManager.getInstance().getValue("EXPORT_PRINTABLE_FILE_NAME")).toString();
+    private final CollectionManager manager;
+    private ProgressAggregator progressDialogtask;
 
     public PDFGenerator() {
         this(Environment.getInstance().getCollectionManager());
     }
 
-    public PDFGenerator(CollectionManager manager) {
+    public PDFGenerator(final CollectionManager manager) {
         if (manager == null) {
             this.manager = Environment.getInstance().getCollectionManager().copy();
         } else {
             this.manager = manager.copy();
         }
         try {
-            new File((String) SettingsManager.getInstance().getValue("OUTPUT_FILE_PATH")).mkdirs();
-        } catch (Exception e) {
+            new File((String) SettingsManager.getInstance().getValue("EXPORT_FILE_PATH")).mkdirs();
+        } catch (final Exception e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("PDF Generation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                             .setMessage("Cannot initialize the output folder!").setParent(SongbookApplication.getMainWindow())
                             .addOkButton().build().open();
-            throw new RuntimeException(e);
+            throw new RuntimeException("ignore");
         }
     }
 
@@ -76,35 +82,37 @@ public class PDFGenerator {
         exec(createDataCollection(EXPORT_OPTION_PRINTABLE), PRINTABLE_PDF_OUTPUT_PATH);
     }
 
-    public String generatePreview(Song s) throws Exception {
-        HTMLGenerator generator = new HTMLGenerator();
-        String path = generator.generatePrintableSongFile(s, PREVIEW_SEGMENT_NUMBER);
-        BrowserWrapper browser = BrowserWrapper.getInstance();
-        String outputPath = path.replace(EXTENSION_HTML, EXTENSION_PDF);
-        browser.print(path, outputPath);
-        browser.close();
+    public String generatePreview(final Song s) throws Exception {
+        final HTMLGenerator generator = new HTMLGenerator();
+        final String path = generator.generatePrintableSongFile(s, PREVIEW_SEGMENT_NUMBER);
+        final String outputPath = path.replace(EXTENSION_HTML, EXTENSION_PDF);
+        final Browser browser = BrowserFactory.getDefaultBrowserInstance();
+        final Page page = browser.newPage();
+        page.navigate(path);
+        page.pdf(BrowserFactory.getPrintOptionsPortrait().setPath(Paths.get(outputPath.replace(EXTENSION_HTML, EXTENSION_PDF))));
         return outputPath;
     }
 
-    public String generatePreview(Song s1, Song s2) throws Exception {
-        HTMLGenerator generator = new HTMLGenerator();
-        String path = generator.generateSegmentFile(s1, s2, PREVIEW_SEGMENT_NUMBER);
-        BrowserWrapper browser = BrowserWrapper.getInstance();
-        String outputPath = path.replace(EXTENSION_HTML, EXTENSION_PDF);
-        browser.print(path, outputPath);
-        browser.close();
+    public String generatePreview(final Song s1, final Song s2) throws Exception {
+        final HTMLGenerator generator = new HTMLGenerator();
+        final String path = generator.generateSegmentFile(s1, s2, PREVIEW_SEGMENT_NUMBER);
+        final Browser browser = BrowserFactory.getDefaultBrowserInstance();
+        final String outputPath = path.replace(EXTENSION_HTML, EXTENSION_PDF);
+        final Page page = browser.newPage();
+        page.navigate(path);
+        page.pdf(BrowserFactory.getPrintOptionsLandscape().setPath(Paths.get(outputPath.replace(EXTENSION_HTML, EXTENSION_PDF))));
         return outputPath;
     }
 
-    private Collection<SegmentDataModel> createDataCollection(int option) {
+    private Collection<SegmentDataModel> createDataCollection(final int option) {
         if (option < EXPORT_OPTION_DEFAULT || option > EXPORT_OPTION_SINGLEPAGE) {
             throw new IllegalArgumentException();
         }
-        ArrayList<Song> collection = manager.getFormalCollection();
+        final ArrayList<Song> collection = manager.getFormalCollection();
         if (collection.size() % 2 == 1) {
             collection.add(CollectionManager.getShadowSong());
         }
-        Collection<SegmentDataModel> output = new ArrayList<>();
+        final Collection<SegmentDataModel> output = new ArrayList<>();
         int segmentNumber = 0;
         if (option == EXPORT_OPTION_DEFAULT) {
             for (int i = 0; i < collection.size(); i += 2) {
@@ -126,9 +134,43 @@ public class PDFGenerator {
         return output;
     }
 
-    private void exec(Collection<SegmentDataModel> data, String outputFileName) throws Exception {
-        ExportWorker.performTask(data);
-        joinSegments(data.size(), outputFileName);
+    private void exec(final Collection<SegmentDataModel> data, final String outputFileName) throws Exception {
+        progressDialogtask = new ProgressAggregator(this, data, outputFileName);
+        final ProgressDialog dialog = new ProgressDialog(progressDialogtask);
+        dialog.contentTextProperty().bind(progressDialogtask.messageProperty());
+        progressDialogtask.call();
+        dialog.showAndWait();
+        progressDialogtask = null;
+    }
+
+    private class ProgressAggregator extends Task<Object> {
+        private final PDFGenerator generator;
+        private final Collection<SegmentDataModel> data;
+        private final String outputFileName;
+
+        public ProgressAggregator(final PDFGenerator g, final Collection<SegmentDataModel> d, final String outputFileName) {
+            generator = g;
+            data = d;
+            this.outputFileName = outputFileName;
+        }
+
+        @Override
+        protected Object call() throws Exception {
+            updateTitle("Exporting");
+            ExportWorker.performTask(data, generator);
+            updateMessage("Merging PDF pages...");
+            updateProgress(getProgress() + 5, getTotalWork());
+            joinSegments(data.size(), outputFileName);
+            while (!this.isCancelled()) {
+                Thread.onSpinWait();
+            }
+            return null;
+        }
+
+        public synchronized void updateProgress(final double value, final double maxValue, final String message) {
+            updateProgress(value, maxValue);
+            updateMessage(message);
+        }
     }
 
     /**
@@ -138,50 +180,55 @@ public class PDFGenerator {
      * @param documentName final file name
      * @throws IOException
      */
-    private void joinSegments(int segmentCount, String documentName) throws IOException {
-        PDFMergerUtility ut = new PDFMergerUtility();
+    private void joinSegments(final int segmentCount, final String documentName) throws IOException {
+        final PDFMergerUtility ut = new PDFMergerUtility();
         for (int i = 0; i < segmentCount; i++) {
             ut.addSource(String.format(DEFAULT_SEGMENT_PATH, i, EXTENSION_PDF));
         }
         ut.setDestinationFileName(documentName);
-        MemoryUsageSetting settings = MemoryUsageSetting.setupMainMemoryOnly().setTempDir(new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")));
+        final MemoryUsageSetting settings = MemoryUsageSetting.setupMainMemoryOnly().setTempDir(new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")));
         ut.mergeDocuments(settings);
     }
 
 
     private static class ExportWorker implements Runnable {
         private static final Logger logger = LogManager.getLogger(ExportWorker.class);
-
         static ConcurrentLinkedDeque<SegmentDataModel> segmentContent;
         static AtomicInteger activeThreads;
+        private static PDFGenerator PDFgenerator;
+        final HTMLGenerator HTMLgenerator = new HTMLGenerator();
+        private final Playwright playwright = BrowserFactory.getPlaywright();
 
-        HTMLGenerator HTMLgenerator = new HTMLGenerator();
+        private final Browser browser = BrowserFactory.getInstance().getBrowserInstance(playwright);
 
-        BrowserWrapper browser = BrowserWrapper.getInstance();
-
-        private ExportWorker() throws IOException {
+        private ExportWorker() {
         }
 
-        private static void init(Collection<SegmentDataModel> contentData) {
+        private static void init (final Collection<SegmentDataModel> contentData, final PDFGenerator g) {
             activeThreads = new AtomicInteger(0);
             segmentContent = new ConcurrentLinkedDeque<>(contentData);
+            PDFgenerator = g;
         }
 
         /**
          * A verification method to be called when the task execution is finished.
          */
         private static void postExecution() {
+            PDFgenerator.progressDialogtask.cancel();
+            PDFgenerator = null;
             if (segmentContent.size() > 0) {
-                throw new IllegalStateException();
+                throw new IllegalStateException("Export work data is not empty");
             }
-            if (activeThreads.intValue() != 0) {
-                throw new IllegalStateException();
+            if (activeThreads.intValue() > 0) {
+                System.out.println("active threads: " + activeThreads);
+                throw new IllegalStateException("Some threads were not finished");
             }
         }
 
-        public static void performTask(Collection<SegmentDataModel> contentData) throws IOException {
-            init(contentData);
-            Thread[] threads = new Thread[((Double) Export.getInstance().getSettings().get("conversionThreadCount")).intValue()];
+        public static void performTask(final Collection<SegmentDataModel> contentData, final PDFGenerator g) {
+            init(contentData, g);
+            final Thread[] threads = new Thread[(Integer) SettingsManager.getInstance().getValue("EXPORT_THREAD_COUNT")];
+            g.progressDialogtask.updateProgress(0, contentData.size() + 10, "Converting songbook pages to PDF...");
             for (int i = 0; i < threads.length; i++) {
                 threads[i] = new Thread(new ExportWorker());
                 threads[i].start();
@@ -189,11 +236,11 @@ public class PDFGenerator {
             while (activeThreads.intValue() > 0) {
                 try {
                     Thread.sleep(100);
-                } catch (InterruptedException e) {
+                } catch (final InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
-            postExecution();
+            //postExecution();
         }
 
         @Override
@@ -201,6 +248,7 @@ public class PDFGenerator {
             activeThreads.incrementAndGet();
             try {
                 SegmentDataModel content;
+                final Page page = browser.newPage();
                 while (segmentContent.size() > 0) {
                     content = segmentContent.pollLast();
                     String path;
@@ -209,17 +257,17 @@ public class PDFGenerator {
                     } else {
                         path = HTMLgenerator.generateSegmentFile(content.song1(), content.song2(), content.number());
                     }
-                    browser.print(path, path.replace(EXTENSION_HTML, EXTENSION_PDF));
+                    logger.debug("segment path is: " + path);
+                    page.navigate(path);
+                    page.pdf(BrowserFactory.getPrintOptionsLandscape().setPath(Paths.get(path.replace(EXTENSION_HTML, EXTENSION_PDF))));
+                    ExportWorker.PDFgenerator.progressDialogtask.updateProgress(ExportWorker.PDFgenerator.progressDialogtask.getProgress() + 1, ExportWorker.PDFgenerator.progressDialogtask.getTotalWork(), ExportWorker.PDFgenerator.progressDialogtask.getMessage());
                 }
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logger.error(e.getMessage(), e);
             }
             activeThreads.decrementAndGet();
-            try {
-                browser.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            browser.close();
+            playwright.close();
         }
     }
 

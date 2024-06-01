@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 public class CacheManager {
     private static final Logger logger = LogManager.getLogger(CacheManager.class);
 
-    private static final String CACHED_INDEX_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_FILE_PATH"), "index.json").toString();
+    private static final String CACHED_INDEX_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_PATH"), "index.json").toString();
 
     private static final CacheManager instance = new CacheManager();
 
@@ -38,7 +38,7 @@ public class CacheManager {
      */
     public void clearCache() {
         try {
-            for (File f : new File((String) SettingsManager.getInstance().getValue("VCS_CACHE_FILE_PATH")).listFiles()) {
+            for (File f : new File((String) SettingsManager.getInstance().getValue("VCS_CACHE_PATH")).listFiles()) {
                 f.delete();
             }
         } catch (NullPointerException npe) {

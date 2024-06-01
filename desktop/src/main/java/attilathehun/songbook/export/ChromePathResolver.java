@@ -15,12 +15,13 @@ import java.util.prefs.Preferences;
 // further resources https://stackoverflow.com/questions/779793/query-windows-search-from-java
 // https://devblogs.microsoft.com/scripting/use-powershell-to-find-installed-software/
 
+@Deprecated
 @TODO(description = "Replace hardcoded paths with win path variables like %ProgramFile(x86)%")
 public class ChromePathResolver extends BrowserPathResolver {
     public static final String CHROME_PATH_VARIABLE = "export.browser.chrome.path";
-    static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe";
+    private static final String EXECUTABLE_NAME_WINDOWS = "chrome.exe";
     // Linux
-    static final String EXECUTABLE_NAME_LINUX = "google-chrome";
+    private static final String EXECUTABLE_NAME_LINUX = "google-chrome";
     private static final Logger logger = LogManager.getLogger(ChromePathResolver.class);
     // Windows
     private static final String USERNAME_PLACEHOLDER = "%UserName%";
@@ -38,7 +39,7 @@ public class ChromePathResolver extends BrowserPathResolver {
     private static final String[] WHEREIS_COMMAND = {"whereis", EXECUTABLE_NAME_LINUX};
     private static final String[] LOCATE_COMMAND = {"locate", EXECUTABLE_NAME_LINUX};
 
-    private final Preferences preferences = Preferences.userRoot().node(BrowserWrapper.class.getName());
+    private final Preferences preferences = Preferences.userRoot().node(BrowserHandle.class.getName());
 
     /**
      * Searches for the path of the Google Chrome executable (its parent). If the executable is not found, returns null;
@@ -46,20 +47,28 @@ public class ChromePathResolver extends BrowserPathResolver {
      * @return path to chrome.exe (chrome binary) or null
      */
     public String resolve() throws IOException, InterruptedException {
-        final String executable = (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) ? EXECUTABLE_NAME_WINDOWS : EXECUTABLE_NAME_LINUX;
+        final String savedPath = preferences.get(CHROME_PATH_VARIABLE, null);
+        if (savedPath != null) {
+            if (new File(savedPath).exists()) {
+                return savedPath;
+            }
+            unsave();
+        }
+
+        final String executable = (BrowserHandle.getOS().equals(BrowserHandle.OS_WINDOWS)) ? EXECUTABLE_NAME_WINDOWS : EXECUTABLE_NAME_LINUX;
 
         // First try if any of the default paths won't do
         File file;
         String path;
-        String[] possiblePaths = initPaths();
+        final String[] possiblePaths = initPaths();
 
-        for (String s : possiblePaths) {
+        for (final String s : possiblePaths) {
             path = s;
             if (path != null && path.length() != 0) {
                 file = new File(Paths.get(path, executable).toString());
                 if (file.exists()) {
-                    savePath(file.getParent());
-                    return file.getParent();
+                    savePath(file.getAbsolutePath());
+                    return file.getAbsolutePath();
                 }
             }
         }
@@ -67,21 +76,21 @@ public class ChromePathResolver extends BrowserPathResolver {
 
         // We are gonna try to find the executable on our own now, using our very good friend, the shell
 
-        final String shell = (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) ? SHELL_LOCATION_WINDOWS : SHELL_LOCATION_LINUX;
-        final String delimeter = (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) ? SHELL_DELIMETER_WINDOWS : SHELL_DELIMETER_LINUX;
+        final String shell = (BrowserHandle.getOS().equals(BrowserHandle.OS_WINDOWS)) ? SHELL_LOCATION_WINDOWS : SHELL_LOCATION_LINUX;
+        final String delimeter = (BrowserHandle.getOS().equals(BrowserHandle.OS_WINDOWS)) ? SHELL_DELIMETER_WINDOWS : SHELL_DELIMETER_LINUX;
 
-        String[][] commands = initCommands();
+        final String[][] commands = initCommands();
 
         if (commands.length == 0) {
             return null;
         }
 
-        Process process = new ProcessBuilder(shell).start();
-        BufferedWriter stdin = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-        Scanner stdout = new Scanner(process.getInputStream());
+        final Process process = new ProcessBuilder(shell).start();
+        final BufferedWriter stdin = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+        final Scanner stdout = new Scanner(process.getInputStream());
 
         // first we try to execute all our commands
-        for (String[] command : commands) {
+        for (final String[] command : commands) {
             String commandString = String.join(" ", command);
             logger.debug("Executing: " + commandString);
             stdin.write(commandString);
@@ -104,13 +113,13 @@ public class ChromePathResolver extends BrowserPathResolver {
             if (path.contains(delimeter)) { // means this is the line that executed the command (this is actually our input from before)
                 continue;
             }
-            if (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) { // this relates to windows-specific commands
+            if (BrowserHandle.getOS().equals(BrowserHandle.OS_WINDOWS)) { // this relates to windows-specific commands
                 if (counter < 2) { // Skip the microsoft copyright stuff
                     counter++;
                     continue;
                 }
 
-                if (path.indexOf("\"") != path.lastIndexOf("\"")) { // means there is at least a duo of double quotes, which could indicate a path with spaces
+                if (path.indexOf("\"") != path.lastIndexOf("\"")) { // means there is at least a pair of double quotes, which could indicate a path with spaces
                     path = path.substring(path.indexOf("\"") + 1, path.lastIndexOf("\""));
                     extracted = true;
                 }
@@ -120,7 +129,7 @@ public class ChromePathResolver extends BrowserPathResolver {
                     path = path.substring(path.indexOf("REG_SZ") + "REG_SZ".length() + 1);
                     extracted = true;
                 }
-            } else if (BrowserWrapper.getOS().equals(BrowserWrapper.OS_LINUX)) {
+            } else if (BrowserHandle.getOS().equals(BrowserHandle.OS_LINUX)) {
                 //TODO
                 // need to check what the commands output on linux and implements similar path extracting as done for windows
             }
@@ -135,7 +144,7 @@ public class ChromePathResolver extends BrowserPathResolver {
             if (path != null && path.length() != 0) {
                 file = new File(path);
                 if (file.exists()) {
-                    path = file.getParent();
+                    path = file.getAbsolutePath();
                     logger.info("path found " + path);
                     savePath(path);
                     stdout.close();
@@ -154,7 +163,7 @@ public class ChromePathResolver extends BrowserPathResolver {
     }
 
     private String[] initPaths() {
-        if (BrowserWrapper.getOS().equals(BrowserWrapper.OS_WINDOWS)) {
+        if (BrowserHandle.getOS().equals(BrowserHandle.OS_WINDOWS)) {
             return new String[]{
                     preferences.get(CHROME_PATH_VARIABLE, null),
                     DEFAULT_PATH_WIN10_2,
@@ -173,7 +182,7 @@ public class ChromePathResolver extends BrowserPathResolver {
     }
 
     private String[][] initCommands() {
-        if (BrowserWrapper.getOS().equals((BrowserWrapper.OS_WINDOWS))) {
+        if (BrowserHandle.getOS().equals((BrowserHandle.OS_WINDOWS))) {
             return new String[][]{
                     WHERE_COMMAND,
                     //GET_COMMAND_COMMAND,
@@ -188,8 +197,12 @@ public class ChromePathResolver extends BrowserPathResolver {
         };
     }
 
-    private void savePath(String path) {
+    private void savePath(final String path) {
         preferences.put(CHROME_PATH_VARIABLE, path);
+    }
+
+    private void unsave() {
+        preferences.remove(CHROME_PATH_VARIABLE);
     }
 
 }

@@ -1,22 +1,11 @@
 package attilathehun.songbook.environment;
 
-import attilathehun.songbook.collection.CollectionManager;
-import attilathehun.songbook.collection.EasterCollectionManager;
-import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.misc.Misc;
-import attilathehun.songbook.plugin.PluginManager;
-import attilathehun.songbook.util.SettingSerializer;
-import attilathehun.songbook.vcs.VCSAdmin;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -59,6 +48,7 @@ public final class SettingsManager {
             return;
         }
         settings.get(setting).set(value);
+        logger.debug(setting + " set to " + value);
         save();
     }
 
@@ -75,7 +65,7 @@ public final class SettingsManager {
             for (final Setting<?> s : values) {
                 settings.get(s.getName()).set(s.getValue());
             }
-            logger.debug("Loaded local settings");
+            logger.debug("loaded local settings");
         }
         this.settings = settings;
 
@@ -129,12 +119,18 @@ public final class SettingsManager {
         map.put("ENABLE_FRONTPAGE", new Setting<Boolean>("ENABLE_FRONTPAGE", Boolean.TRUE, Boolean.TRUE, Setting.TYPE_BOOLEAN, "Should the songbook have a special page on the beginning", "true or false"));
         map.put("ENABLE_DYNAMIC_SONGLIST", new Setting<Boolean>("ENABLE_DYNAMIC_SONGLIST", Boolean.TRUE, Boolean.TRUE, Setting.TYPE_BOOLEAN, "Should the songbook have the list of songs on the beginning", "true or false"));
         map.put("DYNAMIC_SONGLIST_SONGS_PER_COLUMN", new Setting<Integer>("DYNAMIC_SONGLIST_SONGS_PER_COLUMN", 38, 38, Setting.TYPE_POSITIVE_INTEGER, "How many songs will be displayed in a single column of the song list", "38"));
-
         // user settings
         map.put("AUTO_LOAD_DATA", new Setting<Boolean>("AUTO_LOAD_DATA", Boolean.FALSE, Boolean.FALSE, Setting.TYPE_BOOLEAN, "Should the automatically load remote data on start up", "true or false"));
         map.put("DEFAULT_READ_TOKEN", new Setting<String>("DEFAULT_READ_TOKEN", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h", Setting.TYPE_STRING, "This setting will be removed", "Deprecated, use for testing only"));
         map.put("AUTH_FILE_PATH", new Setting<String>("AUTH_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/.auth").toString(), Paths.get(System.getProperty("user.dir") + "/.auth").toString(), Setting.TYPE_URL_ALLOW_EMPTY, "Location of the file with remote authentication tokens", "Insert a full file path to the file"));
-
+        // export settings
+        map.put("EXPORT_ENABLED", new Setting<Boolean>("EXPORT_ENABLED", Boolean.TRUE, Boolean.TRUE, Setting.TYPE_BOOLEAN, "Whether exporting of the songbook is desirable", "true or false"));
+        map.put("EXPORT_BROWSER_EXECUTABLE_PATH", new Setting<String>("EXPORT_BROWSER_EXECUTABLE_PATH", "", "", Setting.TYPE_URL_ALLOW_EMPTY, "Path to the headless browser executable file", "true or false"));
+        map.put("EXPORT_KEEP_BROWSER_INSTANCE", new Setting<Boolean>("EXPORT_KEEP_BROWSER_INSTANCE", Boolean.TRUE, Boolean.TRUE, Setting.TYPE_BOOLEAN, "Speeds up export and preview but uses more memory", "true or false"));
+        map.put("EXPORT_DEFAULT_FILE_NAME", new Setting<String>("EXPORT_DEFAULT_FILE_NAME", "ExportDefault.pdf", "ExportDefault.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the default export file", "Insert a file name"));
+        map.put("EXPORT_PRINTABLE_FILE_NAME", new Setting<String>("EXPORT_PRINTABLE_FILE_NAME", "ExportPrintable.pdf", "ExportPrintable.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the print-format export file", "Insert a file name"));
+        map.put("EXPORT_SINGLEPAGE_FILE_NAME", new Setting<String>("EXPORT_SINGLEPAGE_FILE_NAME", "ExportSinglepage.pdf", "ExportSinglepage.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the singlepage-format export file", "Insert a file name"));
+        map.put("EXPORT_THREAD_COUNT", new Setting<Integer>("EXPORT_THREAD_COUNT", 20, 20, Setting.TYPE_POSITIVE_INTEGER, "How many threads can be used for the PDF conversion", "Insert a file name"));
         return map;
     }
 }

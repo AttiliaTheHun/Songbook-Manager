@@ -4,6 +4,8 @@ import attilathehun.annotation.TODO;
 import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
+import attilathehun.songbook.environment.EnvironmentStateListener;
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.export.PDFGenerator;
 import attilathehun.songbook.misc.Misc;
 import attilathehun.songbook.plugin.Export;
@@ -29,7 +31,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 @TODO(priority = true)
-public class CollectionEditor extends Stage {
+public final class CollectionEditor extends Stage {
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
     private static final CollectionEditor INSTANCE = new CollectionEditor();
     @FXML
@@ -91,14 +93,16 @@ public class CollectionEditor extends Stage {
         if (tabbedPane == null) {
             throw new IllegalStateException();
         }
-        tabbedPane.getTabs().add(new CollectionPanel(StandardCollectionManager.getInstance()));
-        if (Environment.IS_IT_EASTER_ALREADY && EasterCollectionManager.getInstance().getCollection() != null) {
-            tabbedPane.getTabs().add(new CollectionPanel(EasterCollectionManager.getInstance()));
+        for (final CollectionManager manager : Environment.getInstance().getRegisteredManagers().values()) {
+            if (manager.getCollectionName().equals(EasterCollectionManager.getInstance().getCollectionName()) && !Environment.IS_IT_EASTER_ALREADY) {
+                continue;
+            }
+            tabbedPane.getTabs().add(new CollectionPanel(manager));
         }
 
     }
 
-    public static void refreshInstance() {
+    public static void refresh() {
         INSTANCE.tabbedPane.getTabs().clear();
         INSTANCE.initTabbedPane();
     }
@@ -151,9 +155,9 @@ public class CollectionEditor extends Stage {
         });
         previewPDFButton.setOnAction(actionEvent -> {
 
-            if (!Export.getInstance().getSettings().getEnabled()) {
-                new AlertDialog.Builder().setTitle("Collection Editor")
-                        .setMessage("This feature is part of the Export plugin. You can enable the export plugin in settings.")
+            if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
+                new AlertDialog.Builder().setTitle("PDF preview")
+                        .setMessage("This feature is disabled. You can enable exporting in the settings.")
                         .setParent(this).setIcon(AlertDialog.Builder.Icon.WARNING).addOkButton().build().open();
                 return;
             }
@@ -169,7 +173,10 @@ public class CollectionEditor extends Stage {
             Platform.runLater(() -> {
                 try {
                     Desktop.getDesktop().open(new File(new PDFGenerator(selectedManager).generatePreview(selectedSong)));
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
+                    if (ex.getMessage().equals("ignore")) {
+                        return;
+                    }
                     logger.error(ex.getMessage(), ex);
                     new AlertDialog.Builder().setTitle("Error").setMessage(ex.getLocalizedMessage()).setParent(this).setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 }
@@ -345,19 +352,19 @@ public class CollectionEditor extends Stage {
                     throw new IllegalArgumentException();
                 }
                 int index = s.getManager().getSortedCollectionSongIndex(s);
-                Label nLabel = new Label(String.valueOf(index));
+                final Label nLabel = new Label(String.valueOf(index));
                 nLabel.setPrefWidth(30);
                 this.getChildren().add(nLabel);
-                Label nameLabel = new Label(s.name());
+                final Label nameLabel = new Label(s.name());
                 nameLabel.setPrefWidth(260);
                 this.getChildren().add(nameLabel);
-                Label IDLabel = new Label(String.valueOf(s.id()));
+                final Label IDLabel = new Label(String.valueOf(s.id()));
                 IDLabel.setPrefWidth(30);
                 this.getChildren().add(IDLabel);
-                Label URLLabel = new Label(s.getUrl());
+                final Label URLLabel = new Label(s.getUrl());
                 URLLabel.setPrefWidth(440);
                 this.getChildren().add(URLLabel);
-                CheckBox activityCheckBox = new CheckBox(null);
+                final CheckBox activityCheckBox = new CheckBox(null);
                 activityCheckBox.setSelected(s.isActive());
                 activityCheckBox.setPrefWidth(40);
                 activityCheckBox.setOnAction(actionEvent -> {

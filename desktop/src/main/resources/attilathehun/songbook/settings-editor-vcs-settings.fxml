@@ -20,7 +20,7 @@
       </HBox>
       <VBox prefWidth="650.0">
          <children>
-            <CheckBox fx:id="remoteSaveLoadSwitch" mnemonicParsing="false" text="Enable VCS" />
+            <CheckBox fx:id="remoteSaveLoadSwitch" mnemonicParsing="false" selected="true" text="Enable VCS" />
             <HBox>
                <children>
                   <Label text="Remote download">

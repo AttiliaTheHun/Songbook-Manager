@@ -11,8 +11,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * A utility class for creation and extraction of ZIP archive files.
  */
-public class ZipBuilder implements AutoCloseable {
-    private static final Logger logger = LogManager.getLogger(ZipBuilder.class);
+public class ZipBuilder implements Closeable {
     private static final int BUFFER_SIZE = 4096;
     /**
      * When true, the zip file will contain a folder of the same name
@@ -38,7 +37,7 @@ public class ZipBuilder implements AutoCloseable {
      * @param outputPath
      * @throws FileNotFoundException
      */
-    public ZipBuilder(String outputPath) throws FileNotFoundException {
+    public ZipBuilder(final String outputPath) throws FileNotFoundException {
         init(outputPath);
     }
 
@@ -50,7 +49,7 @@ public class ZipBuilder implements AutoCloseable {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    public ZipBuilder(File target, String outputPath) throws FileNotFoundException, IOException {
+    public ZipBuilder(final File target, final String outputPath) throws FileNotFoundException, IOException {
         init(outputPath);
         if (target == null) {
             throw new IllegalArgumentException("target file must not be null");
@@ -73,7 +72,7 @@ public class ZipBuilder implements AutoCloseable {
      *
      * @param value desired value of the flag
      */
-    public static void includeSourceFolder(boolean value) {
+    public static void includeSourceFolder(final boolean value) {
         INCLUDE_SOURCE_FOLDER = value;
     }
 
@@ -93,7 +92,7 @@ public class ZipBuilder implements AutoCloseable {
      * @return null
      */
     @Deprecated
-    public static ZipBuilder fromPath(String path) {
+    public static ZipBuilder fromPath(final String path) {
         return null;
     }
 
@@ -104,7 +103,7 @@ public class ZipBuilder implements AutoCloseable {
      * @return the extraction directory path
      * @throws IOException
      */
-    public static String extract(String zipFilePath) throws IOException {
+    public static String extract(final String zipFilePath) throws IOException {
         String dirName;
         if (zipFilePath.endsWith(".zip")) {
             dirName = zipFilePath.substring(0, zipFilePath.lastIndexOf(".zip"));
@@ -123,22 +122,22 @@ public class ZipBuilder implements AutoCloseable {
      * @return the extraction directory path
      * @throws IOException
      */
-    public static String extract(String zipFilePath, String destDirectory) throws IOException {
-        File destDir = new File(destDirectory);
+    public static String extract(final String zipFilePath, final String destDirectory) throws IOException {
+        final File destDir = new File(destDirectory);
         if (!destDir.exists()) {
             destDir.mkdirs();
         }
-        ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath));
+        final ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath));
         ZipEntry entry = zipIn.getNextEntry();
         // iterates over entries in the zip file
         while (entry != null) {
-            String filePath = destDirectory + File.separator + entry.getName();
+            final String filePath = destDirectory + File.separator + entry.getName();
             if (!entry.isDirectory()) {
                 // if the entry is a file, extracts it
                 extractFile(zipIn, filePath);
             } else {
                 // if the entry is a directory, make the directory
-                File dir = new File(filePath);
+                final File dir = new File(filePath);
                 dir.mkdirs();
             }
             zipIn.closeEntry();
@@ -155,9 +154,9 @@ public class ZipBuilder implements AutoCloseable {
      * @param filePath where to extract the file to
      * @throws IOException
      */
-    private static void extractFile(ZipInputStream zipIn, String filePath) throws IOException {
+    private static void extractFile(final ZipInputStream zipIn, final String filePath) throws IOException {
         new File(filePath).getParentFile().mkdirs();
-        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath, false));
+        final BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath, false));
         byte[] bytesIn = new byte[BUFFER_SIZE];
         int read = 0;
         while ((read = zipIn.read(bytesIn)) != -1) {
@@ -172,7 +171,7 @@ public class ZipBuilder implements AutoCloseable {
      * @param outputPath
      * @throws FileNotFoundException
      */
-    private void init(String outputPath) throws FileNotFoundException {
+    private void init(final String outputPath) throws FileNotFoundException {
         if (initialized) {
             return;
         }
@@ -196,7 +195,7 @@ public class ZipBuilder implements AutoCloseable {
      * @param targetPath zip file path
      * @return this
      */
-    public ZipBuilder setOutputPath(String targetPath) throws FileNotFoundException {
+    public ZipBuilder setOutputPath(final String targetPath) throws FileNotFoundException {
         init(targetPath);
         return this;
     }
@@ -208,7 +207,7 @@ public class ZipBuilder implements AutoCloseable {
      * @return this
      * @throws IOException
      */
-    public ZipBuilder addFile(File file) throws IOException {
+    public ZipBuilder addFile(final File file) throws IOException {
         init(null);
         return addFileToArchive(file);
     }
@@ -220,7 +219,7 @@ public class ZipBuilder implements AutoCloseable {
      * @return this
      * @throws IOException
      */
-    public ZipBuilder addFile(File file, String parentFolder) throws IOException {
+    public ZipBuilder addFile(final File file, final String parentFolder) throws IOException {
         init(null);
         return addFileToArchive(file, parentFolder);
     }
@@ -232,7 +231,7 @@ public class ZipBuilder implements AutoCloseable {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private ZipBuilder addFileToArchive(File file)
+    private ZipBuilder addFileToArchive(final File file)
             throws FileNotFoundException, IOException {
         if (zos == null) {
             throw new IllegalStateException();
@@ -245,8 +244,7 @@ public class ZipBuilder implements AutoCloseable {
             return this;
         }
         zos.putNextEntry(new ZipEntry(file.getName()));
-        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(
-                file));
+        final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
         long bytesRead = 0;
         byte[] bytesIn = new byte[BUFFER_SIZE];
         int read = 0;
@@ -265,7 +263,7 @@ public class ZipBuilder implements AutoCloseable {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private ZipBuilder addFileToArchive(File file, String parentFolder)
+    private ZipBuilder addFileToArchive(final File file, String parentFolder)
             throws FileNotFoundException, IOException {
         if (zos == null) {
             throw new IllegalStateException();
@@ -288,8 +286,7 @@ public class ZipBuilder implements AutoCloseable {
             parentFolder = parentFolder.substring(0, parentFolder.length() - 1);
         }
         zos.putNextEntry(new ZipEntry(parentFolder + "/" + file.getName()));
-        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(
-                file));
+        final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
         long bytesRead = 0;
         byte[] bytesIn = new byte[BUFFER_SIZE];
         int read = 0;
@@ -308,7 +305,7 @@ public class ZipBuilder implements AutoCloseable {
      * @return this
      * @throws IOException
      */
-    public ZipBuilder addFolder(File folder) throws IOException {
+    public ZipBuilder addFolder(final File folder) throws IOException {
         return addFolder(folder, folder.getName());
     }
 
@@ -319,7 +316,7 @@ public class ZipBuilder implements AutoCloseable {
      * @return this
      * @throws IOException
      */
-    public ZipBuilder addFolder(File folder, String parentFolder) throws IOException {
+    public ZipBuilder addFolder(final File folder, final String parentFolder) throws IOException {
         init(null);
         return addFolderToArchive(folder, parentFolder);
     }
@@ -332,7 +329,7 @@ public class ZipBuilder implements AutoCloseable {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private ZipBuilder addFolderToArchive(File folder, String parentFolder) throws FileNotFoundException, IOException {
+    private ZipBuilder addFolderToArchive(final File folder, String parentFolder) throws FileNotFoundException, IOException {
         if (zos == null) {
             throw new IllegalStateException("The builder is not initialised");
         }
@@ -351,8 +348,7 @@ public class ZipBuilder implements AutoCloseable {
                 continue;
             }
             zos.putNextEntry(new ZipEntry(parentFolder + "/" + file.getName()));
-            BufferedInputStream bis = new BufferedInputStream(
-                    new FileInputStream(file));
+            final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
             long bytesRead = 0;
             byte[] bytesIn = new byte[BUFFER_SIZE];
             int read = 0;
@@ -372,7 +368,7 @@ public class ZipBuilder implements AutoCloseable {
      * @return this
      * @throws IOException
      */
-    public ZipBuilder addFolderContent(File folder) throws IOException {
+    public ZipBuilder addFolderContent(final File folder) throws IOException {
         return addFolderContent(folder, "");
     }
 
@@ -385,7 +381,7 @@ public class ZipBuilder implements AutoCloseable {
      * @return this
      * @throws IOException
      */
-    public ZipBuilder addFolderContent(File folder, String parentFolder) throws IOException {
+    public ZipBuilder addFolderContent(final File folder, final String parentFolder) throws IOException {
         init(null);
         return addFolderContentToArchive(folder, parentFolder);
     }
@@ -398,7 +394,7 @@ public class ZipBuilder implements AutoCloseable {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private ZipBuilder addFolderContentToArchive(File folder, String parentFolder) throws FileNotFoundException, IOException {
+    private ZipBuilder addFolderContentToArchive(final File folder, String parentFolder) throws FileNotFoundException, IOException {
         if (zos == null) {
             throw new IllegalStateException("The builder is not initialised");
         }

@@ -46,7 +46,7 @@ public final class StandardCollectionManager extends CollectionManager {
     private static final StandardCollectionManager INSTANCE = new StandardCollectionManager();
     private final String collectionName = "standard";
 
-    private ArrayList<Song> collection;
+    private ArrayList<Song> collection = new ArrayList<>();
 
     private StandardCollectionManager() {
     }
@@ -132,7 +132,7 @@ public final class StandardCollectionManager extends CollectionManager {
 
     @Override
     public ArrayList<Song> getFormalCollection() {
-        ArrayList<Song> formalList = new ArrayList<Song>();
+        final ArrayList<Song> formalList = new ArrayList<Song>();
         if (SettingsManager.getInstance().getValue("ENABLE_FRONTPAGE")) {
             formalList.add(CollectionManager.getFrontpageSong());
         }
@@ -148,11 +148,11 @@ public final class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public Song addSong(Song s) {
+    public Song addSong(final Song s) {
         if (s == null) {
             throw new IllegalArgumentException();
         }
-        Song song = s;
+        final Song song = s;
         song.setId(getNextId());
 
         if (!new HTMLGenerator().generateSongFile(song)) {
@@ -169,13 +169,13 @@ public final class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public void removeSong(Song s) {
+    public void removeSong(final Song s) {
         if (s == null || s.id() < 0) {
             throw new IllegalArgumentException();
         }
         collection.remove(getCollectionSongIndex(s));
         save();
-        File songFile = new File(String.format("%s/%d.html", getSongDataFilePath(), s.id()));
+        final File songFile = new File(String.format("%s/%d.html", getSongDataFilePath(), s.id()));
 
 
         if (songFile.delete()) {
@@ -601,7 +601,7 @@ public final class StandardCollectionManager extends CollectionManager {
     }
 
     private void repairSongbookDialog() {
-        CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Repair songbook").setIcon(AlertDialog.Builder.Icon.CONFIRM)
+        final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Repair songbook").setIcon(AlertDialog.Builder.Icon.CONFIRM)
                 .setMessage("No collection file was found but it seems there are songs saved in your songbook. Would you like to generate a collection file to repair the songbook? Alternatively, you can create a new songbook or load an existing one from a local zip file.")
                 .addOkButton("Repair").addCloseButton("Create New").addExtraButton("Load").setCancelable(false).build().awaitResult();
         result.thenAccept(dialogResult -> {
@@ -616,8 +616,9 @@ public final class StandardCollectionManager extends CollectionManager {
     }
 
     private void createSongbookDialog() {
+        final String messagePartTwo = (SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) ? " Alternatively, you can download an existing one from the VCS server." : " Alternatively, you can load an existing one from a local zip file.";
         CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Create a songbook").setIcon(AlertDialog.Builder.Icon.CONFIRM)
-                .setMessage("Do you want to create a new songbook? Alternatively, you can load an existing one from a local zip file.")
+                .setMessage("Do you want to create a new songbook?" + messagePartTwo)
                 .addOkButton("Create").addCloseButton("Load").setCancelable(false).build().awaitResult();
         result.thenAccept(dialogResult -> {
             if (dialogResult == AlertDialog.RESULT_OK) {

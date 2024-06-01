@@ -8,22 +8,26 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 
 /**
- * This class performs a verification check of the environment, eventually notifying the user what is wrong.
+ * This class performs a verification check of the environment. Should the verification fail, the program will crash anyway, but as we know what is
+ * wrong beforehand, we can notify the user.
  */
 public class EnvironmentVerificator {
-
     private static final Logger logger = LogManager.getLogger(EnvironmentVerificator.class);
-
-    public static boolean SUPPRESS_WARNINGS = false;
 
     private boolean automated = false;
 
+    /**
+     * The constructor to obtain an instance for customized verification. For a complete automatic verification use {@link #automated()}.
+     */
     public EnvironmentVerificator() {
 
     }
 
-    private EnvironmentVerificator(boolean automated) {
-        this.automated = automated;
+    /**
+     * Internal constructor that performs automatic verification upon instantiation.
+     */
+    private EnvironmentVerificator(boolean b) {
+        this.automated = true;
 
         verifyResources();
 
@@ -41,15 +45,19 @@ public class EnvironmentVerificator {
 
     }
 
+    /**
+     * Automatically checks the environment. In case of failure, an {@link AlertDialog} will be shown to the user.
+     */
     public static void automated() {
         new EnvironmentVerificator(true);
-        logger.info("Automated environment verification successful");
+        logger.info("Environment verification successful");
     }
 
-    private static void verificationFail(String message) {
+    private static void verificationFail(final String message) {
         new AlertDialog.Builder().setTitle("Environment Verification Failed").setIcon(AlertDialog.Builder.Icon.ERROR)
                 .setMessage(message).addOkButton().build().open();
         Environment.getInstance().exit();
+        logger.error("Environment verification failed: %s", message);
     }
 
     public boolean verifyData() {

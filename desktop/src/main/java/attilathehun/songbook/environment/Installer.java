@@ -32,13 +32,6 @@ public class Installer {
         if (!verificator.verifyScripts()) {
             installer.installScripts();
         }
-        logger.info("Installer diagnostics finished");
-    }
-
-    private static long downloadRemoteFile(String url, String fileName) throws IOException {
-        try (final InputStream in = URI.create(url).toURL().openStream()) {
-            return Files.copy(in, Paths.get(fileName));
-        }
     }
 
     private void installResources() {
@@ -53,12 +46,12 @@ public class Installer {
                 IS_TEMP_RESOURCES_ZIP_FILE = true;
                 downloadRemoteFile(REMOTE_RESOURCES_ZIP_FILE, "resources.zip");
             }
-            ZipBuilder.extract(RESOURCES_ZIP_FILE_PATH, SettingsManager.getInstance().getValue("RESOURCE_FILE_PATH"));
+            ZipBuilder.extract(RESOURCES_ZIP_FILE_PATH, SettingsManager.getInstance().getValue("RESOURCES_FILE_PATH"));
             if (IS_TEMP_RESOURCES_ZIP_FILE) {
                 new File(RESOURCES_ZIP_FILE_PATH).delete();
             }
             logger.info("Finished installing resources");
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Installation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage("Cannot install resources!").addOkButton().build().open();
@@ -88,4 +81,14 @@ public class Installer {
                     .setMessage("Cannot install scripts!").addOkButton().build().open();
         }
     }
+
+
+    private static long downloadRemoteFile(final String url, final String fileName) throws IOException {
+        try (final InputStream in = URI.create(url).toURL().openStream()) {
+            return Files.copy(in, Paths.get(fileName));
+        }
+    }
+
 }
+
+

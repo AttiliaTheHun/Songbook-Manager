@@ -64,8 +64,6 @@ public class AlertDialog extends Stage {
      * @return handle to the result
      */
     public CompletableFuture<Integer> awaitResult() {
-        show();
-        toFront();
         final CompletableFuture<Integer> result = new CompletableFuture<>();
         if (okButton != null) {
             okButton.setOnAction((event) -> {
@@ -73,7 +71,9 @@ public class AlertDialog extends Stage {
                     result.complete(RESULT_OK);
                     close();
                 } else {
-                    okButtonAction.perform();
+                    if (okButtonAction.perform(result)) {
+                        close();
+                    }
                 }
             });
         }
@@ -83,7 +83,9 @@ public class AlertDialog extends Stage {
                     result.complete(RESULT_CLOSE);
                     close();
                 } else {
-                    closeButtonAction.perform();
+                    if (closeButtonAction.perform(result)) {
+                        close();
+                    }
                 }
             });
         }
@@ -91,8 +93,11 @@ public class AlertDialog extends Stage {
             extraButton.setOnAction((event) -> {
                 if (extraButtonAction == null) {
                     result.complete(RESULT_EXTRA);
+                    close();
                 } else {
-                    extraButtonAction.perform();
+                    if (extraButtonAction.perform(result)) {
+                        close();
+                    }
                 }
             });
         }
@@ -102,6 +107,8 @@ public class AlertDialog extends Stage {
                 event.consume();
             }
         });
+        showAndWait();
+        toFront();
         return result;
     }
 
@@ -114,8 +121,6 @@ public class AlertDialog extends Stage {
      * @return handle to the result
      */
     public CompletableFuture<Pair<Integer, ArrayList<Node>>> awaitData() {
-        show();
-        toFront();
         final CompletableFuture<Pair<Integer, ArrayList<Node>>> result = new CompletableFuture<>();
         if (okButton != null) {
             okButton.setOnAction((event) -> {
@@ -123,7 +128,9 @@ public class AlertDialog extends Stage {
                     result.complete(new Pair<>(RESULT_OK, nodes));
                     close();
                 } else {
-                    okButtonAction.perform();
+                    if (okButtonAction.perform(result)) {
+                        close();
+                    }
                 }
             });
         }
@@ -133,7 +140,9 @@ public class AlertDialog extends Stage {
                     result.complete(new Pair<>(RESULT_CLOSE, nodes));
                     close();
                 } else {
-                    closeButtonAction.perform();
+                    if (closeButtonAction.perform(result)) {
+                        close();
+                    }
                 }
             });
         }
@@ -141,8 +150,11 @@ public class AlertDialog extends Stage {
             extraButton.setOnAction((event) -> {
                 if (extraButtonAction == null) {
                     result.complete(new Pair<>(RESULT_EXTRA, nodes));
+                    close();
                 } else {
-                    extraButtonAction.perform();
+                    if (extraButtonAction.perform(result)) {
+                        close();
+                    }
                 }
             });
         }
@@ -152,6 +164,8 @@ public class AlertDialog extends Stage {
                 event.consume();
             }
         });
+        showAndWait();
+        toFront();
         return result;
     }
 
@@ -159,14 +173,14 @@ public class AlertDialog extends Stage {
      * Shows the dialog without returning any result, which is useful for information notice messages. By default, the Ok, Close and Cancel buttons close the dialog.
      */
     public void open() {
-        show();
-        toFront();
         if (okButton != null) {
             okButton.setOnAction((event) -> {
                 if (okButtonAction == null) {
                     close();
                 } else {
-                    okButtonAction.perform();
+                    if (okButtonAction.perform(null)) {
+                        close();
+                    }
                 }
             });
         }
@@ -175,14 +189,20 @@ public class AlertDialog extends Stage {
                 if (closeButtonAction == null) {
                     close();
                 } else {
-                    closeButtonAction.perform();
+                    if (closeButtonAction.perform(null)) {
+                        close();
+                    }
                 }
             });
         }
         if (extraButton != null) {
             extraButton.setOnAction((event) -> {
                 if (extraButtonAction != null) {
-                    extraButtonAction.perform();
+                    if (extraButtonAction.perform(null)) {
+                        close();
+                    }
+                } else {
+                    close();
                 }
             });
         }
@@ -191,6 +211,8 @@ public class AlertDialog extends Stage {
                 event.consume();
             }
         });
+        showAndWait();
+        toFront();
     }
 
     /**
@@ -297,7 +319,7 @@ public class AlertDialog extends Stage {
         buttonBar.setPadding(new Insets(8, 8, 8, 8));
 
         // we want to add only the buttons that are desired (their text is not empty)
-        ArrayList<Button> buttons = new ArrayList<>();
+        final ArrayList<Button> buttons = new ArrayList<>();
         if (okButtonText != null && okButtonText.length() != 0) {
             okButton = new Button(okButtonText);
             buttons.add(okButton);
@@ -331,7 +353,7 @@ public class AlertDialog extends Stage {
         }
 
         // finally create and set the scene
-        Scene scene = new Scene(root, 400, -1); // width, height
+        final Scene scene = new Scene(root, 400, -1); // width, height
 
         setScene(scene);
     }
@@ -352,7 +374,7 @@ public class AlertDialog extends Stage {
         private String icon = "";
         private Window parent;
         private boolean cancelable = true;
-        private ArrayList<Node> nodes = new ArrayList<>();
+        private final ArrayList<Node> nodes = new ArrayList<>();
 
         /**
          * Sets the title of the AlertDialog. It is the title of the window. The title must not be null.
@@ -669,7 +691,7 @@ public class AlertDialog extends Stage {
 
             private final String file;
 
-            Icon(String s) {
+            Icon(final String s) {
                 file = s;
             }
 
@@ -689,9 +711,14 @@ public class AlertDialog extends Stage {
         public interface Action {
 
             /**
-             * This method contains the Action's executable code.
+             * This method contains the {@link Action}'s executable code. If the method returns true, the {@link AlertDialog} will close after performing the action. Note that
+             * if the parameter @result is not null, it must be completed in order for the dialog to get closed.
+             *
+             * @param result the result object of the AlertDialog the method was passed into. Its type and value depends on the way the AlertDialog was opened. In case of
+             * {@link AlertDialog#awaitResult()} the type is CompletableFuture&#060;Integer&#062;. If {@link AlertDialog#awaitData()} was used, then result is of type
+             * CompletableFuture&#060;Pair&#060;Integer, ArrayList&#060;Node&#062;&#062;&#062; For {@link AlertDialog#open()} result is null;
              */
-            void perform();
+            boolean perform(CompletableFuture result);
         }
     }
 }

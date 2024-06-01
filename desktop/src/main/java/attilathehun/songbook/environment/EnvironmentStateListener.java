@@ -6,7 +6,7 @@ import attilathehun.songbook.collection.Song;
 public interface EnvironmentStateListener {
 
     /**
-     * Emited when {@link Environment#refresh()} is called.
+     * Emited when {@link Environment#refresh()} or {@link Environment#hardRefresh()}  is called.
      */
     void onRefresh();
 

@@ -3,6 +3,7 @@
 	--chords-margin: -0.1em -0.5em -2em;
     --chords-padding: 0.1em 0.5em 0.15em;
 	--line-margin-top: -65px;
+	--br-line-height: 0.8em;
 }
 
 
@@ -16,6 +17,13 @@ html, body {
 	line-height: 0.8em;
 	position: static;
 	overflow: hidden;
+}
+
+.br {
+	visibility: hidden;
+	/*display: block;
+	background: 1px solid pink; */
+	line-height: var(--br-line-height);
 }
 
 a,
@@ -92,20 +100,19 @@ ul {
 
 
 .song-title {
-	//font-size: 32px; /* h1 default */
+	font-size: 32px; /* h1 default */
 	display: block;
 }
 
 .song-author {
 	text-align: right;
 	padding: 0;
-	//margin: 0;
 	margin-right: 10%;
 	margin-left: 10%;
 	margin-top: -10px;
 	color: gray;
 	z-index: 1;
-	//font-size: 16px; /* h4 default */
+	font-size: 16px; /* h4 default */
 	display: block;
 	border: 1px solid orange;
 }
@@ -121,12 +128,6 @@ ul {
 	border-spacing: 0;
 	border-collapse: collapse;
 }
-
-/*.songbook-page::after {
-	content: "";
-	clear: both;
-	display: table;
-}*/
 
 .song-text-formatting {
 	font-family: "Roboto Mono", "Courier New", monospace;
@@ -172,7 +173,6 @@ ul {
 	vertical-align: top;
 	display: table-cell;
 	min-width: 50%;
-	//max-width: 50%;
 	border: 1px solid black;
 }
 
@@ -180,7 +180,6 @@ ul {
 	overflow: hidden;
 	margin: auto;
 	margin-top: var(--line-margin-top);
-	//margin-bottom: -20px;
 	text-align: left;
 	display: block;
 	color: #212121;
@@ -211,28 +210,32 @@ ul {
 	--font-size: 12px;
 	--chords-margin: -0.1em -0.5em -2em;
     --chords-padding: 0.1em 0.5em 0.25em;
-	--line-margin-top: -50px;
+	--line-margin-top: -60px;
+	--br-line-height: 0.3em;
 }
 
 .font-size-13-px {
 	--font-size: 13px;
 	--chords-margin: -0.1em -0.5em -2em;
     --chords-padding: 0.1em 0.5em 0.25em;
-	--line-margin-top: -55px;
+	--line-margin-top: -65px;
+	--br-line-height: 0.4em;
 }
 
 .font-size-14-px {
 	--font-size: 14px;
 	--chords-margin: -0.1em -0.5em -2em;
     --chords-padding: 0.1em 0.5em 0.25em;
-	--line-margin-top: -55px;
+	--line-margin-top: -65px;
+	--br-line-height: 0.5em;
 }
 
 .font-size-15-px {
 	--font-size: 15px;
 	--chords-margin: -0.1em -0.5em -2.05em;
     --chords-padding: 0.1em 0.5em 0.25em;
-	--line-margin-top: -60px;
+	--line-margin-top: -70px;
+	--br-line-height: 0.6em;
 }
 
 

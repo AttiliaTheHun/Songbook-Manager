@@ -36,7 +36,7 @@
             <VBox.margin>
                <Insets top="5.0" />
             </VBox.margin></CheckBox>
-         <CheckBox fx:id="enableDynamicSonglistSwitch" mnemonicParsing="false" text="Enable dynamic songlist">
+         <CheckBox fx:id="enableDynamicSonglistSwitch" mnemonicParsing="false" selected="true" text="Enable dynamic songlist">
             <VBox.margin>
                <Insets top="5.0" />
             </VBox.margin></CheckBox>
@@ -110,6 +110,85 @@
          <opaqueInsets>
             <Insets />
          </opaqueInsets>
+         <VBox.margin>
+            <Insets left="20.0" top="10.0" />
+         </VBox.margin>
+      </VBox>
+      <HBox>
+         <children>
+            <Label text="Export settings">
+               <HBox.margin>
+                  <Insets left="2.0" right="2.0" />
+               </HBox.margin></Label>
+            <Separator prefHeight="20.0" HBox.hgrow="ALWAYS" />
+         </children>
+         <VBox.margin>
+            <Insets top="5.0" />
+         </VBox.margin>
+      </HBox>
+      <VBox>
+         <children>
+            <CheckBox fx:id="exportEnabledSwitch" mnemonicParsing="false" selected="true" text="Export enabled">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin></CheckBox>
+            <HBox>
+               <Label text="Browser executable path">
+                  <HBox.margin>
+                     <Insets right="5.0" top="3.0" />
+                  </HBox.margin></Label>
+               <TextField fx:id="browserExecutablePathField" HBox.hgrow="ALWAYS">
+
+               </TextField>
+               <Button fx:id="browseBrowserExecutablePathButton" text="Browse">
+                  <HBox.margin>
+                     <Insets right="5.0" />
+                  </HBox.margin></Button>
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+            </HBox>
+            <CheckBox fx:id="keepBrowserInstanceAliveSwitch" mnemonicParsing="false" text="Keep browser instance alive">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin></CheckBox>
+            <HBox>
+               <children>
+                  <Label text="Default file name">
+                     <HBox.margin>
+                        <Insets right="5.0" top="3.0" />
+                     </HBox.margin></Label>
+                  <TextField fx:id="defaultExportFileNameField" prefWidth="168.0" />
+               </children>
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+            </HBox>
+            <HBox>
+               <children>
+                  <Label text="Printable file name">
+                     <HBox.margin>
+                        <Insets right="5.0" top="3.0" />
+                     </HBox.margin></Label>
+                  <TextField fx:id="printableExportFileNameField" prefWidth="160.0" />
+               </children>
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+            </HBox>
+            <HBox>
+               <children>
+                  <Label text="Singlepage file name">
+                     <HBox.margin>
+                        <Insets right="5.0" top="3.0" />
+                     </HBox.margin></Label>
+                  <TextField fx:id="singlepageExportFileNameField" />
+               </children>
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+            </HBox>
+         </children>
          <VBox.margin>
             <Insets left="20.0" top="10.0" />
          </VBox.margin>

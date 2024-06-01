@@ -12,3 +12,6 @@ For more information about the project visit the [wiki](https://github.com/Attil
  - [User Guide](https://github.com/AttiliaTheHun/Songbook-Manager/wiki/User-Guide)
  - [Contributing](https://github.com/AttiliaTheHun/Songbook-Manager/wiki/Contributing)
  - [Submitting Issues](https://github.com/AttiliaTheHun/Songbook-Manager/wiki/Submitting-Issues)
+
+## Licenses
+- some icons come from [https://www.flaticon.com](FlatIcon)

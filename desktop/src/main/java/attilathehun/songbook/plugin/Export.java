@@ -3,7 +3,7 @@ package attilathehun.songbook.plugin;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-
+@Deprecated
 public class Export extends Plugin {
     private static final Logger logger = LogManager.getLogger(Export.class);
 

@@ -275,69 +275,6 @@ class EnvironmentTest implements EnvironmentStateListener {
         assertEquals(0, Environment.getInstance().getRegisteredManagers().size());
     }
 
-    @Test
-    public void testGetDefaultSettings_thatIsNotNull() {
-        assertNotNull(Environment.getInstance().getDefaultSettings());
-    }
-
-    @Test
-    public void testGetSettings_thatIsNotNull() {
-        assertNotNull(Environment.getInstance().getSettings());
-    }
-
-    @Test
-    public void testSetSettings_whenSettingsAreNull() {
-        assertThrows(IllegalArgumentException.class, () -> Environment.getInstance().setSettings(null));
-    }
-
-    @Test
-    public void testSetSettings_whenSettingsAreNotNull() {
-        assertDoesNotThrow(() -> Environment.getInstance().setSettings(new Environment.EnvironmentSettings()));
-    }
-
-    @Test
-    public void testSetSettings_resultValue() {
-        Environment.EnvironmentSettings settings = new Environment.EnvironmentSettings();
-        Environment.getInstance().setSettings(settings);
-        assertEquals(settings, Environment.getInstance().getSettings());
-    }
-
-    @Nested
-    public static class EnvironmentSettingsTest {
-
-        @Test
-        public void testGet_whenSettingNotDefined() {
-            Environment.EnvironmentSettings settings = new Environment.EnvironmentSettings();
-            assertNull(settings.get("UNDEFINED_SETTING"));
-        }
-
-        @Test
-        public void testGet_whenSettingDefined() {
-            Environment.EnvironmentSettings settings = new Environment.EnvironmentSettings();
-            String setting = "DEFINED_SETTING";
-            String value = "null but in string";
-            settings.put(setting, value);
-            assertEquals(value, settings.get(setting));
-        }
-
-        @Test
-        public void testGet_whenSettingRedefined() {
-            Environment.EnvironmentSettings settings = new Environment.EnvironmentSettings();
-            String setting = "DEFINED_SETTING";
-            String value1 = "null but in string";
-            String value2 = "undefined but in string";
-            String value3 = "0 but in string";
-            settings.put(setting, value1);
-            assertEquals(value1, settings.get(setting));
-            settings.put(setting, value2);
-            assertEquals(value2, settings.get(setting));
-            settings.put(setting, value3);
-            assertEquals(value3, settings.get(setting));
-        }
-
-
-    }
-
 
     @Override
     public void onRefresh() {

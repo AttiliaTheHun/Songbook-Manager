@@ -14,6 +14,7 @@ import java.util.HashMap;
  * SML into HTML and vice versa utilising the Songbook Manager resource templates. This plugin
  * will probably not work if you alter the default resources or use custom ones.
  */
+@Deprecated
 public class SML extends Plugin {
     protected static final String STRING_PLACEHOLDER = "%s";
     private static final Logger logger = LogManager.getLogger(SML.class);

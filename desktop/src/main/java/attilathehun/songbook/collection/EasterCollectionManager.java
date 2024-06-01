@@ -65,11 +65,13 @@ public final class EasterCollectionManager extends CollectionManager {
 
     @Override
     public void init() {
-        Environment.getInstance().registerCollectionManager(this);
         try {
-            File collectionJSONFile = new File(getCollectionFilePath());
+            final File collectionJSONFile = new File(getCollectionFilePath());
             if (!collectionJSONFile.exists()) {
-                File songDataFolder = new File(getSongDataFilePath());
+                if (!Environment.IS_IT_EASTER_ALREADY) {
+                    return;
+                }
+                final File songDataFolder = new File(getSongDataFilePath());
                 if (songDataFolder.exists() && songDataFolder.isDirectory()) {
                     repairCollectionDialog();
                 } else {
@@ -78,16 +80,18 @@ public final class EasterCollectionManager extends CollectionManager {
                 return;
             }
 
-            String json = String.join("", Files.readAllLines(collectionJSONFile.toPath()));
+            Environment.getInstance().registerCollectionManager(this);
 
-            Type targetClassType = new TypeToken<ArrayList<Song>>() {
-            }.getType();
+            final String json = String.join("", Files.readAllLines(collectionJSONFile.toPath()));
+
+            final Type targetClassType = new TypeToken<ArrayList<Song>>(){}.getType();
             collection = new Gson().fromJson(json, targetClassType);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Easter Collection Initialisation error").setIcon(AlertDialog.Builder.Icon.ERROR)
                             .setMessage("Can not load the easter song collection, for complete error message view the log file. If the problem persists, try reformatting or deleting the collection file.")
                             .addOkButton().setParent(SongbookApplication.getMainWindow()).build().open();
+            return;
         }
         logger.info("initialized");
     }
@@ -105,8 +109,8 @@ public final class EasterCollectionManager extends CollectionManager {
     @Override
     public void save() {
         try {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(getCollectionFilePath());
+            final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            final FileWriter writer = new FileWriter(getCollectionFilePath());
             gson.toJson(collection, writer);
             writer.close();
         } catch (IOException e) {
@@ -638,7 +642,6 @@ public final class EasterCollectionManager extends CollectionManager {
             PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
             printWriter.write("[]");
             printWriter.close();
-            EnvironmentVerificator.SUPPRESS_WARNINGS = true;
 
             CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Add Easter Song?").setMessage("Do you want to create your first easter song?").setIcon(AlertDialog.Builder.Icon.CONFIRM)
                     .addOkButton("Create").addCloseButton("Cancel").build().awaitResult();

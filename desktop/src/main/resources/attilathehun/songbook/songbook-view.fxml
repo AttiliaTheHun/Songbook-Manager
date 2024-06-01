@@ -1,71 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.web.*?>
 <?import org.controlsfx.control.*?>
 
-<AnchorPane minHeight="720.0" minWidth="1280.0" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="attilathehun.songbook.window.SongbookController">
+<HBox minHeight="720.0" minWidth="1280.0" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="attilathehun.songbook.window.SongbookController">
+
     <children>
-        <SplitPane dividerPositions="0.8" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-            <items>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                    <children>
-                        <WebView fx:id="webview" prefHeight="398.0" prefWidth="475.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                    </children>
-                </AnchorPane>
-                <AnchorPane maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" SplitPane.resizableWithParent="false">
-                    <children>
-                        <VBox>
-                            <BorderPane>
-                                <left>
-                                    <Label text="Song Collection" />
-                                </left>
-                        <center>
-                           <ImageView fx:id="openSettingsButton" fitHeight="12.0" fitWidth="12.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
-                        </center>
-                            </BorderPane>
-
-                            <Button fx:id="addSongButton" layoutX="1.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Add Song" />
-                            <Button fx:id="editCollectionButton" layoutX="1.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="122.0" text="Edit" />
-                            <Button fx:id="loadDataButton" layoutX="1.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="122.0" text="Load" />
-                            <Button fx:id="saveDataButton" layoutX="1.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="122.0" text="Save" />
-                            <MenuButton fx:id="exportButton" layoutX="1.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="122.0" text="Export PDF">
-                                <items>
-                                    <MenuItem fx:id="singlepageSelection" mnemonicParsing="false" text="Singlepage PDF (A4)" />
-                                    <MenuItem fx:id="defaultSelection" mnemonicParsing="false" text="Default PDF (A5)" />
-                                    <MenuItem fx:id="printableSelection" mnemonicParsing="false" text="Printable PDF (A5)" />
-                                </items>
-                            </MenuButton>
-                            <Separator prefHeight="8.0" prefWidth="126.0" />
-                            <Label layoutX="2.0" text="Song 1" />
-                            <HBox>
-                                <TextField fx:id="songOneIdField" layoutX="4.0" prefHeight="25.0" prefWidth="81.0" />
-                                <Button fx:id="applySongOneId" layoutX="76.0" mnemonicParsing="false" text="Apply" />
-                            </HBox>
-                            <Button fx:id="editSongOneHTML" layoutX="1.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Edit HTML" />
-                            <Separator prefHeight="8.0" prefWidth="126.0" />
-                            <Label layoutX="2.0" text="Song 2" />
-                            <HBox>
-                                <Button fx:id="applySongTwoId" layoutX="76.0" mnemonicParsing="false" text="Apply" />
-                                <TextField fx:id="songTwoIdField" layoutX="4.0" prefHeight="25.0" prefWidth="75.0" />
-                            </HBox>
-                            <Button fx:id="editSongTwoHTML" layoutX="1.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Edit HTML" />
-                            <Separator prefHeight="8.0" prefWidth="126.0" />
-                            <Label layoutX="1.0" text="Miscellaneous" />
-                            <Button fx:id="refreshButton" layoutX="1.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="Refresh" />
-                            <Button fx:id="previewButton" layoutX="1.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="PDF Preview" />
-                            <ToggleSwitch fx:id="easterSwitch" layoutX="1.0" prefHeight="25.0" prefWidth="123.0" text="Easter Switch" />
-
-                        </VBox>
-
-
-
-
-                    </children>
-                </AnchorPane>
-            </items>
-        </SplitPane>
+        <WebView fx:id="webview" HBox.hgrow="ALWAYS" />
+      <Separator orientation="VERTICAL" prefHeight="200.0" />
+        <VBox maxWidth="130.0" minWidth="120.0">
+            <BorderPane>
+                <left>
+                    <Label text="Song Collection" />
+                </left>
+                <center>
+                    <ImageView fx:id="openSettingsButton" fitHeight="12.0" fitWidth="12.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
+                </center>
+            </BorderPane>
+         <HBox>
+            <children>
+                  <Button fx:id="addSongButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Add Song" HBox.hgrow="ALWAYS" />
+            </children>
+         </HBox>
+         <HBox>
+            <children>
+                  <Button fx:id="editCollectionButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Edit" HBox.hgrow="ALWAYS" />
+            </children>
+         </HBox>
+         <HBox>
+            <children>
+                  <Button fx:id="loadDataButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Load" HBox.hgrow="ALWAYS" />
+            </children>
+         </HBox>
+         <HBox>
+            <children>
+                  <Button fx:id="saveDataButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Save" HBox.hgrow="ALWAYS" />
+            </children>
+         </HBox>
+         <HBox>
+            <children>
+                  <MenuButton fx:id="exportButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Export" HBox.hgrow="ALWAYS">
+                      <items>
+                          <MenuItem fx:id="singlepageSelection" mnemonicParsing="false" text="Singlepage PDF (A4)" />
+                          <MenuItem fx:id="defaultSelection" mnemonicParsing="false" text="Default PDF (A5)" />
+                          <MenuItem fx:id="printableSelection" mnemonicParsing="false" text="Printable PDF (A5)" />
+                      </items>
+                  </MenuButton>
+            </children>
+         </HBox>
+            <HBox>
+                <Label text="Song 1">
+               <HBox.margin>
+                  <Insets right="2.0" />
+               </HBox.margin></Label>
+                <Separator prefHeight="20.0" HBox.hgrow="ALWAYS" />
+            </HBox>
+            <HBox>
+                <TextField fx:id="songOneIdField" HBox.hgrow="ALWAYS" />
+                <Button fx:id="applySongOneId" maxWidth="1.7976931348623157E308" minWidth="50.0" mnemonicParsing="false" text="Apply" />
+            </HBox>
+            <Button fx:id="editSongOneHTML" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Edit HTML" />
+            <HBox>
+                <Label text="Song 2">
+               <HBox.margin>
+                  <Insets right="2.0" />
+               </HBox.margin></Label>
+                <Separator prefHeight="20.0" HBox.hgrow="ALWAYS" />
+            </HBox>
+            <HBox>
+                <TextField fx:id="songTwoIdField" HBox.hgrow="ALWAYS" />
+                <Button fx:id="applySongTwoId" maxWidth="1.7976931348623157E308" minWidth="50.0" mnemonicParsing="false" text="Apply" />
+            </HBox>
+            <Button fx:id="editSongTwoHTML" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Edit HTML" />
+            <HBox>
+                <Label text="Miscellaneous">
+               <HBox.margin>
+                  <Insets right="2.0" />
+               </HBox.margin></Label>
+                <Separator prefHeight="20.0" HBox.hgrow="ALWAYS" />
+            </HBox>
+            <Button fx:id="refreshButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Refresh" />
+            <Button fx:id="previewButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="PDF Preview" />
+            <ToggleSwitch fx:id="easterSwitch" maxWidth="1.7976931348623157E308" text="Easter Switch">
+            <VBox.margin>
+               <Insets top="5.0" />
+            </VBox.margin></ToggleSwitch>
+         <HBox.margin>
+            <Insets right="5.0" />
+         </HBox.margin>
+            
+        </VBox>
     </children>
-</AnchorPane>
+</HBox>

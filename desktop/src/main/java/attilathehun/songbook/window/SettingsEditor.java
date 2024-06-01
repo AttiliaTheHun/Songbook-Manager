@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public class SettingsEditor extends Stage {
+public final class SettingsEditor extends Stage {
     private static final Logger logger = LogManager.getLogger(SettingsEditor.class);
     private static final SettingsEditor INSTANCE = new SettingsEditor();
 
@@ -177,6 +177,20 @@ public class SettingsEditor extends Stage {
         public TextField authFilePathField;
         @FXML
         public Button browseFilesForAuthFileButton;
+        @FXML
+        public CheckBox exportEnabledSwitch;
+        @FXML
+        public CheckBox keepBrowserInstanceAliveSwitch;
+        @FXML
+        public TextField defaultExportFileNameField;
+        @FXML
+        public TextField printableExportFileNameField;
+        @FXML
+        public TextField singlepageExportFileNameField;
+        @FXML
+        public TextField browserExecutablePathField;
+        @FXML
+        public Button browseBrowserExecutablePathButton;
 
 
         @FXML
@@ -298,6 +312,102 @@ public class SettingsEditor extends Stage {
                 if (file != null) {
                     SettingsManager.getInstance().set("AUTH_FILE_PATH", file.toString());
                     authFilePathField.setText(file.toString());
+                }
+            });
+
+            final Setting<Boolean> enableExportSetting = (Setting<Boolean>) SettingsManager.getInstance().get("EXPORT_ENABLED");
+            final Tooltip enableExportSwitchTooltip = new Tooltip();
+            enableExportSwitchTooltip.setText(enableExportSetting.getDescription());
+            exportEnabledSwitch.setTooltip(enableExportSwitchTooltip);
+            exportEnabledSwitch.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
+                SettingsManager.getInstance().set("EXPORT_ENABLED", newValue);
+                keepBrowserInstanceAliveSwitch.setDisable(oldValue);
+                defaultReadTokenField.setDisable(oldValue);
+                printableExportFileNameField.setDisable(oldValue);
+                singlepageExportFileNameField.setDisable(oldValue);
+            });
+            exportEnabledSwitch.setSelected(enableDynamicSonglistSetting.getValue());
+
+            final Setting<Boolean> keepBworserInstanceAliveSetting = (Setting<Boolean>) SettingsManager.getInstance().get("EXPORT_KEEP_BROWSER_INSTANCE");
+            final Tooltip keepBrowserInstanceAliveSwitchTooltip = new Tooltip();
+            keepBrowserInstanceAliveSwitchTooltip.setText(keepBworserInstanceAliveSetting.getDescription());
+            keepBrowserInstanceAliveSwitch.setSelected(keepBworserInstanceAliveSetting.getValue());
+            keepBrowserInstanceAliveSwitch.setTooltip(keepBrowserInstanceAliveSwitchTooltip);
+            keepBrowserInstanceAliveSwitch.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
+                SettingsManager.getInstance().set("EXPORT_KEEP_BROWSER_INSTANCE", newValue);
+            });
+            
+            final Setting<String> defaultFileNameSetting = (Setting<String>) SettingsManager.getInstance().get("EXPORT_DEFAULT_FILE_NAME");
+            defaultExportFileNameField.setText(defaultFileNameSetting.getValue());
+            defaultExportFileNameField.setPromptText(defaultFileNameSetting.getInputFormatDescription());
+            final Tooltip defaultExportFileNameFieldFieldTooltip = new Tooltip();
+            defaultExportFileNameFieldFieldTooltip.setText(defaultFileNameSetting.getDescription());
+            defaultExportFileNameField.setTooltip(defaultExportFileNameFieldFieldTooltip);
+            defaultExportFileNameField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
+                if (!newValue) { // focus lost
+                    if (defaultFileNameSetting.verifyValue(defaultExportFileNameField.getText().trim())) {
+                        SettingsManager.getInstance().set("EXPORT_DEFAULT_FILE_NAME", defaultExportFileNameField.getText().trim());
+                    } else {
+                        defaultExportFileNameField.setText(defaultFileNameSetting.getValue().toString());
+                    }
+                }
+            });
+
+            final Setting<String> printableFileNameSetting = (Setting<String>) SettingsManager.getInstance().get("EXPORT_PRINTABLE_FILE_NAME");
+            printableExportFileNameField.setText(printableFileNameSetting.getValue());
+            printableExportFileNameField.setPromptText(printableFileNameSetting.getInputFormatDescription());
+            final Tooltip printableExportFileNameFieldFieldTooltip = new Tooltip();
+            printableExportFileNameFieldFieldTooltip.setText(printableFileNameSetting.getDescription());
+            printableExportFileNameField.setTooltip(printableExportFileNameFieldFieldTooltip);
+            printableExportFileNameField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
+                if (!newValue) { // focus lost
+                    if (printableFileNameSetting.verifyValue(printableExportFileNameField.getText().trim())) {
+                        SettingsManager.getInstance().set("EXPORT_PRINTABLE_FILE_NAME", printableExportFileNameField.getText().trim());
+                    } else {
+                        printableExportFileNameField.setText(printableFileNameSetting.getValue().toString());
+                    }
+                }
+            });
+
+            final Setting<String> singlepageFileNameSetting = (Setting<String>) SettingsManager.getInstance().get("EXPORT_SINGLEPAGE_FILE_NAME");
+            singlepageExportFileNameField.setText(singlepageFileNameSetting.getValue());
+            singlepageExportFileNameField.setPromptText(singlepageFileNameSetting.getInputFormatDescription());
+            final Tooltip singlepageExportFileNameFieldFieldTooltip = new Tooltip();
+            singlepageExportFileNameFieldFieldTooltip.setText(singlepageFileNameSetting.getDescription());
+            singlepageExportFileNameField.setTooltip(singlepageExportFileNameFieldFieldTooltip);
+            singlepageExportFileNameField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
+                if (!newValue) { // focus lost
+                    if (singlepageFileNameSetting.verifyValue(singlepageExportFileNameField.getText().trim())) {
+                        SettingsManager.getInstance().set("EXPORT_SINGLEPAGE_FILE_NAME", singlepageExportFileNameField.getText().trim());
+                    } else {
+                        singlepageExportFileNameField.setText(singlepageFileNameSetting.getValue().toString());
+                    }
+                }
+            });
+
+            final Setting<String> browserExecutablePathSetting = (Setting<String>) SettingsManager.getInstance().get("EXPORT_BROWSER_EXECUTABLE_PATH");
+            browserExecutablePathField.setText(browserExecutablePathSetting.getValue());
+            browserExecutablePathField.setPromptText(browserExecutablePathSetting.getInputFormatDescription());
+            final Tooltip browserExecutablePathFieldTooltip = new Tooltip();
+            browserExecutablePathFieldTooltip.setText(browserExecutablePathSetting.getDescription());
+            browserExecutablePathField.setTooltip(browserExecutablePathFieldTooltip);
+            browserExecutablePathField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
+                if (!newValue) { // focus lost
+                    if (browserExecutablePathSetting.verifyValue(browserExecutablePathField.getText().trim())) {
+                        SettingsManager.getInstance().set("EXPORT_BROWSER_EXECUTABLE_PATH", browserExecutablePathField.getText().trim());
+                    } else {
+                        browserExecutablePathField.setText(browserExecutablePathSetting.getValue());
+                    }
+                }
+            });
+
+            browseBrowserExecutablePathButton.setOnAction(event -> {
+                final FileChooser fileChoose = new FileChooser();
+                fileChoose.getExtensionFilters().add(new FileChooser.ExtensionFilter("Executable files",  "*.exe"));
+                final File file = fileChoose.showOpenDialog(new Stage());
+                if (file != null) {
+                    SettingsManager.getInstance().set("EXPORT_BROWSER_EXECUTABLE_PATH", file.toString());
+                    browserExecutablePathField.setText(file.toString());
                 }
             });
 
@@ -750,7 +860,7 @@ public class SettingsEditor extends Stage {
             VCSCachePathField.setText(VCSCachePathSetting.getValue());
             VCSCachePathField.setPromptText(VCSCachePathSetting.getInputFormatDescription());
             final Tooltip VCSCachePathFieldTooltip = new Tooltip();
-            VCSCachePathFieldTooltip.setText(remoteVersionTimestampSetting.getDescription());
+            VCSCachePathFieldTooltip.setText(VCSCachePathSetting.getDescription());
             VCSCachePathField.setTooltip(VCSCachePathFieldTooltip);
             VCSCachePathField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
                 if (!newValue) { // focus lost

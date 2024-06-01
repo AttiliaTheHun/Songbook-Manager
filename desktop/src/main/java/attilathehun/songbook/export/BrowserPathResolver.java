@@ -2,6 +2,7 @@ package attilathehun.songbook.export;
 
 import java.io.IOException;
 
+@Deprecated
 public abstract class BrowserPathResolver {
     public static final String SHELL_LOCATION_WINDOWS = "C:/Windows/System32/cmd.exe";
     public static final String SHELL_DELIMETER_WINDOWS = ">";
