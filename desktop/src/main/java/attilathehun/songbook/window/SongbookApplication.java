@@ -4,38 +4,23 @@ import attilathehun.songbook.Main;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.*;
-import attilathehun.songbook.export.BrowserFactory;
-import attilathehun.songbook.export.BrowserHandle;
-import attilathehun.songbook.plugin.PluginManager;
-import attilathehun.songbook.vcs.Client;
-import attilathehun.songbook.vcs.RequestFileAssembler;
-import attilathehun.songbook.vcs.index.LoadIndex;
-import attilathehun.songbook.vcs.index.SaveIndex;
+import attilathehun.songbook.util.BrowserFactory;
 import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import java.awt.Desktop;
 
-import javafx.stage.WindowEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 
@@ -105,7 +90,7 @@ public class SongbookApplication extends Application {
         Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
         StandardCollectionManager.getInstance().init();
         EasterCollectionManager.getInstance().init();
-        BrowserFactory.getInstance().init();
+        BrowserFactory.init();
         EnvironmentVerificator.automated();
 
         stage.setOnCloseRequest(t -> {
@@ -130,6 +115,7 @@ public class SongbookApplication extends Application {
         // beware of caching and garbage collection
         mainWindow = stage;
         logger.debug("Application started successfully");
+
     }
 
     private void initKeyboardShortcuts(final Stage stage) {

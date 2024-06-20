@@ -1,7 +1,6 @@
-package attilathehun.songbook.export;
+package attilathehun.songbook.util;
 
 import attilathehun.songbook.environment.SettingsManager;
-import attilathehun.songbook.util.ZipBuilder;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.SongbookApplication;
 import com.microsoft.playwright.Browser;
@@ -9,10 +8,14 @@ import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.options.Margin;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
@@ -20,6 +23,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.URI;
+import java.net.URL;
+import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,6 +32,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class BrowserFactory {
@@ -35,27 +41,27 @@ public class BrowserFactory {
     public static final String OS_LINUX = "Linux";
     private static final String CHROMIUM_WINDOWS_DOWNLOAD_LINK = "https://storage.googleapis.com/chromium-browser-snapshots/Win_x64/1308506/chrome-win.zip";
     private static final String CHROMIUM_LINUX_DOWNLOAD_LINK = "";
-    private static final BrowserFactory INSTANCE = new BrowserFactory();
+
     private static Playwright playwright;
     private static Browser browserInstance;
-    private final String os;
+    private final String os = getOS();
 
-    private BrowserFactory() {
-        os = getOS();
+    public BrowserFactory() {
+
     }
 
-    public static BrowserFactory getInstance() {
-        return INSTANCE;
-    }
-
-    public void init() {
+    /**
+     * Initializes the current installation and settings for the runtime. The class will not work properly until this method is called.
+     */
+    public static void init() {
+        final BrowserFactory factory = new BrowserFactory();
         if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
             return;
         }
 
-        final String path = resolve();
+        final String path = factory.resolve();
         if (path == null) {
-            if (!requestInstallChromium()) {
+            if (!factory.requestInstallChromium()) {
                 SettingsManager.getInstance().set("EXPORT_ENABLED", false);
                 new AlertDialog.Builder().setTitle("Installation aborted").setMessage("The installation has been cancelled and exporting has been deactivated.")
                         .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open();
@@ -63,9 +69,9 @@ public class BrowserFactory {
             }
         }
         logger.info("chromium browser executable found at " + path);
-        playwright = getPlaywright();
+        playwright = factory.getPlaywright();
         if ((Boolean) SettingsManager.getInstance().getValue("EXPORT_KEEP_BROWSER_INSTANCE")) {
-            browserInstance = getBrowserInstance(playwright);
+            browserInstance = factory.getBrowserInstance(playwright);
             logger.debug("default browser instance initialised");
         } else if (browserInstance != null) {
             browserInstance.close();
@@ -73,7 +79,12 @@ public class BrowserFactory {
         }
     }
 
-    public static Playwright getPlaywright() {
+    /**
+     * Creates a {@link Playwright} instance with the necessary create options. Returns null if things go wrong.
+     *
+     * @return Playwright instance or null
+     */
+    public Playwright getPlaywright() {
         final HashMap<String, String> playwrightEnv = new HashMap<>();
         playwrightEnv.put("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
         try {
@@ -85,6 +96,59 @@ public class BrowserFactory {
         return null;
     }
 
+    /**
+     * Creates a headless {@link Browser} instance bound to the chromium browser executable available to the program. The Browser is created upon the
+     * given {@link Playwright} object and lives within the same scope (especially thread-wise).
+     *
+     * @param playwright parent Playwright instance to the browser (non-null)
+     * @return a Browser instance
+     */
+    public Browser getBrowserInstance(final Playwright playwright) {
+        if (playwright == null) {
+            throw new IllegalArgumentException("playwright can not be null");
+        }
+
+        final BrowserType.LaunchOptions options = new BrowserType.LaunchOptions().setHeadless(true)
+                .setExecutablePath(Path.of((String) SettingsManager.getInstance().getValue("EXPORT_BROWSER_EXECUTABLE_PATH")));
+
+        return playwright.chromium().launch(options);
+    }
+
+    /**
+     * Returns the static {@link Browser} instance if one exists, creates a new instance if it does not. This method should NEVER be called from a separate thread.
+     *
+     * @return a Browser instance
+     */
+    public static Browser getDefaultBrowserInstance() {
+        return (browserInstance == null) ? new BrowserFactory().getBrowserInstance(playwright) : browserInstance;
+    }
+
+    /**
+     * Returns the {@link Page.PdfOptions} for landscape printing.
+     *
+     * @return landscape pdf options object
+     */
+    public static Page.PdfOptions getPrintOptionsLandscape() {
+        return new Page.PdfOptions().setDisplayHeaderFooter(false).setLandscape(true)
+                .setMargin(new Margin().setRight("0").setTop("0").setBottom("0").setLeft("0")).setPrintBackground(false).setFormat("A4");
+    }
+
+    /**
+     * Returns the {@link Page.PdfOptions} for portrait printing.
+     *
+     * @return portrait pdf options object
+     */
+    public static Page.PdfOptions getPrintOptionsPortrait() {
+        return new Page.PdfOptions().setDisplayHeaderFooter(false).setLandscape(false)
+                .setMargin(new Margin().setRight("0").setTop("0").setBottom("0").setLeft("0")).setPrintBackground(false).setFormat("A4");
+    }
+
+    /**
+     * Resolves a chromium-based browser executable to a file path, if possible. It starts with verifying the available path, but it will stop at nothing
+     * and eventually summon demons, if necessary. It may return null at will.
+     *
+     * @return chromium browser executable path or null
+     */
     private String resolve() {
         final File file = new File((String) SettingsManager.getInstance().getValue("EXPORT_BROWSER_EXECUTABLE_PATH"));
         if (file.exists() && !file.isDirectory()) {
@@ -114,6 +178,11 @@ public class BrowserFactory {
         return null;
     }
 
+    /**
+     * Checks whether any of the default Windows paths are valid.
+     *
+     * @return windows browser executable path or null
+     */
     private String resolveDefaultPathsWindows() {
         final String[] defaultPaths = new String[]{
                 "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
@@ -132,6 +201,11 @@ public class BrowserFactory {
         return null;
     }
 
+    /**
+     * Attempts to find a browser executable using the shell (Windows only). This thing may summon demons or start another world war.
+     *
+     * @return hopefully the exe path, probably destroys the PC
+     */
     private String askTerminalForExecutableWindows() {
         final String SHELL_LOCATION_WINDOWS = "C:/Windows/System32/cmd.exe";
         final String SHELL_DELIMETER_WINDOWS = ">";
@@ -232,6 +306,11 @@ public class BrowserFactory {
         return null;
     }
 
+    /**
+     * Checks whether any of the default Linux paths are valid.
+     *
+     * @return linux browser executable path or null
+     */
     private String resolveDefaultPathsLinux() {
         final String[] defaultPaths = new String[]{
                 "/usr/bin/chromium-browser",
@@ -295,6 +374,8 @@ public class BrowserFactory {
         final HBox container = new HBox();
         final Label label = new Label("Installation path: ");
         final TextField browserDirField = new TextField(System.getProperty("user.dir"));
+        HBox.setHgrow(browserDirField, Priority.ALWAYS);
+       // HBox.setMargin(browserDirField, new Insets(3, 3, 0, 0));
         final Button browseFilesButton = new Button("Browse");
         browseFilesButton.setOnAction(event -> {
             final DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -307,7 +388,7 @@ public class BrowserFactory {
         final AlertDialog.Builder.Action okAction = (result) -> {
             final File target = new File(browserDirField.getText());
             if (target.exists() && target.isDirectory()) {
-                result.complete(Integer.valueOf(AlertDialog.RESULT_OK));
+                result.complete(AlertDialog.RESULT_OK);
                 return true;
             }
             return false;
@@ -330,7 +411,7 @@ public class BrowserFactory {
 
     public boolean requestInstallChromium() {
         final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("No suitable browser found").setIcon(AlertDialog.Builder.Icon.CONFIRM)
-                .setMessage("The export of the songbook is done using a chromium-based headless web browser (Chrome, Edge), however no such browser was found on your computer. Do you wish to install Chromium on your computer? If you have such a browser installed, you can help the program find in inside the program settings.")
+                .setMessage("The export of the songbook is done using a chromium-based headless web browser (Chrome, Edge), however no such browser was found on your computer. Do you wish to install Chromium on your computer? If you have such a browser installed, you can help the program find it in inside the program settings.")
                 .setCancelable(false).addOkButton("Proceed").addCloseButton("Cancel").build().awaitResult();
         final AtomicReference<Boolean> success = new AtomicReference<>();
         result.thenAccept(code -> {
@@ -350,53 +431,67 @@ public class BrowserFactory {
         if (path == null) {
             return false;
         }
+
+        final String url = (getOS().equals(OS_WINDOWS)) ? CHROMIUM_WINDOWS_DOWNLOAD_LINK : CHROMIUM_LINUX_DOWNLOAD_LINK;
+
         final Path DOWNLOAD_FILE_NAME = Paths.get(path, "chromium.zip");
         logger.info("initiating download...");
-        try (final InputStream in = URI.create(path).toURL().openStream()) {
-            final long bytesRead = Files.copy(in, DOWNLOAD_FILE_NAME);
-            if (bytesRead == 0) {
-                return false;
+
+        final HBox container = new HBox();
+        final ProgressIndicator progressThingy = new ProgressIndicator();
+        final Label label = new Label("Download in progress...");
+        container.getChildren().add(progressThingy);
+        container.getChildren().add(label);
+        final AlertDialog dialog = new AlertDialog.Builder().setTitle("Downloading Chromium").setCancelable(false)
+                .addContentNode(container).addContentNode(label).build();
+        final AtomicBoolean output = new AtomicBoolean(false);
+        new Thread(() -> {
+            Platform.runLater(dialog::open);
+            boolean skip = false;
+            try (final InputStream in = new URL(url).openStream()) {
+                final long bytesRead = Files.copy(in, DOWNLOAD_FILE_NAME);
+
+                if (bytesRead == 0) {
+                    skip = true;
+                }
+                if (!skip) {
+                    logger.info("download finished");
+                    final String executablePath = Paths.get(ZipBuilder.extract(DOWNLOAD_FILE_NAME.toString()), "chrome-win", "chrome.exe").toString();
+                    final File file = new File(executablePath);
+                    if (file.exists() && !file.isDirectory()) {
+                        SettingsManager.getInstance().set("EXPORT_BROWSER_EXECUTABLE_PATH", executablePath);
+                        logger.info("archive extracted successfully");
+                        new File(DOWNLOAD_FILE_NAME.toString()).delete();
+                        output.set(true);
+                    }
+                }
+
+            } catch (final Exception e) {
+                logger.error(e.getLocalizedMessage(), e);
+                skip = true;
             }
-            logger.info("download finished");
-            final String executablePath = Paths.get(ZipBuilder.extract(DOWNLOAD_FILE_NAME.toString()), "chrome.exe").toString();
-            final File file = new File(executablePath);
-            if (file.exists() && !file.isDirectory()) {
-                SettingsManager.getInstance().set("EXPORT_BROWSER_EXECUTABLE_PATH", executablePath);
-                logger.info("archive extracted successfully");
-                return true;
-            }
-        } catch (final Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-        }
-        return false;
+            boolean finalSkip = skip;
+            Platform.runLater(() -> {
+                dialog.close();
+                if (finalSkip) {
+                    new AlertDialog.Builder().setTitle("Download failed").setMessage("Something happened while downloading. Check the log for more information!").setIcon(AlertDialog.Builder.Icon.ERROR)
+                            .addOkButton().setCancelable(true).build().open();
+                } else {
+                    new AlertDialog.Builder().setTitle("Download finished").setMessage("It appears that hte download was successful!").setIcon(AlertDialog.Builder.Icon.INFO)
+                            .addOkButton().setCancelable(true).build().open();
+                }
+
+            });
+        }).start();
+
+
+
+        return output.get();
     }
 
-    public synchronized Browser getBrowserInstance(final Playwright playwright) {
-        if (playwright == null) {
-            throw new IllegalArgumentException("playwright can not be null");
-        }
-
-        final BrowserType.LaunchOptions options = new BrowserType.LaunchOptions().setHeadless(true)
-                    .setExecutablePath(Path.of((String) SettingsManager.getInstance().getValue("EXPORT_BROWSER_EXECUTABLE_PATH")));
-
-        return playwright.chromium().launch(options);
-
-    }
-
-    public static Browser getDefaultBrowserInstance() {
-        return (browserInstance == null) ? new BrowserFactory().getBrowserInstance(playwright) : browserInstance;
-    }
-
-    public static Page.PdfOptions getPrintOptionsLandscape() {
-        return new Page.PdfOptions().setDisplayHeaderFooter(false).setLandscape(true)
-                .setMargin(new Margin().setRight("0").setTop("0").setBottom("0").setLeft("0")).setPrintBackground(false).setFormat("A4");
-    }
-
-    public static Page.PdfOptions getPrintOptionsPortrait() {
-        return new Page.PdfOptions().setDisplayHeaderFooter(false)
-                .setMargin(new Margin().setRight("0").setTop("0").setBottom("0").setLeft("0")).setPrintBackground(false).setFormat("A4");
-    }
-
+    /**
+     * Frees up any resources that may have been allocated.
+     */
     public static void close() {
         if (browserInstance != null) {
             browserInstance.close();

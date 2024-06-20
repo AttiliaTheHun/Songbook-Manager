@@ -112,7 +112,7 @@ public final class SettingsManager {
         map.put("REMOTE_DATA_INDEX_URL", new Setting<String>("REMOTE_DATA_INDEX_URL", "http://beta-hrabozpevnik.clanweb.eu/api/data/index/", "", Setting.TYPE_URL_ALLOW_EMPTY, "Address of the remote index download endpoint", "Insert a full URL address"));
         map.put("REMOTE_DATA_VERSION_TIMESTAMP_URL", new Setting<String>("REMOTE_DATA_VERSION_TIMESTAMP_URL", "http://beta-hrabozpevnik.clanweb.eu/api/data/version-timestamp/", "", Setting.TYPE_URL_ALLOW_EMPTY, "Address of the remote version timestamp download endpoint", "Insert a full URL address"));
         map.put("VCS_CACHE_PATH", new Setting<String>("VCS_CACHE_PATH", Paths.get(System.getProperty("user.dir"), "/vcs/").toString(), Paths.get(System.getProperty("user.dir"), "/vcs/").toString(), Setting.TYPE_URL, "Location of the VCS cache files", "Insert a full file path to the folder"));
-        map.put("VCS_THREAD_COUNT", new Setting<Integer>("VCS_THREAD_COUNT", 20, 20, Setting.TYPE_POSITIVE_INTEGER, "How many threads can the VCS use to process the data", "a positive integer"));
+        map.put("VCS_THREAD_COUNT", new Setting<Integer>("VCS_THREAD_COUNT", 5, 5, Setting.TYPE_POSITIVE_INTEGER, "How many threads can the VCS use to process the data", "a positive integer"));
         // songbook settings
         map.put("BIND_SONG_TITLES", new Setting<Boolean>("BIND_SONG_TITLES", Boolean.TRUE, Boolean.TRUE, Setting.TYPE_BOOLEAN, "Should the client keep the song name in the collection the same as in the file", "true or false"));
         map.put("SONGBOOK_LANGUAGE", new Setting<String>("SONGBOOK_LANGUAGE", Locale.ENGLISH.toString(), Locale.ENGLISH.toString(), Setting.TYPE_NON_EMPTY_STRING, "What language are the songs in", "en, fr"));
@@ -130,7 +130,7 @@ public final class SettingsManager {
         map.put("EXPORT_DEFAULT_FILE_NAME", new Setting<String>("EXPORT_DEFAULT_FILE_NAME", "ExportDefault.pdf", "ExportDefault.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the default export file", "Insert a file name"));
         map.put("EXPORT_PRINTABLE_FILE_NAME", new Setting<String>("EXPORT_PRINTABLE_FILE_NAME", "ExportPrintable.pdf", "ExportPrintable.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the print-format export file", "Insert a file name"));
         map.put("EXPORT_SINGLEPAGE_FILE_NAME", new Setting<String>("EXPORT_SINGLEPAGE_FILE_NAME", "ExportSinglepage.pdf", "ExportSinglepage.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the singlepage-format export file", "Insert a file name"));
-        map.put("EXPORT_THREAD_COUNT", new Setting<Integer>("EXPORT_THREAD_COUNT", 20, 20, Setting.TYPE_POSITIVE_INTEGER, "How many threads can be used for the PDF conversion", "Insert a file name"));
+        map.put("EXPORT_THREAD_COUNT", new Setting<Integer>("EXPORT_THREAD_COUNT", 5, 5, Setting.TYPE_POSITIVE_INTEGER, "How many threads can be used for the PDF conversion", "Insert a file name"));
         return map;
     }
 }

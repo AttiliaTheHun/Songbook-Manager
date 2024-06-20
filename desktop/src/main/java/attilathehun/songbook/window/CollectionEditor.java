@@ -3,12 +3,9 @@ package attilathehun.songbook.window;
 import attilathehun.annotation.TODO;
 import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
-import attilathehun.songbook.environment.EnvironmentManager;
-import attilathehun.songbook.environment.EnvironmentStateListener;
 import attilathehun.songbook.environment.SettingsManager;
-import attilathehun.songbook.export.PDFGenerator;
+import attilathehun.songbook.util.PDFGenerator;
 import attilathehun.songbook.misc.Misc;
-import attilathehun.songbook.plugin.Export;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
@@ -25,9 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 @TODO(priority = true)

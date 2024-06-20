@@ -4,29 +4,18 @@ import attilathehun.songbook.collection.CollectionListener;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
-import attilathehun.songbook.export.BrowserFactory;
-import attilathehun.songbook.export.BrowserHandle;
-import attilathehun.songbook.export.PDFGenerator;
-import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.util.BrowserFactory;
+import attilathehun.songbook.util.PDFGenerator;
 import attilathehun.songbook.vcs.CacheManager;
-import attilathehun.songbook.vcs.VCSAdmin;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.CollectionEditor;
 import attilathehun.songbook.window.SettingsEditor;
 import attilathehun.songbook.window.SongbookApplication;
 import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
 import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 import static javax.swing.JOptionPane.showMessageDialog;
@@ -203,7 +192,7 @@ public final class Environment implements CollectionListener {
 
         CollectionEditor.refresh();
         CacheManager.getInstance().clearCache();
-        BrowserFactory.getInstance().init();
+        BrowserFactory.init();
         EnvironmentVerificator.automated();
 
         notifyOnRefresh();

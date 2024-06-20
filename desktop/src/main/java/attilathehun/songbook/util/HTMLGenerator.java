@@ -4,7 +4,6 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
-import attilathehun.songbook.export.PDFGenerator;
 import attilathehun.songbook.misc.Misc;
 import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.window.AlertDialog;
@@ -73,7 +72,7 @@ public class HTMLGenerator {
     }
 
     private void createShadowSongFile() throws IOException {
-        File shadowSongFile = new File(SHADOW_SONG_PATH);
+        final File shadowSongFile = new File(SHADOW_SONG_PATH);
         shadowSongFile.createNewFile();
         PrintWriter printWriter = new PrintWriter(new FileWriter((shadowSongFile), false));
         printWriter.write(SHADOW_SONG_HTML);
@@ -180,7 +179,7 @@ public class HTMLGenerator {
      * @throws IOException
      */
     private String generatePage(Song songOne, Song songTwo, CollectionManager manager) throws IOException {
-        if (songOne == null && songTwo == null) {
+        if (songOne == null || songTwo == null) {
             throw new IllegalArgumentException();
         }
 

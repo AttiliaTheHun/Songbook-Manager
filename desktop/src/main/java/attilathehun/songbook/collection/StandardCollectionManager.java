@@ -144,6 +144,7 @@ public final class StandardCollectionManager extends CollectionManager {
         }
 
         formalList.addAll(new ArrayList<Song>(getSortedCollection().stream().filter(Song::isActive).collect(Collectors.toList())));
+
         return formalList;
     }
 

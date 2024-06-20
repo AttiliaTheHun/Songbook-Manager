@@ -52,7 +52,7 @@ public class AlertDialog extends Stage {
      *
      * @param b new value
      */
-    public void setAutoCancel(final boolean b) {
+    private void setAutoCancel(final boolean b) {
         FLAG_AUTO_CANCEL = b;
     }
 
@@ -102,8 +102,9 @@ public class AlertDialog extends Stage {
             });
         }
         setOnCloseRequest((event) -> {
-            result.complete(RESULT_CANCEL);
-            if (!FLAG_AUTO_CANCEL) {
+            if (FLAG_AUTO_CANCEL) {
+                result.complete(RESULT_CANCEL);
+            } else {
                 event.consume();
             }
         });
@@ -159,8 +160,9 @@ public class AlertDialog extends Stage {
             });
         }
         setOnCloseRequest((event) -> {
-            result.complete(new Pair<>(RESULT_CANCEL, nodes));
-            if (!FLAG_AUTO_CANCEL) {
+            if (FLAG_AUTO_CANCEL) {
+                result.complete(new Pair<>(RESULT_CANCEL, nodes));
+            } else {
                 event.consume();
             }
         });
