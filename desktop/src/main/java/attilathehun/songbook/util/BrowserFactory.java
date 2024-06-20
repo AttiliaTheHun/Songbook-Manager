@@ -9,7 +9,6 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.options.Margin;
 import javafx.application.Platform;
-import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
@@ -22,9 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
-import java.net.URI;
 import java.net.URL;
-import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+// TODO work this out for Linux (shell search and chromium download)
 public class BrowserFactory {
     private static final Logger logger = LogManager.getLogger(BrowserFactory.class);
     public static final String OS_WINDOWS = "Windows";

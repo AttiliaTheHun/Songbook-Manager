@@ -3,16 +3,12 @@ package attilathehun.songbook.window;
 import attilathehun.songbook.Main;
 import attilathehun.songbook.environment.Setting;
 import attilathehun.songbook.environment.SettingsManager;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.SubScene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -25,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 
+// TODO settings may be altered through other components os the window should get refreshed somehow
 public final class SettingsEditor extends Stage {
     private static final Logger logger = LogManager.getLogger(SettingsEditor.class);
     private static final SettingsEditor INSTANCE = new SettingsEditor();
