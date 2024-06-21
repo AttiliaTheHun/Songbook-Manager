@@ -1,6 +1,7 @@
 package attilathehun.songbook.window;
 
 import attilathehun.songbook.Main;
+import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.environment.Setting;
 import attilathehun.songbook.environment.SettingsManager;
 import javafx.collections.FXCollections;
@@ -8,6 +9,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -20,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Objects;
 
 // TODO settings may be altered through other components os the window should get refreshed somehow
 public final class SettingsEditor extends Stage {
@@ -63,6 +67,11 @@ public final class SettingsEditor extends Stage {
         INSTANCE.hide();
     }
 
+    public static void refresh() {
+        getInstance().initSubscenes();
+        getInstance().settingCategoryList.getSelectionModel().select(getInstance().settingCategoryList.getSelectionModel().getSelectedIndex());
+    }
+
     @FXML
     public void initialize() {
         initSubscenes();
@@ -71,7 +80,13 @@ public final class SettingsEditor extends Stage {
     }
 
     public void postInit() {
-        // init keyboard shortcuts
+        this.getScene().addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> {
+            if (Objects.requireNonNull(keyEvent.getCode()) == KeyCode.R) {
+                if (keyEvent.isControlDown()) {
+                    refresh();
+                }
+            }
+        });
     }
 
     private void initSettingCategoryListView() {

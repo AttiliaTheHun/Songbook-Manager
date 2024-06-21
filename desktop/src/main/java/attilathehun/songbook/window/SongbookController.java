@@ -182,8 +182,12 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         });
 
         openSettingsButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-            SettingsEditor.open();
-            event.consume();
+            if (SettingsEditor.getInstance() != null && SettingsEditor.getInstance().isShowing()) {
+                SettingsEditor.shut();
+            } else {
+                SettingsEditor.open();
+                event.consume();
+            }
         });
 
         editCollectionButton.setOnAction(event -> {

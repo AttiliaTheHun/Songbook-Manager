@@ -130,7 +130,6 @@ public final class SettingsManager {
         map.put("EXPORT_DEFAULT_FILE_NAME", new Setting<String>("EXPORT_DEFAULT_FILE_NAME", "ExportDefault.pdf", "ExportDefault.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the default export file", "Insert a file name"));
         map.put("EXPORT_PRINTABLE_FILE_NAME", new Setting<String>("EXPORT_PRINTABLE_FILE_NAME", "ExportPrintable.pdf", "ExportPrintable.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the print-format export file", "Insert a file name"));
         map.put("EXPORT_SINGLEPAGE_FILE_NAME", new Setting<String>("EXPORT_SINGLEPAGE_FILE_NAME", "ExportSinglepage.pdf", "ExportSinglepage.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the singlepage-format export file", "Insert a file name"));
-        map.put("EXPORT_THREAD_COUNT", new Setting<Integer>("EXPORT_THREAD_COUNT", 5, 5, Setting.TYPE_POSITIVE_INTEGER, "How many threads can be used for the PDF conversion", "Insert a file name"));
         return map;
     }
 }

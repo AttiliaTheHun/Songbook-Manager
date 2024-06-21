@@ -144,7 +144,8 @@ public final class Environment implements CollectionListener {
 
     /**
      * A soft refresh to ensure the environment is working with the latest sure-to-change data. This operation is relatively lightweight as it updates
-     * only the components whose working data changes often during runtime, such as the webview source data. For a more thorough refresh use {@link #hardRefresh()}. Emits {@link EnvironmentStateListener#onRefresh()}.
+     * only the components whose working data changes often during runtime, such as the webview source data. For a more thorough refresh use {@link #hardRefresh()}.
+     * Emits {@link EnvironmentStateListener#onRefresh()}.
      */
     public void refresh() {
         try {
@@ -168,8 +169,9 @@ public final class Environment implements CollectionListener {
 
     /**
      * Performs a complete refresh of the environment without restarting it. This operation is quite heavy and may result in crash of the program. It is designed
-     * to be used only when absolute necessary, for example when loading a new songbook at runtime. If you only need to mae sure some changes in the configuration
-     * or in the collections are applied, use {@link #refresh()} which is much lighter and much less likely to crash the application. Emits {@link EnvironmentStateListener#onRefresh()}.
+     * to be used only when absolute necessary, for example when loading a new songbook at runtime. If you only need to make sure some changes in the configuration
+     * or in the collections are applied, use {@link #refresh()} which is much lighter and much less likely to crash the application.
+     * Emits {@link EnvironmentStateListener#onRefresh()}.
      */
     public void hardRefresh() {
         SettingsManager.getInstance().load();
@@ -191,6 +193,7 @@ public final class Environment implements CollectionListener {
         }
 
         CollectionEditor.refresh();
+        SettingsEditor.refresh();
         CacheManager.getInstance().clearCache();
         BrowserFactory.init();
         EnvironmentVerificator.automated();
