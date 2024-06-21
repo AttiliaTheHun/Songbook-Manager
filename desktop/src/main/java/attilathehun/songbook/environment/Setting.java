@@ -1,5 +1,6 @@
 package attilathehun.songbook.environment;
 
+import java.io.File;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -60,18 +61,39 @@ public final class Setting<T> implements Serializable {
         this.inputFormatDescription = inputFormatDescription;
     }
 
+    /**
+     * Returns the setting name.
+     *
+     * @return the setting name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Returns the current value of the setting.
+     *
+     * @return the setting value
+     */
     public T getValue() {
         return value;
     }
 
+    /**
+     * Sets the new value of the setting.
+     *
+     * @param value the new setting value
+     */
     public void setValue(final T value) {
         this.value = value;
     }
 
+    /**
+     * Sets the value of the setting to the new value. If the new value type is incompatible with the setting, this method will throw an exception.
+     *
+     * @param value the new setting value
+     * @throws ClassCastException if the new value type is incorrect
+     */
     public void set(final Object value) {
         if (type == TYPE_INTEGER || type == TYPE_POSITIVE_INTEGER) {
             try {
@@ -97,6 +119,11 @@ public final class Setting<T> implements Serializable {
         return type;
     }
 
+    /**
+     * Returns true if the setting has a default value.
+     *
+     * @return true if it has a default value
+     */
     public boolean hasDefaultValue() {
         return def != null;
     }
@@ -154,7 +181,6 @@ public final class Setting<T> implements Serializable {
                     return false;
                 }
             }
-            // TODO does not work for file paths
             case TYPE_URL -> {
                 try {
                     if (s.length() == 0) {
@@ -163,6 +189,13 @@ public final class Setting<T> implements Serializable {
                     new URL(s);
                     return true;
                 } catch (final MalformedURLException e) {
+                    // file URLs somehow do not work as standard URLs
+                    try {
+                        new File(s).toURI().toURL();
+                        return true;
+                    } catch (final MalformedURLException e2) {
+
+                    }
                     return false;
                 }
             }
