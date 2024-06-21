@@ -1,10 +1,6 @@
 package attilathehun.songbook.environment;
 
-import attilathehun.songbook.collection.CollectionManager;
-import attilathehun.songbook.collection.EasterCollectionManager;
-import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
-import attilathehun.songbook.plugin.Plugin;
 import attilathehun.songbook.util.ZipBuilder;
 import attilathehun.songbook.vcs.VCSAdmin;
 import attilathehun.songbook.window.AlertDialog;
@@ -13,15 +9,10 @@ import javafx.application.Platform;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
-import javax.swing.text.NumberFormatter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Paths;
-import java.text.NumberFormat;
-import java.util.Locale;
 
 public final class EnvironmentManager {
     private static final Logger logger = LogManager.getLogger(EnvironmentManager.class);
