@@ -1,5 +1,6 @@
 package attilathehun.songbook.util;
 
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
 import org.apache.logging.log4j.LogManager;
@@ -8,14 +9,18 @@ import org.apache.logging.log4j.Logger;
 public class DynamicSonglist{
     private static final Logger logger = LogManager.getLogger(DynamicSonglist.class);
 
+    /**
+     * Generates the HTML files of the songlist based on the default manager's {@link CollectionManager#getFormalCollection()} output. The file is generated from a template.
+     *
+     * @return the number of pages the songlist occupies
+     */
     public static int generateSonglist() {
         final int MAX_SONGS_PER_COLUMN = SettingsManager.getInstance().getValue("DYNAMIC_SONGLIST_SONGS_PER_COLUMN");
         final int MAX_SONGS_PER_PAGE = 2 * MAX_SONGS_PER_COLUMN;
-        boolean isLastPageSingleColumn = false;
+
         int songlistParts = Environment.getInstance().getCollectionManager().getDisplayCollection().size() / MAX_SONGS_PER_PAGE;
         if (Environment.getInstance().getCollectionManager().getDisplayCollection().size() % MAX_SONGS_PER_PAGE != 0) {
             songlistParts += 1;
-            isLastPageSingleColumn = Environment.getInstance().getCollectionManager().getDisplayCollection().size() % MAX_SONGS_PER_PAGE <= MAX_SONGS_PER_COLUMN;
         }
 
         final HTMLGenerator generator = new HTMLGenerator();
