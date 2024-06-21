@@ -53,13 +53,23 @@ public class EnvironmentVerificator {
         logger.info("Environment verification successful");
     }
 
+    /**
+     * Informs the user that the environment verification has failed and exits the application.
+     *
+     * @param message the message to displayed to the user
+     */
     private static void verificationFail(final String message) {
         new AlertDialog.Builder().setTitle("Environment Verification Failed").setIcon(AlertDialog.Builder.Icon.ERROR)
                 .setMessage(message).addOkButton().build().open();
-        Environment.getInstance().exit();
         logger.error("Environment verification failed: %s", message);
+        Environment.getInstance().exit();
     }
 
+    /**
+     * Verifies the state of the data folder. In automated mode failure will cause the application to exit.
+     *
+     * @return true if the data folder is alright
+     */
     public boolean verifyData() {
         if (!(new File(StandardCollectionManager.getInstance().getSongDataFilePath()).exists() && new File(StandardCollectionManager.getInstance().getSongDataFilePath()).isDirectory())) {
             if (automated) {
@@ -70,8 +80,13 @@ public class EnvironmentVerificator {
         return true;
     }
 
+    /**
+     * Verifies the existence of the {@link StandardCollectionManager}'s data file. In automated mode failure will cause the application to exit.
+     *
+     * @return true if the collection file exists
+     */
     public boolean verifyCollection() {
-        if (!new File(StandardCollectionManager.getInstance().getCollectionFilePath()).exists()) {
+        if (!new File(StandardCollectionManager.getInstance().getCollectionFilePath()).exists() || new File(StandardCollectionManager.getInstance().getCollectionFilePath()).length() == 0) {
             if (automated) {
                 verificationFail("No song collection found!");
             }
@@ -80,6 +95,11 @@ public class EnvironmentVerificator {
         return true;
     }
 
+    /**
+     * Verifies the state of the resource folder. In automated mode failure will cause the application to exit.
+     *
+     * @return true if the resource folder is alright
+     */
     public boolean verifyResources() {
         if (!(new File((String) SettingsManager.getInstance().getValue("RESOURCES_FILE_PATH")).exists() && new File((String) SettingsManager.getInstance().getValue("RESOURCES_FILE_PATH")).isDirectory())) {
             if (automated) {
@@ -90,9 +110,13 @@ public class EnvironmentVerificator {
         return true;
     }
 
+    /**
+     * Verifies the state of the CSS resource folder. In automated mode failure will cause the application to exit.
+     *
+     * @return true if the folder is alright
+     */
     public boolean verifyCSS() {
         if (!(new File((String) SettingsManager.getInstance().getValue("CSS_RESOURCES_FILE_PATH")).exists() && new File((String) SettingsManager.getInstance().getValue("CSS_RESOURCES_FILE_PATH")).isDirectory())) {
-            verificationFail("No CSS resource folder found!");
             if (automated) {
                 verificationFail("No CSS resource folder found!");
             }
@@ -101,6 +125,11 @@ public class EnvironmentVerificator {
         return true;
     }
 
+    /**
+     * Verifies the state of the template folder. In automated mode failure will cause the application to exit.
+     *
+     * @return true if the template folder is alright
+     */
     public boolean verifyTemplates() {
         if (!(new File((String) SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH")).exists() && new File((String) SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH")).isDirectory())) {
             if (automated) {
@@ -111,6 +140,11 @@ public class EnvironmentVerificator {
         return true;
     }
 
+    /**
+     * Verifies the state of the script folder.
+     *
+     * @return true if the script folder is alright
+     */
     public boolean verifyScripts() {
         if (!(new File((String) SettingsManager.getInstance().getValue("SCRIPTS_FILE_PATH")).exists() && new File((String) SettingsManager.getInstance().getValue("SCRIPTS_FILE_PATH")).isDirectory())) {
             if (automated) {
@@ -122,6 +156,9 @@ public class EnvironmentVerificator {
         return true;
     }
 
+    /**
+     * Verifies the state of the temp folder and performs a soft refresh.
+     */
     public void verifyTemp() {
         if (!(new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).exists() && new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).isDirectory())) {
             new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).mkdirs();
