@@ -22,6 +22,9 @@ public class Installer {
     private static boolean IS_TEMP_RESOURCES_ZIP_FILE = false;
     private static boolean IS_TEMP_SCRIPTS_ZIP_FILE = false;
 
+    /**
+     * Checks the existence of resource and script folders and in the case of their absence attempts to download and extract them.
+     */
     public static void runDiagnostics() {
         logger.info("Running installer diagnostics...");
         final Installer installer = new Installer();
@@ -34,6 +37,9 @@ public class Installer {
         }
     }
 
+    /**
+     * Attempts to install resources either from local or remote archive file.
+     */
     private void installResources() {
         logger.info("Installing resources....");
         try {
@@ -59,6 +65,9 @@ public class Installer {
         }
     }
 
+    /**
+     * Attempts to install scripts either from local or remote archive file.
+     */
     private void installScripts() {
         logger.info("Installing scripts....");
         try {
@@ -82,7 +91,14 @@ public class Installer {
         }
     }
 
-
+    /**
+     * Downloads a file from remote location to the local disk.
+     *
+     * @param url full remote file URL
+     * @param fileName target file path on the local machine
+     * @return number of bytes downloaded
+     * @throws IOException when things go wrong
+     */
     private static long downloadRemoteFile(final String url, final String fileName) throws IOException {
         try (final InputStream in = URI.create(url).toURL().openStream()) {
             return Files.copy(in, Paths.get(fileName));
