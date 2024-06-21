@@ -6,6 +6,7 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.Misc;
 import eu.mihosoft.monacofx.MonacoFX;
 import javafx.scene.Scene;
@@ -25,6 +26,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * This class represents the windows where songs can be edited.
+ */
 public class CodeEditor extends Stage implements CollectionListener {
     private static final Logger logger = LogManager.getLogger(CodeEditor.class);
     private static final HashMap<Song, CodeEditor> instances = new HashMap<>();
@@ -33,6 +37,12 @@ public class CodeEditor extends Stage implements CollectionListener {
     private String filePath;
     private MonacoFX monaco;
 
+    /**
+     * Creates an editor window with the content of the song file.
+     *
+     * @param s the song to be edited
+     * @param manager the manager of the song
+     */
     private CodeEditor(final Song s, final CollectionManager manager) {
         if (s == null) {
             throw new IllegalArgumentException("Song must not be null!");
@@ -50,23 +60,29 @@ public class CodeEditor extends Stage implements CollectionListener {
         init();
     }
 
-
+    /**
+     * Creates and opens an editor window for the target song.
+     *
+     * @param s the song to be edited
+     * @param m the manager of the song
+     */
     public static void open(final Song s, final CollectionManager m) {
-        System.out.println(instances.size());
-        CodeEditor instance;
-        if (instances.get(s) == null) {
+        //System.out.println(instances.size());
+        CodeEditor instance = instances.get(s);
+        if (instance == null) {
             instance = new CodeEditor(s, m);
             instances.put(instance.song, instance);
-        } else {
-            instance = instances.get(s);
         }
         instance.show();
         instance.toFront();
     }
 
+    /**
+     * Initializes the editor component and loads the song data into it.
+     */
     private void init() {
         monaco = new MonacoFX();
-        StackPane root = new StackPane(monaco);
+        final StackPane root = new StackPane(monaco);
 
         filePath = manager.getSongFilePath(song);
 
@@ -77,7 +93,7 @@ public class CodeEditor extends Stage implements CollectionListener {
         }
 
         try {
-            ArrayList<String> lines = new ArrayList<String>(Files.readAllLines(Paths.get(filePath)));
+            final ArrayList<String> lines = new ArrayList<String>(Files.readAllLines(Paths.get(filePath)));
             monaco.getEditor().getDocument().setText(String.join("\n", lines));
 
             if (this.manager.equals(EasterCollectionManager.getInstance())) {
@@ -86,7 +102,7 @@ public class CodeEditor extends Stage implements CollectionListener {
                 setTitle(String.format("HTML editor - %s (id: %d)", song.name(), song.id()));
             }
 
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("HTML Editor").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage("Error: Cannot open song data file.").addOkButton().build().open();
@@ -95,7 +111,7 @@ public class CodeEditor extends Stage implements CollectionListener {
         monaco.getEditor().setCurrentLanguage("html");
         monaco.getEditor().setCurrentTheme("vs-light");
 
-        Scene scene = new Scene(root, 800, 600);
+        final Scene scene = new Scene(root, 800, 600);
         setScene(scene);
         show();
 
@@ -105,7 +121,9 @@ public class CodeEditor extends Stage implements CollectionListener {
         manager.addListener(this);
     }
 
-
+    /**
+     * Closes the editor window.
+     */
     private void destroy() {
         manager.removeListener(this);
         instances.remove(song);
@@ -115,11 +133,18 @@ public class CodeEditor extends Stage implements CollectionListener {
         }
     }
 
+    /**
+     * Returns whether an editor instance is open. It is important not to close the application until all editor windows are closed to prevent the loss of user's data.
+     *
+     * @return true if an editor instance is open
+     */
     public static boolean hasInstanceOpen() {
         return instances.size() > 0;
     }
 
-
+    /**
+     * Registers additional keyboard shortcuts for the window (the editor itself features some cool utilities).
+     */
     private void registerKeyboardShortcuts() {
         this.getScene().setOnKeyPressed(keyEvent -> {
             if (keyEvent.getCode() == KeyCode.S) {
@@ -132,7 +157,10 @@ public class CodeEditor extends Stage implements CollectionListener {
             }
         });
     }
-    
+
+    /**
+     * Registers a handler for the window close request event to ask if the user wants to save changes upon closing the window.
+     */
     private void registerWindowListener() {
         setOnCloseRequest(event -> {
             if (getTitle().startsWith("*")) {
@@ -141,7 +169,7 @@ public class CodeEditor extends Stage implements CollectionListener {
                     return;
                 }
                 event.consume();
-                CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("HTML Editor").setIcon(AlertDialog.Builder.Icon.ERROR)
+                final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("HTML Editor").setIcon(AlertDialog.Builder.Icon.ERROR)
                         .setMessage("Saves changes?").addOkButton("Save").addCloseButton("Discard").build().awaitResult();
                 result.thenAccept(dialogResult -> {
                     if (dialogResult == AlertDialog.RESULT_OK) {
@@ -155,6 +183,9 @@ public class CodeEditor extends Stage implements CollectionListener {
         });
     }
 
+    /**
+     * Registers a text listener, so we can indicate unsaved changes in the window title.
+     */
     private void registerTextChangedListener() {
         monaco.getEditor().getDocument().textProperty().addListener((event) -> {
             if (!getTitle().startsWith("*")) {
@@ -163,14 +194,17 @@ public class CodeEditor extends Stage implements CollectionListener {
         });
     }
 
+    /**
+     * Saves the content of the editor to the song file and refreshes the environment to update other components.
+     */
     private void saveChanges() {
         try {
-            FileWriter writer = new FileWriter(filePath, false);
+            final FileWriter writer = new FileWriter(filePath, false);
             writer.write(monaco.getEditor().getDocument().getText());
             writer.close();
             manager.updateSongRecordTitleFromHTML(song);
             Environment.getInstance().refresh();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("HTML Editor").setIcon(AlertDialog.Builder.Icon.CONFIRM)
                     .setMessage(String.format("Error: cannot save the changes. You can save them manually to the path %s from your clipboard.", filePath)).addOkButton().build().open();
@@ -179,13 +213,12 @@ public class CodeEditor extends Stage implements CollectionListener {
     }
 
 
-    @TODO
     @Override
     public void onSongRemoved(final Song s, final CollectionManager m) {
         if (!(song.equals(s) && manager.equals(m))) {
             return;
         }
-        CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle(String.format("Song deleted: %s (%d)", s.name(), s.id())).setIcon(AlertDialog.Builder.Icon.CONFIRM)
+        final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle(String.format("Song deleted: %s (%d)", s.name(), s.id())).setIcon(AlertDialog.Builder.Icon.CONFIRM)
                 .setMessage("The song you are editing was deleted. If you want, you can recreate it. Otherwise, this editor will close.")
                 .setCancelable(false).setParent(this).addOkButton("Recreate").addCloseButton("Close").build().awaitResult();
         result.thenAccept((dialogResult) -> {
@@ -199,14 +232,14 @@ public class CodeEditor extends Stage implements CollectionListener {
         });
     }
 
-    @TODO(description = "if BIND_SONG_TITLES is active, notify about change (if change happened)")
     @Override
     public void onSongUpdated(final Song s, final CollectionManager m) {
-        if (s.id() != song.id()) {
+        if (s.id() != song.id() || !manager.equals(m)) {
             return;
         }
-        if (m.equals(EasterCollectionManager.getInstance()) && s.getFormerId() != -1) {
-
+        if ((Boolean) SettingsManager.getInstance().getValue("BIND_SONG_TITLES") && !s.name().equals(song.name())) {
+            new AlertDialog.Builder().setTitle("Unsynchronized change in title").setMessage("It looks like the song title was updated outside the editor. If you wish to keep the titles in sync, please update the title as you are editing the song manually.")
+                    .setIcon(AlertDialog.Builder.Icon.INFO).setCancelable(true).addOkButton().build().open();
         }
 
     }

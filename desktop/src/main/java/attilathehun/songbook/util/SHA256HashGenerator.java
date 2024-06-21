@@ -56,5 +56,5 @@ public class SHA256HashGenerator {
         }
         return hexString.toString();
     }
-    
+
 }
