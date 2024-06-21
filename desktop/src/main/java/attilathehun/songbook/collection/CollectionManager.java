@@ -1,10 +1,9 @@
 package attilathehun.songbook.collection;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
+import attilathehun.songbook.util.PDFGenerator;
 
 /**
  * Base class every collection manager should implement. Moreover, every collection manager should follow the singleton pattern for compatibility,
