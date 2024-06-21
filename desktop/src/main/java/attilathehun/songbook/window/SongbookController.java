@@ -35,7 +35,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 //TODO: when songs get disabled, there is a problem with the latest page/song being out of bonds, fixing it?
-@TODO()
 public class SongbookController implements CollectionListener, EnvironmentStateListener {
 
     private static final Logger logger = LogManager.getLogger(SongbookController.class);
@@ -84,14 +83,29 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     @FXML
     private MenuItem printableSelection;
 
+    /**
+     * Returns the song in display on the left. It is possible the song will be a shadow song.
+     *
+     * @return the song on the left
+     */
     public static Song getSongOne() {
         return SONG_ONE;
     }
 
+    /**
+     * Returns the song in display on the right. It is possible the song will be a shadow song.
+     *
+     * @return the song on the right
+     */
     public static Song getSongTwo() {
         return SONG_TWO;
     }
 
+    /**
+     * JavaFX method that gets called when an FXML file gets inflated.
+     *
+     * @throws MalformedURLException
+     */
     @FXML
     private void initialize() throws MalformedURLException {
         Environment.addListener(this);
@@ -106,10 +120,10 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     }
 
     /**
-     * Initializes the web view to the default position. Default position is start of the songbook, more practically speaking the beginning of the default collection manager's collection
-     * substituted, if necessary, by shadow songs.
+     * Initializes the web view to the default position. Default position is start of the songbook, more practically speaking the beginning of the default collection manager's
+     * collection substituted, if necessary, by shadow songs.
      *
-     * @throws MalformedURLException
+     * @throws MalformedURLException shouldn't happen
      */
     private void initWebView() throws MalformedURLException {
         SONG_ONE_INDEX = 0;
@@ -126,7 +140,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(1);
         }
 
-        URL url = new File(generator.generatePageFile(SONG_ONE, SONG_TWO)).toURI().toURL();
+        final URL url = new File(generator.generatePageFile(SONG_ONE, SONG_TWO)).toURI().toURL();
         webview.getEngine().load(url.toExternalForm());
     }
 
@@ -141,7 +155,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         Scene scene;
         try {
             scene = new Scene(fxmlLoader.load());
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException(e);
         }
         scene.getStylesheets().add(Main.class.getResource("/css/style.css").toExternalForm());
@@ -149,6 +163,10 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         editorController.postInit();
     }
 
+    /**
+     * Initializes and creates the SettingsEditor window, which is an instance of {@link SettingsEditor}. The window is hidden in background and can be summoned using
+     * {@link SettingsEditor#open()}.
+     */
     private void initSettingsEditor() {
         final SettingsEditor editorController = SettingsEditor.getInstance();
         final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("settings-editor.fxml"));
@@ -164,6 +182,9 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         editorController.postInit();
     }
 
+    /**
+     * Initializes the main window UI components' actions and behavior
+     */
     private void initUIComponents() {
 
         songOneIdField.setText(SONG_ONE.getDisplayId());
@@ -214,8 +235,9 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
                 applySongTwoId.fire();
             }
         });
+
         applySongOneId.setOnAction(event -> {
-            String text = songOneIdField.getText().trim().toLowerCase();
+            final String text = songOneIdField.getText().trim().toLowerCase();
             if (text.length() == 0) {
                 return;
             }
@@ -231,12 +253,12 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
                     SONG_ONE_INDEX = index;
                 }
 
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (final Exception e) {
+                logger.error(e.getLocalizedMessage(), e);
             }
             if (id == -1) {
                 int index = 0;
-                for (Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
+                for (final Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
                     if (song.name().equals(text)) {
                         SONG_ONE = song;
                         SONG_ONE_INDEX = index;
@@ -250,7 +272,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
         //TODO: when inputing "songlist0" this throws @NumberFormatException, fix it!
         applySongTwoId.setOnAction(event -> {
-            String text = songTwoIdField.getText().trim().toLowerCase();
+            final String text = songTwoIdField.getText().trim().toLowerCase();
             if (text.length() == 0) {
                 return;
             }
@@ -260,7 +282,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
                 id = Integer.parseInt(text);
                 if (id == -1)
                     break lol;
-                int index = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(id);
+                final int index = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(id);
                 if (index != -1) {
                     SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(index);
                     SONG_TWO_INDEX = index;
@@ -270,7 +292,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
             if (id == -1) {
                 int index = 0;
-                for (Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
+                for (final Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
                     if (song.name().equals(text)) {
                         SONG_TWO = song;
                         SONG_TWO_INDEX = index;
@@ -316,21 +338,11 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
         });
 
-        exportButton.addEventHandler(new ActionEvent().getEventType(), new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                System.out.println("exportButton.x.handle");
-            }
-        });
-
         if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
             singlepageSelection.setVisible(false);
             defaultSelection.setVisible(false);
             printableSelection.setVisible(false);
         }
-
-
-
 
         singlepageSelection.setOnAction(event -> {
             try {
@@ -403,7 +415,6 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
 
             try {
-
                 Desktop.getDesktop().open(new File(new PDFGenerator().generatePreview(SONG_ONE, SONG_TWO)));
             } catch (final Exception ex) {
                 if (ex.getMessage().equals("ignore")) {
@@ -416,7 +427,6 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         });
 
         initAddSongButton();
-
     }
 
     private void initAddSongButton() {
@@ -425,6 +435,11 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         });
     }
 
+    /**
+     * Turns the page in the songbook.
+     *
+     * @param toTheRight if true, the page will be turned to the right; it gets turned to the left otehrwise
+     */
     private void switchPage(final boolean toTheRight) {
         if (toTheRight) {
             SONG_ONE_INDEX += 2;
@@ -443,6 +458,9 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         refreshWebView();
     }
 
+    /**
+     * Refreshes the webview, expecting the internal variables have changed.
+     */
     private void refreshWebView() {
         if (SONG_ONE.id() == CollectionManager.SHADOW_SONG_ID) {
             SONG_ONE = CollectionManager.getShadowSong();
@@ -549,7 +567,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
             refreshWebView();
         } catch (final Exception e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 

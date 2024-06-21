@@ -83,6 +83,12 @@ public class SongbookApplication extends Application {
         return mainWindow;
     }
 
+    /**
+     * JavaFX main method. UI thread entry point. Initializes the environment and loads the main window.
+     *
+     * @param stage the main stage
+     * @throws IOException
+     */
     @Override
     public void start(final Stage stage) throws IOException {
         SettingsManager.init();
@@ -115,9 +121,13 @@ public class SongbookApplication extends Application {
         // beware of caching and garbage collection
         mainWindow = stage;
         logger.debug("Application started successfully");
-
     }
 
+    /**
+     * Initializes the keyboard shortcuts on the main stage.
+     *
+     * @param stage the main stage
+     */
     private void initKeyboardShortcuts(final Stage stage) {
         stage.getScene().setOnKeyPressed(keyEvent -> {
             switch (keyEvent.getCode()) {
