@@ -85,6 +85,11 @@ public final class Environment implements CollectionListener {
         listeners.add(listener);
     }
 
+    /**
+     * Removes a {@link EnvironmentStateListener}, so it no longer receives Environment-related events.
+     *
+     * @param listener the listener
+     */
     public static void removeListener(final EnvironmentStateListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("listener is null");
@@ -92,40 +97,63 @@ public final class Environment implements CollectionListener {
         listeners.remove(listener);
     }
 
+    /**
+     * Returns the complete list of registered {@link EnvironmentStateListener}s upon which custom events may be emitted.
+     *
+     * @return the list of registered listeners
+     */
     public static List<EnvironmentStateListener> getListeners() {
         return listeners;
     }
 
+    /**
+     * Sends out the {@link EnvironmentStateListener#onRefresh()} event to the registered listeners.
+     */
     private static void notifyOnRefresh() {
         for (final EnvironmentStateListener listener : listeners) {
             listener.onRefresh();
         }
     }
 
+    /**
+     * Sends out the {@link EnvironmentStateListener#onPageTurnedBack()} event to the registered listeners.
+     */
     public static void notifyOnPageTurnedBack() {
         for (final EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onPageTurnedBack();
         }
     }
 
+    /**
+     * Sends out the {@link EnvironmentStateListener#onPageTurnedForward()} event to the registered listeners.
+     */
     public static void notifyOnPageTurnedForward() {
         for (final EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onPageTurnedForward();
         }
     }
 
+    /**
+     * Sends out the {@link EnvironmentStateListener#onSongOneSet(Song)} event to the registered listeners.
+     */
     public static void notifyOnSongOneSet(final Song s) {
         for (final EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onSongOneSet(s);
         }
     }
 
+    /**
+     * Sends out the {@link EnvironmentStateListener#onSongTwoSet(Song)} event to the registered listeners.
+     */
     public static void notifyOnSongTwoSet(final Song s) {
         for (final EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onSongTwoSet(s);
         }
     }
 
+    /**
+     * Sends out the {@link EnvironmentStateListener#onCollectionManagerChanged(CollectionManager)} event to the registered listeners.
+     */
     private static void notifyOnCollectionManagerChanged(final CollectionManager m) {
         for (final EnvironmentStateListener listener : Environment.getListeners()) {
             listener.onCollectionManagerChanged(m);
@@ -234,6 +262,12 @@ public final class Environment implements CollectionListener {
         notifyOnCollectionManagerChanged(selectedCollectionManager);
     }
 
+    /**
+     * Registers a {@link CollectionManager} to the environment so that other components such as the Version Control System or the {@link CollectionEditor} recognize it.
+     * The manager must not be null.
+     *
+     * @param collectionManager the manager
+     */
     public void registerCollectionManager(final CollectionManager collectionManager) {
         if (collectionManager == null) {
             throw new IllegalArgumentException("manager is null");
@@ -241,6 +275,11 @@ public final class Environment implements CollectionListener {
         collectionManagers.put(collectionManager.getCollectionName(), collectionManager);
     }
 
+    /**
+     * Unregisters a {@link CollectionManager} from the environment so that other components will no longer utilise it. The manager must not be null.
+     *
+     * @param collectionManager the manager
+     */
     public void unregisterCollectionManager(final CollectionManager collectionManager) {
         if (collectionManager == null) {
             throw new IllegalArgumentException("manager is null");
@@ -248,6 +287,11 @@ public final class Environment implements CollectionListener {
         collectionManagers.remove(collectionManager.getCollectionName());
     }
 
+    /**
+     * Returns the list of all registered {@link CollectionManager}s.
+     *
+     * @return the list of the managers
+     */
     public Map<String, CollectionManager> getRegisteredManagers() {
         return collectionManagers;
     }
@@ -259,6 +303,10 @@ public final class Environment implements CollectionListener {
         tokenInMemory = token;
     }
 
+    /**
+     * Saves the settings and collections, frees up any resources held and closes the application. This is preferred over {@link System#exit(int)} and {@link Platform#exit()}
+     * as it eventually calls both of these methods.
+     */
     public void exit() {
         SettingsManager.getInstance().save();
         for (final CollectionManager m : getRegisteredManagers().values()) {
