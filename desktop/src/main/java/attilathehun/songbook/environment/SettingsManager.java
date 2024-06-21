@@ -28,6 +28,9 @@ public final class SettingsManager {
         return INSTANCE;
     }
 
+    /**
+     * Initializes the manager by loading the local settings to memory. It is necessary to call this method before using the manager at all.
+     */
     public static void init() {
         getInstance().load();
         if (!Misc.fileExists(Environment.SETTINGS_FILE_PATH)) {
@@ -35,14 +38,38 @@ public final class SettingsManager {
         }
     }
 
+    /**
+     * Returns the complete representation of the setting. It is not recommended to modify settings directly through its methods from {@link Setting}, because the manager can not
+     * perform a save operation after such modifications are made. use {@link #set(String, Object)} instead.
+     *
+     * @param name target setting name
+     * @return the setting object or null
+     */
     public Setting<?> get(final String name) {
         return settings.get(name);
     }
 
+    /**
+     * Returns the value of a setting. If the name of the setting is incorrect (nonexistent) this method will throw an exception.
+     *
+     * @param setting target setting name
+     * @return value of the setting
+     * @param <T> type of the setting value, usually String, Boolean or Integer
+     * @throws NullPointerException if the setting does not exist
+     */
     public <T> T getValue(final String setting) {
         return (T) settings.get(setting).getValue();
     }
 
+    /**
+     * Changes the value of the setting to the value provided. If the new value is of incorrect type, this method will throw an exception. Successful changing of a setting
+     * will make the manager save the current state of the settings.
+     *
+     * @param setting target setting name
+     * @param value new value for the setting
+     * @param <T> type of the setting value, usually String, Boolean or Integer
+     * @throws ClassCastException if the new value does not match the setting value type
+     */
     public <T> void set(final String setting, final T value) {
         if (settings.get(setting) == null) {
             return;
@@ -52,12 +79,16 @@ public final class SettingsManager {
         save();
     }
 
-
-
+    /**
+     * Locally saves the current state of the settings.
+     */
     public void save() {
         Misc.saveObjectToFileInJSON(new ArrayList<>(settings.values()), new File (Environment.SETTINGS_FILE_PATH));
     }
 
+    /**
+     * Loads the settings from a local file if such a file exists or loads default settings if it does not.
+     */
     public void load() {
         final ArrayList<Setting<?>> values = loadSavedValues();
         final HashMap<String, Setting<?>> settings = getDefaultSettings();
@@ -71,6 +102,11 @@ public final class SettingsManager {
 
     }
 
+    /**
+     * Loads locally saved settings to an {@link ArrayList}. Returns null if there is no save file.
+     *
+     * @return list of settings or null
+     */
     private ArrayList<Setting<?>> loadSavedValues() {
 
         try {
@@ -91,6 +127,11 @@ public final class SettingsManager {
         return null;
     }
 
+    /**
+     * Creates a setting {@link java.util.HashMap} with the default values.
+     *
+     * @return hashmap of default settings
+     */
     private static HashMap<String, Setting<?>> getDefaultSettings() {
         final HashMap<String, Setting<?>> map = new HashMap<>();
         // environment settings
