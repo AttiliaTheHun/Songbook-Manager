@@ -1,6 +1,5 @@
 package attilathehun.songbook.window;
 
-import attilathehun.annotation.TODO;
 import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
@@ -25,7 +24,6 @@ import java.awt.*;
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
 
-@TODO(priority = true)
 public final class CollectionEditor extends Stage {
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
     private static final CollectionEditor INSTANCE = new CollectionEditor();
@@ -51,6 +49,9 @@ public final class CollectionEditor extends Stage {
         this.setResizable(false);
     }
 
+    /**
+     * Opens the CollectionEditor window. If it already is open, it pushes it to the front.
+     */
     public static void open() {
         if (INSTANCE == null) {
             throw new IllegalStateException();
@@ -66,6 +67,9 @@ public final class CollectionEditor extends Stage {
         return INSTANCE;
     }
 
+    /**
+     * Hides the CollectionEditor window, but does not close it. The window still lives hidden in the background.
+     */
     public static void shut() {
         if (INSTANCE == null) {
             throw new IllegalStateException();
@@ -73,6 +77,9 @@ public final class CollectionEditor extends Stage {
         INSTANCE.hide();
     }
 
+    /**
+     * JavaFX method called when the FXML file is being inflated.
+     */
     @FXML
     private void initialize() {
         initTabbedPane();
@@ -80,10 +87,16 @@ public final class CollectionEditor extends Stage {
         addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, window -> hide());
     }
 
+    /**
+     * Code to be executed when all the UI pieces are inflated and available.
+     */
     public void postInit() {
         initKeyboardShortcuts();
     }
 
+    /**
+     * Initializes the {@link TabPane} by creating a tab for each registered {@link CollectionManager}.
+     */
     private void initTabbedPane() {
         if (tabbedPane == null) {
             throw new IllegalStateException();
@@ -97,17 +110,23 @@ public final class CollectionEditor extends Stage {
 
     }
 
+    /**
+     * Recreates the UI that works with data that is subject to runtime changes.
+     */
     public static void refresh() {
         INSTANCE.tabbedPane.getTabs().clear();
         INSTANCE.initTabbedPane();
     }
-    
-    //TODO
+
+    /**
+     * Initializes the buttons on the bottom of the window and their respective actions.
+     */
     private void initBottomToolbar() {
         addSongButton.setFocusTraversable(true);
         addSongButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
-                selectedManager.addSongDialog();
+            selectedManager.addSongDialog();
+            // TODO if ctrl is held, allow to create an easter song from template of the current song?
         });
         editSongHTMLButton.setOnAction(actionEvent -> {
             refreshStoredSelection();
@@ -200,7 +219,10 @@ public final class CollectionEditor extends Stage {
         });
     }
 
-    public void initKeyboardShortcuts() {
+    /**
+     * Initializes the keyboard shortcuts available in the window.
+     */
+    private void initKeyboardShortcuts() {
         this.getScene().addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> {
             switch (keyEvent.getCode()) {
                 case DELETE -> {
@@ -229,46 +251,27 @@ public final class CollectionEditor extends Stage {
                 }
             }
         });
-/*
-        this.getScene().setOnKeyPressed(keyEvent -> {
-            switch (keyEvent.getCode()) {
-                case DELETE -> {
-                    deleteSongButton.fire();
-                }
-                case R -> {
-                    if (keyEvent.isControlDown()) {
-                        refreshStoredSelection();
-                        refreshCurrentList();
-                    }
-                }
-                case ESCAPE -> {
-                    shut();
-                }
-                case N -> {
-                    refreshStoredSelection();
-                    if (keyEvent.isControlDown()) {
-                        if (keyEvent.isShiftDown()) {
-                            if (!selectedManager.equals(EasterCollectionManager.getInstance())) {
-                                EasterCollectionManager.getInstance().addSongFromTemplateDialog(selectedSong);
-                                return;
-                            }
-                        }
-                        selectedManager.addSongDialog();
-                    }
-                }
-            }
-        });*/
     }
 
+    /**
+     * Reassigns the local variables to the selected values.
+     */
     private void refreshStoredSelection() {
         selectedSong = ((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).getList().getSelectionModel().getSelectedItem();
         selectedManager = ((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).getManager();
     }
 
+    /**
+     * Refreshes the {@link ListView} in the currently selected tab.
+     */
     private void refreshCurrentList() {
-        //((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).refresh();
+        ((CollectionPanel) tabbedPane.getSelectionModel().getSelectedItem()).refresh();
     }
 
+    /**
+     * A special Tab implementation that serves as a container for data of one {@link CollectionManager}. The tab automatically refreshes when the manager's collection
+     * is updated.
+     */
     public static class CollectionPanel extends Tab implements CollectionListener {
         private static final Logger logger = LogManager.getLogger(CollectionPanel.class);
 
@@ -292,17 +295,30 @@ public final class CollectionEditor extends Stage {
             manager.addListener(this);
         }
 
+        /**
+         * Returns the associated {@link CollectionManager}.
+         *
+         * @return the manager
+         */
         public CollectionManager getManager() {
             return manager;
         }
 
+        /**
+         * Returns the internal {@link ListView}.
+         *
+         * @return the listview
+         */
         public ListView<Song> getList() {
             return list;
         }
 
+        /**
+         * Refreshes the internal {@link ListView}.
+         */
         public void refresh() {
             list.getItems().clear();
-            ReadOnlyListWrapper<Song> listViewData = new ReadOnlyListWrapper<>(FXCollections.observableArrayList(manager.getSortedCollection()));
+            final ReadOnlyListWrapper<Song> listViewData = new ReadOnlyListWrapper<>(FXCollections.observableArrayList(manager.getSortedCollection()));
             list.getItems().addAll(listViewData);
             list.refresh();
         }
@@ -322,6 +338,9 @@ public final class CollectionEditor extends Stage {
             refresh();
         }
 
+        /**
+         * Custom {@link ListView} item implementation.
+         */
         private class SongCell extends ListCell<Song> {
 
             public SongCell() {
@@ -340,7 +359,9 @@ public final class CollectionEditor extends Stage {
             }
         }
 
-        // the actual listview item (one line)
+        /**
+         * The underlying layout that actually makes up the item (the one line in the list view).
+         */
         private class SongEntry extends HBox {
             private SongEntry(final Song s) {
                 if (s == null || s.getManager() == null) {
