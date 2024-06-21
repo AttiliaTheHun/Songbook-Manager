@@ -25,7 +25,11 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 
-// TODO settings may be altered through other components os the window should get refreshed somehow
+// TODO settings may be altered through other components so the window should get refreshed somehow
+
+/**
+ * This class represents the window from which the user can manage the settings.
+ */
 public final class SettingsEditor extends Stage {
     private static final Logger logger = LogManager.getLogger(SettingsEditor.class);
     private static final SettingsEditor INSTANCE = new SettingsEditor();
@@ -49,6 +53,9 @@ public final class SettingsEditor extends Stage {
         return INSTANCE;
     }
 
+    /**
+     * Opens the SettingsEditor window. If it already is open, it pushes it to the front.
+     */
     public static void open() {
         if (INSTANCE == null) {
             throw new IllegalStateException();
@@ -60,6 +67,9 @@ public final class SettingsEditor extends Stage {
         }
     }
 
+    /**
+     * Hides the SettingsEditor window, but does not close it. The window still lives hidden in the background.
+     */
     public static void shut() {
         if (INSTANCE == null) {
             throw new IllegalStateException();
@@ -67,11 +77,17 @@ public final class SettingsEditor extends Stage {
         INSTANCE.hide();
     }
 
+    /**
+     * Recreates the underlying subscenes.
+     */
     public static void refresh() {
         getInstance().initSubscenes();
         getInstance().settingCategoryList.getSelectionModel().select(getInstance().settingCategoryList.getSelectionModel().getSelectedIndex());
     }
 
+    /**
+     * JavaFX method called when the FXML file is being inflated.
+     */
     @FXML
     public void initialize() {
         initSubscenes();
@@ -79,6 +95,9 @@ public final class SettingsEditor extends Stage {
         addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, window -> hide());
     }
 
+    /**
+     * Code to be executed when all the UI pieces are inflated and available.
+     */
     public void postInit() {
         this.getScene().addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> {
             if (Objects.requireNonNull(keyEvent.getCode()) == KeyCode.R) {
@@ -89,6 +108,9 @@ public final class SettingsEditor extends Stage {
         });
     }
 
+    /**
+     * Initializes the {@link ListView} with the setting categories.
+     */
     private void initSettingCategoryListView() {
         final ArrayList<String> categories = new ArrayList<>();
         categories.add("General");
@@ -119,12 +141,18 @@ public final class SettingsEditor extends Stage {
 
     }
 
+    /**
+     * Initializes all the underlying subscenes.
+     */
     private void initSubscenes() {
         initGeneralSettingsScene();
         initEnvironmentSettingsScene();
         initVCSSettingsScene();
     }
 
+    /**
+     * Initializes the general category settings subscene.
+     */
     private void initGeneralSettingsScene() {
         final GeneralSettingsController controller = new GeneralSettingsController();
         final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("settings-editor-general-settings.fxml"));
@@ -140,6 +168,9 @@ public final class SettingsEditor extends Stage {
         controller.postInit();
     }
 
+    /**
+     * Initializes the environment category settings subscene.
+     */
     private void initEnvironmentSettingsScene() {
         final EnvironmentSettingsController controller = new EnvironmentSettingsController();
         final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("settings-editor-environment-settings.fxml"));
@@ -155,6 +186,9 @@ public final class SettingsEditor extends Stage {
         controller.postInit();
     }
 
+    /**
+     * Initializes the Version Control System category settings subscene.
+     */
     private void initVCSSettingsScene() {
         final VCSSettingsController controller = new VCSSettingsController();
         final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("settings-editor-vcs-settings.fxml"));
@@ -170,6 +204,9 @@ public final class SettingsEditor extends Stage {
         controller.postInit();
     }
 
+    /**
+     * The general category settings subscene UI controller.
+     */
     private static class GeneralSettingsController {
         @FXML
         public TextField songbookLanguageField;
@@ -432,6 +469,9 @@ public final class SettingsEditor extends Stage {
 
     }
 
+    /**
+     * The environment category settings subscene UI controller.
+     */
     private static class EnvironmentSettingsController {
         @FXML
         public TextField dataFilePathField;
@@ -762,6 +802,9 @@ public final class SettingsEditor extends Stage {
 
     }
 
+    /**
+     * The VCS category settings subscene UI controller.
+     */
     private static class VCSSettingsController {
         @FXML
         public CheckBox remoteSaveLoadSwitch;
