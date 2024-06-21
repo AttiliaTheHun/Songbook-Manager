@@ -1,6 +1,6 @@
 package attilathehun.songbook.plugin;
 
-import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.util.Misc;
 import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

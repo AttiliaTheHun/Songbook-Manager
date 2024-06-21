@@ -3,7 +3,7 @@ package attilathehun.songbook.collection;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.environment.SettingsManager;
-import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.util.DynamicSonglist;
 import attilathehun.songbook.util.HTMLGenerator;
 import attilathehun.songbook.window.AlertDialog;

@@ -40,7 +40,7 @@ public final class PluginManager {
     }
 
     /**
-     * Adds a plugin to the plugin collection. Unless registered, a plugin will not be recognized my the most part of the
+     * Adds a plugin to the plugin collection. Unless registered, a plugin will not be recognized by the most part of the
      * program as plugins are supposed to be accessed through {@link #getPlugin(String)}. A plugin can not be unregistered,
      * but can be set as disabled which the rest of the program should abide by not using this plugin.
      *

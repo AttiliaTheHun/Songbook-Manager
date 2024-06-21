@@ -1,6 +1,6 @@
 package attilathehun.songbook.environment;
 
-import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.util.Misc;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;

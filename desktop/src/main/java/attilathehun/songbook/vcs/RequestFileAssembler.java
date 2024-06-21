@@ -1,11 +1,9 @@
 package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.collection.CollectionManager;
-import attilathehun.songbook.collection.EasterCollectionManager;
-import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
-import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.util.ZipBuilder;
 import attilathehun.songbook.vcs.index.LoadIndex;
 import attilathehun.songbook.vcs.index.SaveIndex;

@@ -544,7 +544,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             SONG_TWO = s;
 
             refreshWebView();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
         }
     }

@@ -4,8 +4,6 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
-import attilathehun.songbook.misc.Misc;
-import attilathehun.songbook.plugin.PluginManager;
 import attilathehun.songbook.window.AlertDialog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

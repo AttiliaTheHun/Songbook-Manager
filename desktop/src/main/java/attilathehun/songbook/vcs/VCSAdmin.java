@@ -3,7 +3,7 @@ package attilathehun.songbook.vcs;
 import attilathehun.annotation.TODO;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
-import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.vcs.index.Index;
 import attilathehun.songbook.vcs.index.LoadIndex;
 import attilathehun.songbook.window.AlertDialog;
@@ -19,7 +19,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 
 /**
  * The Version Control System Administrator. This class is the main class of the Version Control System and provides a simple API to be used from other components.

@@ -5,7 +5,7 @@ import attilathehun.songbook.collection.*;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.PDFGenerator;
-import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.util.Misc;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;

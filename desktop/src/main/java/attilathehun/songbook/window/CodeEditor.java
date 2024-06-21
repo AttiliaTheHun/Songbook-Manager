@@ -6,7 +6,7 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
-import attilathehun.songbook.misc.Misc;
+import attilathehun.songbook.util.Misc;
 import eu.mihosoft.monacofx.MonacoFX;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -15,7 +15,6 @@ import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.io.FileWriter;
@@ -24,7 +23,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 public class CodeEditor extends Stage implements CollectionListener {
