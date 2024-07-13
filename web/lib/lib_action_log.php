@@ -10,7 +10,7 @@ const ACTION_RESTORE = "RESTORE";
 $action_log_file_path = dirname(__FILE__) . "/../data/action_log.txt";
 
 function log_action(string $action, Token $token = NULL, string $backup_file_name = "") {
-    if ($backup_file_name == null) {
+    if ($backup_file_name == NULL) {
         $backup_file_name = "";
     }
     

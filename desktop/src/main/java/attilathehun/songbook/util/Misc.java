@@ -7,10 +7,9 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.io.FileWriter;
-import java.io.File;
-import java.io.Serializable;
+import java.io.*;
+import java.util.MissingResourceException;
+import java.util.Random;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 
@@ -62,6 +61,22 @@ public class Misc {
                     .setMessage(String.format("Cannot load object from file: %s. File: %s", e.getLocalizedMessage(), target.toPath())).addOkButton().build().open();
         }
         return null;
+    }
+
+    public static void randomException() {
+        final int random = new Random().nextInt(10);
+        switch (random) {
+            case 0 -> throw new IllegalArgumentException();
+            case 1 -> throw new NullPointerException();
+            case 2 -> throw new IllegalStateException();
+            case 3 -> throw new IndexOutOfBoundsException();
+            case 4 -> throw new ClassCastException();
+            case 5 -> throw new UnsupportedOperationException();
+            case 6 -> throw new LayerInstantiationException();
+            case 7 -> throw new ArithmeticException();
+            case 8 -> throw new IllegalCallerException();
+            case 9 -> throw new SecurityException();
+        }
     }
 
 }

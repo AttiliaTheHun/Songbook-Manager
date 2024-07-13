@@ -4,8 +4,8 @@
  * 
  **/
 
-require_once dirname(__FILE__) . '/lib_init.php';
-require_once dirname(__FILE__) . '/lib_zip_util.php';
+require_once(dirname(__FILE__) . '/lib_init.php');
+require_once(dirname(__FILE__) . '/lib_zip_util.php');
 
 const BACKUP_TYPE_COMPLETE = "COMPLETE";
 const BACKUP_TYPE_INVERSE = "INVERSE";

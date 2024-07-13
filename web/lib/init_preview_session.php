@@ -4,30 +4,24 @@
  * for the online preview of the songbook.
  */
  
-include 'lib_collection.php';
-include_once 'lib_settings.php';
+
+include_once(dirname(__FILE__) . '/lib_settings.php');
+include_once(dirname(__FILE__) . '/lib_collection.php');
 
 session_start();
 
-init_collections();
 
 /**
- * $_SESSION['collections'] contains a map of "collection_name" => collection (Object) entries for every
+ * $_SESSION['providers'] contains a map of "collection_name" => provider (Object) entries for every
  * available collection in the songbook.
  **/
-$_SESSION['collections'] = $GLOBALS['collections'];
+$_SESSION['providers'] = $GLOBALS['providers'];
 
 /**
- * $_SESSION['collection_data'] contains a map of "collection_name" => collection_data (Object) entries for every
- * available collection in the songbook. The collection_data contains additional data such as file paths.
+ * $_SESSION['PROVIDER'] contains the current collection provider ('standard' by default). It is capitalised
+ * to differentiate it visually from $_SESSION['providers'].
  **/
-$_SESSION['collection_data'] = $GLOBALS['collection_data'];
-
-/**
- * $_SESSION['COLLECTION'] contains directly the current collection ('standard' by default). It is capitalised
- * to differentiate it visually from $_SESSION['collections'].
- **/
-$_SESSION['COLLECTION'] = $_SESSION['collections']['standard'];
+$_SESSION['PROVIDER'] = $_SESSION['providers'][StandardCollectionProvider::COLLECTION_NAME];
 
 /**
  * $_SESSION['SETTINGS'] contains the setings of the songbook.
@@ -48,8 +42,6 @@ $_SESSION['REPLACE_MARKS'] = [
     'site_description_replace_mark' => '<replace "site-description">'
 ];
 
-// we mapped these values to the $_SESSION variable so we can free up some memory now
-unset($GLOBALS['collections']);
-unset($GLOBALS['collection_data']);
+unset($GLOBALS['providers']);
 
 ?>

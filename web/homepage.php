@@ -5,14 +5,14 @@
  * file. You can modify the HTML structure to alter the layout of the page or you can make changes to the stylesheet,
  * but modifying the PHP code is not recommended. The homepage feature can be disabled in the settings file.
  **/
-include('./lib/lib_settings.php');
+include_once(dirname(__FILE__) . '/lib/lib_settings.php');
 
 if ($settings['homepage']['enabled'] == false) {
     if ($settings['preview']['enabled']) {
         header("Location: " . $settings['url'] . "/preview/");
         exit(0);
     } else {
-        include './resources/pages/204.php';
+        include(dirname(__FILE__) . '/resources/pages/204.php');
         http_response_code(204);
         exit(0);
     }
@@ -23,9 +23,9 @@ if ($settings['homepage']['enabled'] == false) {
 <html>
 <head>
 <?php
-    include './lib/lib_strings.php';
-    include './lib/init_preview_session.php';
-    $head_html = file_get_contents('./resources/templates/head.html');
+    include_once(dirname(__FILE__) . '/lib/lib_strings.php');
+    include_once(dirname(__FILE__) . '/lib/init_preview_session.php');
+    $head_html = file_get_contents(dirname(__FILE__) . '/resources/templates/head.html');
     $head_html = str_replace($_SESSION['REPLACE_MARKS']['site_description_replace_mark'], $strings['site_description'], $head_html);
     echo $head_html;
 ?>

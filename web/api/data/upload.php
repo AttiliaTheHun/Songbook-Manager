@@ -1,22 +1,22 @@
 <?php
 /**
- * This scripts processes requests to data uploads. It is an authenticated API route.
+ * This scripts processes requests for data uploads. It is an authenticated API route.
  */
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    include '../../resources/pages/405.php';
+    include(dirname(__FILE__) . '/../../resources/pages/405.php');
     die();
 }
 
 // first we need to authenticate the user
-require '../../lib/lib_auth.php';
+require(dirname(__FILE__) . '/../../lib/lib_auth.php');
 auth_init();
 
 // if the token is invalid, we abort
 if ($token == NULL || !$token->has_write_permission()) {
     http_response_code(401);
-    include '../../resources/pages/401.php';
+    include(dirname(__FILE__) . '/../../resources/pages/401.php');
     die();
 }
 
@@ -29,8 +29,8 @@ if ($request_body == NULL || strlen($request_body) == 0) {
     die();
 }
 
-require '../../lib/lib_save_load.php';
-require '../../lib/lib_action_log.php';
+require(dirname(__FILE__) . '/../../lib/lib_save_load.php');
+require(dirname(__FILE__) . '/../../lib/lib_action_log.php');
 
 // if such a file already existed for a parallel request, we do not want to accidentally overwrite it
 $num = -1;

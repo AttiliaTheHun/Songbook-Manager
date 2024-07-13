@@ -1,30 +1,30 @@
 <?php
 /**
- * This scripts processes requests to data downloads. It is an authenticated API route.
+ * This scripts processes requests for data downloads. It is an authenticated API route.
  */
 
 // GET is for empty request body, POST may have a request body (a load index)
 if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    include '../../resources/pages/405.php';
+    include(dirname(__FILE__) . '/../../resources/pages/405.php');
     die();
 }
 
 // first we need to authenticate the user
-require '../../lib/lib_auth.php';
+require(dirname(__FILE__) . '../../lib/lib_auth.php');
 auth_init();
 
 // if the token is invalid, we abort
 if ($token == NULL || !$token->has_read_permission()) {
     http_response_code(401);
-    include '../../resources/pages/401.php';
+    include(dirname(__FILE__) . '/../../resources/pages/401.php');
     die();
 }
 
 // getting here means everything is ok and we can actually process the request
     
-require '../../lib/lib_save_load.php';
-require '../../lib/lib_action_log.php';
+require(dirname(__FILE__) . '/../../lib/lib_save_load.php');
+require(dirname(__FILE__) . '/../../lib/lib_action_log.php');
 
 $request_body = file_get_contents('php://input');
 

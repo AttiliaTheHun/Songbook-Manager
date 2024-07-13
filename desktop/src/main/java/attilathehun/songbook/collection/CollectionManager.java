@@ -118,7 +118,7 @@ public abstract class CollectionManager {
 
     /**
      * Returns a collection modified to a presentable form for output purposes. Deactivated songs are excluded,
-     * but some other pages may be added depending on plugins. The WebView driver as well as the {@link PDFGenerator} class
+     * but some other pages may be added depending on settings. The WebView driver as well as the {@link PDFGenerator} class
      * work with this collection format.
      *
      * @return production form of the collection

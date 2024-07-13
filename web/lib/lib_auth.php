@@ -79,14 +79,29 @@ class Token {
         foreach ($data AS $key => $value) $this->{$key} = $value;
     }
     
-    public static function generate(string $secret, string $name, mixed $permissions, boolean $phrase) {
-        if (len($secret) == 0) {
+    public static function generate(string $secret = NULL, string $name, mixed $permissions) {
+        if ($secret == NULL) {
             $secret = base64_encode(random_bytes(10));
-        }
-        if ($phrase === true) {
+        } else {
             $secret = base64_encode($secret);
         }
         return new Token($secret, $name, date("d-m-Y"), $permissions[0], $permissions[1], $permissions[2], $permissions[3], $permissions[4]);
+    }
+    
+    public function to_string() {
+        $output = $this->name . " " . $this->created_at;
+        if ($this->frozen) {
+            $output .= " frozen";
+        }
+        $output .= " ";
+        foreach($this->permissions as $permission => $value) {
+            if (value) {
+                $output .= '1';
+            } else {
+                $output .= '0';
+            }
+        }
+        return $output;
     }
  	
 }
