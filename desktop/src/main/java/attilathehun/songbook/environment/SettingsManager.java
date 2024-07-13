@@ -13,10 +13,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 
 public final class SettingsManager {
     private static final Logger logger = LogManager.getLogger(SettingsManager.class);
+    private static final List<SettingsListener> listeners = new ArrayList<SettingsListener>();
     private static final SettingsManager INSTANCE = new SettingsManager();
     private HashMap<String, Setting<?>> settings = new HashMap<>();
 
@@ -63,7 +65,7 @@ public final class SettingsManager {
 
     /**
      * Changes the value of the setting to the value provided. If the new value is of incorrect type, this method will throw an exception. Successful changing of a setting
-     * will make the manager save the current state of the settings.
+     * will make the manager save the current state of the settings. Emits the {@link SettingsListener#onSettingChanged(String, Setting, Setting)} event.
      *
      * @param setting target setting name
      * @param value new value for the setting
@@ -71,6 +73,24 @@ public final class SettingsManager {
      * @throws ClassCastException if the new value does not match the setting value type
      */
     public <T> void set(final String setting, final T value) {
+        final Setting current = settings.get(setting);
+        setSilent(setting, value);
+        notifySettingChanged(setting, current, settings.get(setting));
+    }
+
+    /**
+     * Changes the value of the setting to the value provided without triggering any events. If the new value is of incorrect type, this method will throw an exception. Successful changing of a setting
+     * will make the manager save the current state of the settings.
+     *
+     * This method is meant to be used for automatic procedures and configuration to avoid producing unnecessary events. For regular runtime and most application components the
+     * {@link #set(String, Object)} method should be used.
+     *
+     * @param setting target setting name
+     * @param value new value for the setting
+     * @param <T> type of the setting value, usually String, Boolean or Integer
+     * @throws ClassCastException if the new value does not match the setting value type
+     */
+    public <T> void setSilent(final String setting, final T value) {
         if (settings.get(setting) == null) {
             return;
         }
@@ -119,7 +139,7 @@ public final class SettingsManager {
             final ArrayList<Setting<?>> values = new Gson().fromJson(json, type);
             return values;
         } catch (final NoSuchFileException nsf) {
-
+            // this is not really an exception from the program's point of view
         } catch (final Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -172,5 +192,42 @@ public final class SettingsManager {
         map.put("EXPORT_PRINTABLE_FILE_NAME", new Setting<String>("EXPORT_PRINTABLE_FILE_NAME", "ExportPrintable.pdf", "ExportPrintable.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the print-format export file", "Insert a file name"));
         map.put("EXPORT_SINGLEPAGE_FILE_NAME", new Setting<String>("EXPORT_SINGLEPAGE_FILE_NAME", "ExportSinglepage.pdf", "ExportSinglepage.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the singlepage-format export file", "Insert a file name"));
         return map;
+    }
+
+    /**
+     * Registers a {@link SettingsListener} to receive settings-related events.
+     *
+     * @param listener the listener (not null)
+     */
+    public static void addListener(final SettingsListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("listener can not be null");
+        }
+        listeners.add(listener);
+    }
+
+    /**
+     * Unregisters a {@link SettingsListener} so it no longer receives settings-related events.
+     *
+     * @param listener the listener (not null)
+     */
+    public static void removeListener(final SettingsListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("listener can not be null");
+        }
+        listeners.remove(listener);
+    }
+
+    /**
+     * Sends the {@link SettingsListener#onSettingChanged(String, Setting, Setting)} event to all the registered listeners.
+     *
+     * @param name name of the setting affected
+     * @param old state of the setting begore update
+     * @param _new state of the setting after update
+     */
+    private void notifySettingChanged(final String name, final Setting old, final Setting _new) {
+        for (final SettingsListener listener : listeners) {
+            listener.onSettingChanged(name, old, _new);
+        }
     }
 }

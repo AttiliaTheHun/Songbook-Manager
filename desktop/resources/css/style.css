@@ -19,11 +19,11 @@ html, body {
 	overflow: hidden;
 }
 
-.br {
-	visibility: hidden;
-	/*display: block;
-	background: 1px solid pink; */
-	line-height: var(--br-line-height);
+br::after {
+	content: "";
+	display: block;
+	background: 1px solid pink;
+	height: var(--br-line-height);
 }
 
 a,

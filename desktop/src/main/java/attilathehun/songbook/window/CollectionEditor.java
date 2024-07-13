@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Logger;
 import java.awt.*;
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
-
+// TODO on right click upon a list item, a menu with "delete", "create easter song from template" and "open link" could open ;)
 public final class CollectionEditor extends Stage {
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
     private static final CollectionEditor INSTANCE = new CollectionEditor();

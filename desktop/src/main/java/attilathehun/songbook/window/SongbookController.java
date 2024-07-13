@@ -332,12 +332,13 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         exportButton.showingProperty().addListener((event) -> {
             if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
                 new AlertDialog.Builder().setTitle("Exporting disabled").setIcon(AlertDialog.Builder.Icon.WARNING)
-                        .setMessage("It seems like the Export plugin is disabled. You can enabled it in settings.")
+                        .setMessage("It seems like exporting is disabled. You can enabled it in settings.")
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
         });
 
+        // TODO when export gets disabled on runtime, these things should be hidden
         if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
             singlepageSelection.setVisible(false);
             defaultSelection.setVisible(false);
