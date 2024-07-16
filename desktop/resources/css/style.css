@@ -71,7 +71,7 @@ ul {
 .songlist-column {
 	text-align: center;
 	display: table-cell;
-	border: 1px solid cyan;
+	/*border: 1px solid cyan;*/
 	overflow: visible;
 	min-width: 50%;
 }
