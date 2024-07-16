@@ -184,13 +184,14 @@ public final class SettingsManager {
         map.put("AUTO_LOAD_DATA", new Setting<Boolean>("AUTO_LOAD_DATA", Boolean.FALSE, Boolean.FALSE, Setting.TYPE_BOOLEAN, "Should the automatically load remote data on start up", "true or false"));
         map.put("DEFAULT_READ_TOKEN", new Setting<String>("DEFAULT_READ_TOKEN", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h", "SHJhYm/FoWkgTGV0J3MgRnVja2luZyAgR29vb28h", Setting.TYPE_STRING, "This setting will be removed", "Deprecated, use for testing only"));
         map.put("AUTH_FILE_PATH", new Setting<String>("AUTH_FILE_PATH", Paths.get(System.getProperty("user.dir") + "/.auth").toString(), Paths.get(System.getProperty("user.dir") + "/.auth").toString(), Setting.TYPE_URL_ALLOW_EMPTY, "Location of the file with remote authentication tokens", "Insert a full file path to the file"));
+        map.put("USE_CUSTOM_ENCRYPTION_PASSWORD", new Setting<Boolean>("USE_CUSTOM_ENCRYPTION_PASSWORD", Boolean.FALSE, Boolean.FALSE, Setting.TYPE_URL_ALLOW_EMPTY, "Do you want to use a custom encryption password", ""));
         // export settings
         map.put("EXPORT_ENABLED", new Setting<Boolean>("EXPORT_ENABLED", Boolean.TRUE, Boolean.TRUE, Setting.TYPE_BOOLEAN, "Whether exporting of the songbook is desirable", "true or false"));
         map.put("EXPORT_BROWSER_EXECUTABLE_PATH", new Setting<String>("EXPORT_BROWSER_EXECUTABLE_PATH", "", "", Setting.TYPE_URL_ALLOW_EMPTY, "Path to the headless browser executable file", "true or false"));
         map.put("EXPORT_KEEP_BROWSER_INSTANCE", new Setting<Boolean>("EXPORT_KEEP_BROWSER_INSTANCE", Boolean.TRUE, Boolean.TRUE, Setting.TYPE_BOOLEAN, "Speeds up export and preview but uses more memory", "true or false"));
-        map.put("EXPORT_DEFAULT_FILE_NAME", new Setting<String>("EXPORT_DEFAULT_FILE_NAME", "ExportDefault.pdf", "ExportDefault.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the default export file", "Insert a file name"));
-        map.put("EXPORT_PRINTABLE_FILE_NAME", new Setting<String>("EXPORT_PRINTABLE_FILE_NAME", "ExportPrintable.pdf", "ExportPrintable.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the print-format export file", "Insert a file name"));
-        map.put("EXPORT_SINGLEPAGE_FILE_NAME", new Setting<String>("EXPORT_SINGLEPAGE_FILE_NAME", "ExportSinglepage.pdf", "ExportSinglepage.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the singlepage-format export file", "Insert a file name"));
+        map.put("EXPORT_DEFAULT_FILE_NAME", new Setting<String>("EXPORT_DEFAULT_FILE_NAME", "Default.pdf", "Default.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the default export file", "Insert a file name"));
+        map.put("EXPORT_PRINTABLE_FILE_NAME", new Setting<String>("EXPORT_PRINTABLE_FILE_NAME", "Printable.pdf", "Printable.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the print-format export file", "Insert a file name"));
+        map.put("EXPORT_SINGLEPAGE_FILE_NAME", new Setting<String>("EXPORT_SINGLEPAGE_FILE_NAME", "Singlepage.pdf", "Singlepage.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the singlepage-format export file", "Insert a file name"));
         return map;
     }
 

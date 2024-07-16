@@ -1,7 +1,5 @@
 package attilathehun.songbook.window;
 
-import attilathehun.annotation.TODO;
-import com.google.gson.Gson;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
