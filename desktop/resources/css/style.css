@@ -3,9 +3,8 @@
 	--chords-margin: -0.1em -0.5em -2em;
     --chords-padding: 0.1em 0.5em 0.15em;
 	--line-margin-top: -65px;
-	--br-line-height: 0.8em;
+	--verse-margin-top: -50px;
 }
-
 
 html, body {
 	padding: 0;
@@ -17,13 +16,6 @@ html, body {
 	line-height: 0.8em;
 	position: static;
 	overflow: hidden;
-}
-
-br::after {
-	content: "";
-	display: block;
-	background: 1px solid pink;
-	height: var(--br-line-height);
 }
 
 a,
@@ -176,6 +168,12 @@ ul {
 	border: 1px solid black;
 }
 
+.verse {
+	display: block;
+	position: absolute;
+	margin-top: var(--verse-margin-top);
+}
+
 .line {
 	overflow: hidden;
 	margin: auto;
@@ -211,7 +209,7 @@ ul {
 	--chords-margin: -0.1em -0.5em -2em;
     --chords-padding: 0.1em 0.5em 0.25em;
 	--line-margin-top: -60px;
-	--br-line-height: 0.3em;
+	--verse-margin-top: -50px;
 }
 
 .font-size-13-px {
@@ -219,7 +217,7 @@ ul {
 	--chords-margin: -0.1em -0.5em -2em;
     --chords-padding: 0.1em 0.5em 0.25em;
 	--line-margin-top: -65px;
-	--br-line-height: 0.4em;
+	--verse-margin-top: -50px;
 }
 
 .font-size-14-px {
@@ -227,7 +225,7 @@ ul {
 	--chords-margin: -0.1em -0.5em -2em;
     --chords-padding: 0.1em 0.5em 0.25em;
 	--line-margin-top: -65px;
-	--br-line-height: 0.5em;
+	--verse-margin-top: -50px;
 }
 
 .font-size-15-px {
@@ -235,12 +233,37 @@ ul {
 	--chords-margin: -0.1em -0.5em -2.05em;
     --chords-padding: 0.1em 0.5em 0.25em;
 	--line-margin-top: -70px;
-	--br-line-height: 0.6em;
+	--verse-margin-top: -50px;
 }
 
 
 
 /* Legacy classes to use when CSS variables are not an option */
+
+/** to replace the .verse class */
+.verse-12-px {
+	display: block;
+	position: absolute;
+	margin-top: var(--verse-margin-top);
+}
+
+.verse-13-px  {
+	display: block;
+	position: absolute;
+	margin-top: var(--verse-margin-top);
+}
+
+.verse-14-px  {
+	display: block;
+	position: absolute;
+	margin-top: var(--verse-margin-top);
+}
+
+.verse-15-px  {
+	display: block;
+	position: absolute;
+	margin-top: var(--verse-margin-top);
+}
 
 /* to replace the .chords class */
 .chords-12-px {
