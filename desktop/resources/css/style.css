@@ -170,7 +170,7 @@ ul {
 
 .verse {
 	display: block;
-	position: absolute;
+	position: relative;
 	margin-top: var(--verse-margin-top);
 }
 
