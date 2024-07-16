@@ -1,6 +1,5 @@
 package attilathehun.songbook.window;
 
-import attilathehun.annotation.TODO;
 import attilathehun.songbook.collection.CollectionListener;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
@@ -31,11 +30,14 @@ import java.util.concurrent.CompletableFuture;
  */
 public class CodeEditor extends Stage implements CollectionListener {
     private static final Logger logger = LogManager.getLogger(CodeEditor.class);
-    private static final HashMap<Song, CodeEditor> instances = new HashMap<>();
+    private static final HashMap<Integer, CodeEditor> instances = new HashMap<>();
+    private static final HashMap<Song, Integer> songs = new HashMap<>();
+    private static int nextInstanceId = 0;
     private Song song;
     private final CollectionManager manager;
     private String filePath;
     private MonacoFX monaco;
+    private final int instanceId;
 
     /**
      * Creates an editor window with the content of the song file.
@@ -58,6 +60,8 @@ public class CodeEditor extends Stage implements CollectionListener {
             this.manager = manager;
         }
         init();
+        this.instanceId = nextInstanceId;
+        nextInstanceId++;
     }
 
     /**
@@ -67,12 +71,15 @@ public class CodeEditor extends Stage implements CollectionListener {
      * @param m the manager of the song
      */
     public static void open(final Song s, final CollectionManager m) {
-        //System.out.println(instances.size());
-        CodeEditor instance = instances.get(s);
-        if (instance == null) {
+        CodeEditor instance;
+        if (songs.get(s) == null) {
             instance = new CodeEditor(s, m);
-            instances.put(instance.song, instance);
+            instances.put(instance.getId(), instance);
+            songs.put(s, instance.getId());
+        } else {
+            instance = instances.get(songs.get(s));
         }
+
         instance.show();
         instance.toFront();
     }
@@ -126,11 +133,21 @@ public class CodeEditor extends Stage implements CollectionListener {
      */
     private void destroy() {
         manager.removeListener(this);
-        instances.remove(song);
+        instances.remove(instanceId);
+        songs.remove(song);
         close();
         if (!(hasInstanceOpen() || SongbookApplication.getMainWindow().isShowing())) {
             Environment.getInstance().exit();
         }
+    }
+
+    /**
+     * Returns the internal instance id that acts as a key in the instances map.
+     *
+     * @return guess what
+     */
+    private int getId() {
+        return instanceId;
     }
 
     /**

@@ -1,6 +1,5 @@
 package attilathehun.songbook.vcs;
 
-import attilathehun.annotation.TODO;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.Misc;
@@ -162,7 +161,7 @@ public final class VCSAdmin {
         }
     }
 
-    @TODO
+    // TODO
     public void loadRemoteChanges(VCSAgent a) throws IOException, NoSuchAlgorithmException {
         if (!(Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             new AlertDialog.Builder().setTitle("Remote saving and loading disabled").setIcon(AlertDialog.Builder.Icon.INFO)

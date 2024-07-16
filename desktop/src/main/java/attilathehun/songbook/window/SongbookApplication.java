@@ -5,6 +5,7 @@ import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.*;
 import attilathehun.songbook.util.BrowserFactory;
+import attilathehun.songbook.util.TokenProvider;
 import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
@@ -21,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 
@@ -118,7 +120,7 @@ public class SongbookApplication extends Application {
         stage.setScene(scene);
         initKeyboardShortcuts(stage);
         stage.show();
-        // beware of caching and garbage collection
+        // beware of memory leaks
         mainWindow = stage;
         logger.debug("Application started successfully");
     }

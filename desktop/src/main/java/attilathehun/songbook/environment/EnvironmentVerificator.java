@@ -35,7 +35,7 @@ public class EnvironmentVerificator {
 
         verifyCSS();
 
-        verifyScripts();
+        //verifyScripts();
 
         verifyTemp();
 

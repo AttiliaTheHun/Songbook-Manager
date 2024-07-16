@@ -1,17 +1,11 @@
 package attilathehun.songbook.window;
 
-import attilathehun.annotation.TODO;
 import attilathehun.songbook.Main;
 import attilathehun.songbook.collection.*;
-import attilathehun.songbook.environment.Environment;
-import attilathehun.songbook.environment.EnvironmentManager;
-import attilathehun.songbook.environment.EnvironmentStateListener;
-import attilathehun.songbook.environment.SettingsManager;
+import attilathehun.songbook.environment.*;
 import attilathehun.songbook.util.PDFGenerator;
 import attilathehun.songbook.util.HTMLGenerator;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -35,7 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 //TODO: when songs get disabled, there is a problem with the latest page/song being out of bonds, fixing it?
-public class SongbookController implements CollectionListener, EnvironmentStateListener {
+public class SongbookController implements CollectionListener, EnvironmentStateListener, SettingsListener {
 
     private static final Logger logger = LogManager.getLogger(SongbookController.class);
 
@@ -239,69 +233,73 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         applySongOneId.setOnAction(event -> {
             final String text = songOneIdField.getText().trim().toLowerCase();
             if (text.length() == 0) {
+                songOneIdField.setText(SONG_ONE.getDisplayId());
                 return;
             }
-            int id = CollectionManager.INVALID_SONG_ID;
+
             lol:
             try {
-                id = Integer.parseInt(text);
-                if (id < 0)
+                int id = Integer.parseInt(text);
+                if (!CollectionManager.isValidId(id))
                     break lol;
                 int index = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(id);
                 if (index > 0) {
                     SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(index);
                     SONG_ONE_INDEX = index;
+                    refreshWebView();
+                    return;
                 }
+            } catch (final NumberFormatException e) {
+                // it's ok
+            }
 
-            } catch (final Exception e) {
-                logger.error(e.getLocalizedMessage(), e);
-            }
-            if (id == -1) {
-                int index = 0;
-                for (final Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
-                    if (song.name().equals(text)) {
-                        SONG_ONE = song;
-                        SONG_ONE_INDEX = index;
-                        break;
-                    }
-                    index++;
+            int index = 0;
+            for (final Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
+                if (song.name().equals(text)) {
+                    SONG_ONE = song;
+                    SONG_ONE_INDEX = index;
+                    refreshWebView();
+                    return;
                 }
+                index++;
             }
-            refreshWebView();
+            songOneIdField.setText(SONG_ONE.getDisplayId());
         });
 
-        //TODO: when inputing "songlist0" this throws @NumberFormatException, fix it!
         applySongTwoId.setOnAction(event -> {
             final String text = songTwoIdField.getText().trim().toLowerCase();
             if (text.length() == 0) {
+                songTwoIdField.setText(SONG_TWO.getDisplayId());
                 return;
             }
-            int id = -1;
+
             lol:
             try {
-                id = Integer.parseInt(text);
-                if (id == -1)
+                int id = Integer.parseInt(text);
+                if (!CollectionManager.isValidId(id))
                     break lol;
-                final int index = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(id);
-                if (index != -1) {
+                int index = Environment.getInstance().getCollectionManager().getFormalCollectionSongIndex(id);
+                if (index > 0) {
                     SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(index);
                     SONG_TWO_INDEX = index;
+                    refreshWebView();
+                    return;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (final NumberFormatException e) {
+                // it's ok
             }
-            if (id == -1) {
-                int index = 0;
-                for (final Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
-                    if (song.name().equals(text)) {
-                        SONG_TWO = song;
-                        SONG_TWO_INDEX = index;
-                        break;
-                    }
-                    index++;
+
+            int index = 0;
+            for (final Song song : Environment.getInstance().getCollectionManager().getFormalCollection()) {
+                if (song.name().equals(text)) {
+                    SONG_TWO = song;
+                    SONG_TWO_INDEX = index;
+                    refreshWebView();
+                    return;
                 }
+                index++;
             }
-            refreshWebView();
+            songTwoIdField.setText(SONG_TWO.getDisplayId());
         });
 
         refreshButton.setOnAction(event -> {
@@ -338,7 +336,6 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
         });
 
-        // TODO when export gets disabled on runtime, these things should be hidden
         if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
             singlepageSelection.setVisible(false);
             defaultSelection.setVisible(false);
@@ -479,6 +476,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             final URL url = new File(generator.generatePageFile(SONG_ONE, SONG_TWO)).toURI().toURL();
 
             Platform.runLater(() -> webview.getEngine().load(url.toExternalForm()));
+            webview.getEngine().reload();
         } catch (final MalformedURLException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("WebView Configuration Error").setIcon(AlertDialog.Builder.Icon.ERROR)
@@ -575,5 +573,17 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     @Override
     public void onCollectionManagerChanged(final CollectionManager m) {
 
+    }
+
+    @Override
+    public void onSettingChanged(final String name, final Setting old, final Setting _new) {
+        if (!name.equals("EXPORT_ENABLED")) {
+            return;
+        }
+
+        final boolean status = (Boolean) _new.getValue();
+        singlepageSelection.setVisible(status);
+        defaultSelection.setVisible(status);
+        printableSelection.setVisible(status);
     }
 }

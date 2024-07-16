@@ -31,10 +31,10 @@ public class Installer {
         final EnvironmentVerificator verificator = new EnvironmentVerificator();
         if (!verificator.verifyResources()) {
             installer.installResources();
-        }
+        }/*
         if (!verificator.verifyScripts()) {
             installer.installScripts();
-        }
+        }*/
     }
 
     /**

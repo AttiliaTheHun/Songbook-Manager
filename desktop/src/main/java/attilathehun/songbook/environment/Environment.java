@@ -5,6 +5,7 @@ import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.util.BrowserFactory;
+import attilathehun.songbook.util.HTMLGenerator;
 import attilathehun.songbook.util.PDFGenerator;
 import attilathehun.songbook.vcs.CacheManager;
 import attilathehun.songbook.window.AlertDialog;
@@ -31,7 +32,7 @@ public final class Environment implements CollectionListener {
     private final Map<String, CollectionManager> collectionManagers = new HashMap<>();
 
     private CollectionManager selectedCollectionManager;
-
+    @Deprecated(forRemoval = true)
     private String tokenInMemory = null;
 
     private Environment() {
@@ -160,12 +161,12 @@ public final class Environment implements CollectionListener {
         }
     }
 
+    @Deprecated(forRemoval = true)
     public String acquireToken() {
         if (tokenInMemory != null) {
             return tokenInMemory;
         }
 
-        // TODO
 
        return null;
     }
@@ -192,6 +193,7 @@ public final class Environment implements CollectionListener {
         } catch (final NullPointerException npe) {
             logger.error(npe.getMessage(), npe);
         }
+        HTMLGenerator.init();
         notifyOnRefresh();
     }
 
@@ -220,6 +222,7 @@ public final class Environment implements CollectionListener {
             manager.init();
         }
 
+        HTMLGenerator.init();
         CollectionEditor.refresh();
         SettingsEditor.refresh();
         CacheManager.getInstance().clearCache();

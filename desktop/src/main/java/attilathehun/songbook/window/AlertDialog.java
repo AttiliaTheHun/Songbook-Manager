@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+/**
+ * Utility class that allows the creation of customizable pop-up dialogs with ease and only minor headache.
+ */
 public class AlertDialog extends Stage {
     public static final int RESULT_OK = 0;
     public static final int RESULT_CLOSE = 1;

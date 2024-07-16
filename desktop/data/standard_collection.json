@@ -3,6 +3,18 @@
     "id": 0,
     "name": "1. Signální",
     "active": true,
-    "url": "https://www.youtube.com/watch?v\\u003dRuWfykUIlrY"
+    "url": "https://www.youtube.com/watch?v\u003dRuWfykUIlrY"
+  },
+  {
+    "id": 1,
+    "name": "Abeceda",
+    "active": true,
+    "url": "https://www.youtube.com/watch?v\u003dQX6rolYzt3M"
+  },
+  {
+    "id": 2,
+    "name": "Amazonka",
+    "active": true,
+    "url": "https://www.youtube.com/watch?v\u003dplgFQPmf-DU"
   }
 ]

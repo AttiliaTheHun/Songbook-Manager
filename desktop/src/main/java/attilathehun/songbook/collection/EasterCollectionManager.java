@@ -1,6 +1,5 @@
 package attilathehun.songbook.collection;
 
-import attilathehun.annotation.TODO;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.EnvironmentManager;
 import attilathehun.songbook.environment.EnvironmentVerificator;
@@ -289,7 +288,7 @@ public final class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
-    @TODO
+    // TODO
     public void updateSongHTMLFromRecord(final Song s) {
         if (!CollectionManager.isValidId(s.id())) {
             throw new IllegalArgumentException();

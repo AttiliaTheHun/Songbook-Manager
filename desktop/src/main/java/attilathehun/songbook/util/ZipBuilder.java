@@ -96,7 +96,7 @@ public class ZipBuilder implements Closeable {
     /**
      * Extracts a zip file specified by path to the directory of the same name as the zip file trimmed of its extension.
      *
-     * @param zipFilePath
+     * @param zipFilePath path to the zip file
      * @return the extraction directory path
      * @throws IOException
      */

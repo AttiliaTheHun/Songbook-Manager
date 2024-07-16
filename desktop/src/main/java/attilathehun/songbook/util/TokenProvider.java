@@ -21,6 +21,9 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.ArrayList;
 
+/**
+ * This class can be used to acquire an authentication token. This class is not thread-safe, but there is no reason to require more than one instance anyway.
+ */
 public class TokenProvider {
     private static final Logger logger = LogManager.getLogger(TokenProvider.class);
     private static final String AES_ALGORITHM = "AES";
@@ -41,6 +44,10 @@ public class TokenProvider {
         byte[] token = null;
         try {
             token = getLocalAuthenticationToken();
+            // if the decryption fails, null is returned and so it would simply ask to enter a token (undesirable)
+            if (token == null) {
+                token = requestAuthenticationToken();
+            }
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("I/O Error").setIcon(AlertDialog.Builder.Icon.ERROR).setMessage("Something went wrong while reading the auth file: " + e.getLocalizedMessage())
@@ -49,10 +56,6 @@ public class TokenProvider {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Decryption Error").setIcon(AlertDialog.Builder.Icon.ERROR).setMessage("Error occurred when decrypting the auth file: " + e.getLocalizedMessage())
                     .addOkButton().build().open();
-        }
-
-        if (token == null) {
-            token = requestAuthenticationToken();
         }
 
         return token;

@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -53,14 +54,26 @@ public class HTMLGenerator {
 
     private static final String SHADOW_SONG_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH") + "/shadow_song.html").toString();
 
+    private static String tempStylesheetFileChecksum = "";
+
+    static {
+        init();
+    }
+
     /**
-     * The default constructor. Upon instantiation the default style file and a shadow song file are created in the temp folder.
+     * The default constructor.
      */
     public HTMLGenerator() {
+
+    }
+
+    /**
+     * Ensures the stylesheet in the temp folder is up-to-date and creates the shadow song file.
+     */
+    public static void init() {
         try {
-            Files.copy(Paths.get(BASE_STYLE_FILE_PATH), Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH") + "/style.css"), StandardCopyOption.REPLACE_EXISTING);
-            createShadowSongFile();
-        } catch (final IOException e) {
+            initTempFiles();
+        } catch (final Exception e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage("Cannot instantiate the HTML generator").addOkButton().build().open();
@@ -68,8 +81,36 @@ public class HTMLGenerator {
         }
     }
 
-    private void createShadowSongFile() throws IOException {
+    /**
+     * Ensures the stylesheet in the temp folder is up-to-date and creates the shadow song file.
+     */
+    private static void initTempFiles() throws IOException, NoSuchAlgorithmException {
+        createShadowSongFile();
+
+        final File tempStylesheet = new File(SettingsManager.getInstance().getValue("TEMP_FILE_PATH") + "/style.css");
+        String currentChecksum;
+
+        if (tempStylesheet.exists()) {
+            currentChecksum = new SHA256HashGenerator().getHash(tempStylesheet);
+            if (currentChecksum.equals(tempStylesheetFileChecksum)) {
+                return;
+            }
+        }
+        Files.copy(Paths.get(BASE_STYLE_FILE_PATH), tempStylesheet.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        currentChecksum = new SHA256HashGenerator().getHash(tempStylesheet);
+        tempStylesheetFileChecksum = currentChecksum;
+    }
+
+    /**
+     * Create an empty song file that can be injected into the current page file as a fill-up song.
+     *
+     * @throws IOException
+     */
+    private static void createShadowSongFile() throws IOException {
         final File shadowSongFile = new File(SHADOW_SONG_PATH);
+        if (shadowSongFile.exists()) {
+            return;
+        }
         shadowSongFile.createNewFile();
         final PrintWriter printWriter = new PrintWriter(new FileWriter((shadowSongFile), false));
         printWriter.write(SHADOW_SONG_HTML);
