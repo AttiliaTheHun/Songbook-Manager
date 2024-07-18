@@ -5,7 +5,11 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-
+/**
+ * This class represents the actual settings that are used to modify the program's behavior.
+ *
+ * @param <T> the data type the setting keeps
+ */
 public final class Setting<T> implements Serializable {
     public static final int TYPE_STRING = 0;
     public static final int TYPE_NON_EMPTY_STRING = 1;
@@ -23,6 +27,7 @@ public final class Setting<T> implements Serializable {
     private final transient T def;
     private final transient int type;
     private final transient String description;
+    @Deprecated
     private final transient String inputFormatDescription;
 
     public Setting (final String name, final T value) {
@@ -131,6 +136,7 @@ public final class Setting<T> implements Serializable {
     /**
      * Sets the default value of the setting as its actual value. Can only be performed on settings with a default value as it will
      * throw and exception otherwise.
+     *
      * @throws {@link UnsupportedOperationException} if the setting does not have a default value
      */
     public void setDefault() {
@@ -211,7 +217,7 @@ public final class Setting<T> implements Serializable {
                 }
             }
         }
-
+        // signifies TYPE_CUSTOM
         return true;
     }
 
@@ -226,9 +232,13 @@ public final class Setting<T> implements Serializable {
 
     /**
      * Returns the description of the expected value format that should be displayed to the user when editing the setting.
+     * <br><br>
+     * Since the only input type that would make sense to use this would be text type when used as hint text, this feature is deprecated. The problem is
+     * that settings are implemented to automatically fill in default value when an input field is left empty, so the hint text is never actually shown.
      *
      * @return description of the value format
      */
+    @Deprecated
     public String getInputFormatDescription() {
         return inputFormatDescription;
     }

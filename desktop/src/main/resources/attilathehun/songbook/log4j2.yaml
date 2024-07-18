@@ -8,6 +8,7 @@ Configuration:
     File:
       name: Default_Appender
       fileName: log.txt
+      append: false
       PatternLayout:
         Pattern: ${DefaultPattern}
   Loggers:

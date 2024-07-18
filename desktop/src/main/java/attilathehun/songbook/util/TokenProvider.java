@@ -158,7 +158,7 @@ public class TokenProvider {
      * @return the key generation password or null
      */
     private char[] getKeyPassword() {
-        if (SettingsManager.getInstance().getValue("USE_CUSTOM_ENCRYPTION_PASSWORD")) {
+        if (SettingsManager.getInstance().getValue("USE_DEFAULT_ENCRYPTION_PASSWORD")) {
             final String k = openInputDialog("Enter custom encryption password", "Password", "Enter the encryption key derivation password");
             if (k == null || k.trim().length() == 0) {
                 return null;

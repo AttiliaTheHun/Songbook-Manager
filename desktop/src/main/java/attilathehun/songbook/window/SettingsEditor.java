@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 
-// TODO settings may be altered through other components so the window should get refreshed somehow
+// TODO: settings may be altered through other components so the window should get refreshed somehow
 
 /**
  * This class represents the window from which the user can manage the settings.
@@ -221,8 +221,6 @@ public final class SettingsEditor extends Stage {
         @FXML
         public CheckBox autoLoadDataSwitch;
         @FXML
-        public TextField defaultReadTokenField;
-        @FXML
         public TextField authFilePathField;
         @FXML
         public Button browseFilesForAuthFileButton;
@@ -312,7 +310,6 @@ public final class SettingsEditor extends Stage {
                 }
             });
 
-
             final Setting<Boolean> autoLoadDataSetting = (Setting<Boolean>) SettingsManager.getInstance().get("AUTO_LOAD_DATA");
             autoLoadDataSwitch.setSelected(enableDynamicSonglistSetting.getValue());
             final Tooltip autoLoadDataSwitchTooltip = new Tooltip();
@@ -322,27 +319,11 @@ public final class SettingsEditor extends Stage {
                 SettingsManager.getInstance().set("AUTO_LOAD_DATA", newValue);
             });
 
-            final Setting<String> defaultReadTokenSetting = (Setting<String>) SettingsManager.getInstance().get("DEFAULT_READ_TOKEN");
-            defaultReadTokenField.setText(defaultReadTokenSetting.getValue());
-            defaultReadTokenField.setPromptText(defaultReadTokenSetting.getInputFormatDescription());
-            final Tooltip defaultReadTokenFieldTooltip = new Tooltip();
-            defaultReadTokenFieldTooltip.setText(defaultReadTokenSetting.getDescription());
-            defaultReadTokenField.setTooltip(defaultReadTokenFieldTooltip);
-            defaultReadTokenField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
-                if (!newValue) { // focus lost
-                    if (defaultReadTokenSetting.verifyValue(defaultReadTokenField.getText().trim())) {
-                        SettingsManager.getInstance().set("DEFAULT_READ_TOKEN", defaultReadTokenField.getText().trim());
-                    } else {
-                        defaultReadTokenField.setText(defaultReadTokenSetting.getValue());
-                    }
-                }
-            });
-
             final Setting<String> authFilePathSetting = (Setting<String>) SettingsManager.getInstance().get("AUTH_FILE_PATH");
             authFilePathField.setText(authFilePathSetting.getValue());
             authFilePathField.setPromptText(authFilePathSetting.getInputFormatDescription());
             final Tooltip authFilePathFieldTooltip = new Tooltip();
-            authFilePathFieldTooltip.setText(defaultReadTokenSetting.getDescription());
+            authFilePathFieldTooltip.setText(authFilePathSetting.getDescription());
             authFilePathField.setTooltip(authFilePathFieldTooltip);
             authFilePathField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
                 if (!newValue) { // focus lost
@@ -371,7 +352,6 @@ public final class SettingsEditor extends Stage {
             exportEnabledSwitch.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
                 SettingsManager.getInstance().set("EXPORT_ENABLED", newValue);
                 keepBrowserInstanceAliveSwitch.setDisable(oldValue);
-                defaultReadTokenField.setDisable(oldValue);
                 printableExportFileNameField.setDisable(oldValue);
                 singlepageExportFileNameField.setDisable(oldValue);
             });
@@ -809,9 +789,7 @@ public final class SettingsEditor extends Stage {
         @FXML
         public CheckBox remoteSaveLoadSwitch;
         @FXML
-        public TextField remoteDataDownloadURLField;
-        @FXML
-        public TextField remoteDataUploadURLField;
+        public TextField remoteDataURLField;
         @FXML
         public TextField remoteDataIndexURLField;
         @FXML
@@ -837,8 +815,7 @@ public final class SettingsEditor extends Stage {
             remoteSaveLoadSwitch.setTooltip(remoteSaveLoadDataSwitchTooltip);
             remoteSaveLoadSwitch.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
                 SettingsManager.getInstance().set("REMOTE_SAVE_LOAD_ENABLED", newValue);
-                remoteDataDownloadURLField.setDisable(oldValue);
-                remoteDataUploadURLField.setDisable(oldValue);
+                remoteDataURLField.setDisable(oldValue);
                 remoteDataIndexURLField.setDisable(oldValue);
                 remoteDataVersionTimestampField.setDisable(oldValue);
                 VCSCachePathField.setDisable(oldValue);
@@ -847,37 +824,22 @@ public final class SettingsEditor extends Stage {
             });
             remoteSaveLoadSwitch.setSelected(enableVCSSetting.getValue());
 
-            final Setting<String> remoteDownloadSetting = (Setting<String>) SettingsManager.getInstance().get("REMOTE_DATA_DOWNLOAD_URL");
-            remoteDataDownloadURLField.setText(remoteDownloadSetting.getValue());
-            remoteDataDownloadURLField.setPromptText(remoteDownloadSetting.getInputFormatDescription());
+            final Setting<String> remoteDownloadSetting = (Setting<String>) SettingsManager.getInstance().get("REMOTE_DATA_URL");
+            remoteDataURLField.setText(remoteDownloadSetting.getValue());
+            remoteDataURLField.setPromptText(remoteDownloadSetting.getInputFormatDescription());
             final Tooltip remoteDataDownloadFieldTooltip = new Tooltip();
             remoteDataDownloadFieldTooltip.setText(remoteDownloadSetting.getDescription());
-            remoteDataDownloadURLField.setTooltip(remoteDataDownloadFieldTooltip);
-            remoteDataDownloadURLField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
+            remoteDataURLField.setTooltip(remoteDataDownloadFieldTooltip);
+            remoteDataURLField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
                 if (!newValue) { // focus lost
-                    if (remoteDownloadSetting.verifyValue(remoteDataDownloadURLField.getText().trim())) {
-                        SettingsManager.getInstance().set("REMOTE_DATA_DOWNLOAD_URL", remoteDataDownloadURLField.getText().trim());
+                    if (remoteDownloadSetting.verifyValue(remoteDataURLField.getText().trim())) {
+                        SettingsManager.getInstance().set("REMOTE_DATA_URL", remoteDataURLField.getText().trim());
                     } else {
-                        remoteDataDownloadURLField.setText(remoteDownloadSetting.getValue());
+                        remoteDataURLField.setText(remoteDownloadSetting.getValue());
                     }
                 }
             });
 
-            final Setting<String> remoteUploadSetting = (Setting<String>) SettingsManager.getInstance().get("REMOTE_DATA_UPLOAD_URL");
-            remoteDataUploadURLField.setText(remoteUploadSetting.getValue());
-            remoteDataUploadURLField.setPromptText(remoteUploadSetting.getInputFormatDescription());
-            final Tooltip remoteDataUploadFieldTooltip = new Tooltip();
-            remoteDataUploadFieldTooltip.setText(remoteUploadSetting.getDescription());
-            remoteDataUploadURLField.setTooltip(remoteDataUploadFieldTooltip);
-            remoteDataUploadFieldTooltip.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
-                if (!newValue) { // focus lost
-                    if (remoteUploadSetting.verifyValue(remoteDataUploadFieldTooltip.getText().trim())) {
-                        SettingsManager.getInstance().set("REMOTE_DATA_UPLOAD_URL", remoteDataUploadFieldTooltip.getText().trim());
-                    } else {
-                        remoteDataUploadFieldTooltip.setText(remoteUploadSetting.getValue());
-                    }
-                }
-            });
 
             final Setting<String> remoteIndexSetting = (Setting<String>) SettingsManager.getInstance().get("REMOTE_DATA_INDEX_URL");
             remoteDataIndexURLField.setText(remoteIndexSetting.getValue());

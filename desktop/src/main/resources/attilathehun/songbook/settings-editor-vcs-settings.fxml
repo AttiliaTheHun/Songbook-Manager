@@ -23,26 +23,11 @@
             <CheckBox fx:id="remoteSaveLoadSwitch" mnemonicParsing="false" selected="true" text="Enable VCS" />
             <HBox>
                <children>
-                  <Label text="Remote download">
+                  <Label text="Remote data">
                      <HBox.margin>
                         <Insets right="3.0" top="3.0" />
                      </HBox.margin></Label>
-                  <TextField fx:id="remoteDataDownloadURLField" HBox.hgrow="ALWAYS">
-                     <HBox.margin>
-                        <Insets right="5.0" />
-                     </HBox.margin></TextField>
-               </children>
-               <VBox.margin>
-                  <Insets top="5.0" />
-               </VBox.margin>
-            </HBox>
-            <HBox>
-               <children>
-                  <Label text="Remote upload">
-                     <HBox.margin>
-                        <Insets right="3.0" top="3.0" />
-                     </HBox.margin></Label>
-                  <TextField fx:id="remoteDataUploadURLField" HBox.hgrow="ALWAYS">
+                  <TextField fx:id="remoteDataURLField" HBox.hgrow="ALWAYS">
                      <HBox.margin>
                         <Insets right="5.0" />
                      </HBox.margin></TextField>

@@ -75,21 +75,11 @@
                   <Insets top="5.0" />
                </VBox.margin>
             </CheckBox>
-            <HBox prefWidth="200.0">
-               <children>
-                  <Label text="Default read token">
-                     <HBox.margin>
-                        <Insets right="5.0" top="3.0" />
-                     </HBox.margin></Label>
-                  <TextField fx:id="defaultReadTokenField" HBox.hgrow="ALWAYS">
-                     <HBox.margin>
-                        <Insets right="60.0" />
-                     </HBox.margin></TextField>
-               </children>
+            <CheckBox fx:id="useDefaultEncryptionPassword" mnemonicParsing="false" text="Use default encryption password" selected="true">
                <VBox.margin>
                   <Insets top="5.0" />
                </VBox.margin>
-            </HBox>
+            </CheckBox>
             <HBox prefWidth="200.0">
                <children>
                   <Label text="Auth file path">

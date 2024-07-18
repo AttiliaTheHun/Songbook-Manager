@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox prefHeight="575" prefWidth="800" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+        <Label text="Response:">
+            <VBox.margin>
+                <Insets bottom="2.0" left="5.0" top="5.0" />
+            </VBox.margin>
+        </Label>
+        <TextArea fx:id="rawAccessViewResponseArea" editable="false" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+            <VBox.margin>
+                <Insets left="5.0" right="5.0" />
+            </VBox.margin>
+        </TextArea>
+        <Label text="Request:">
+            <VBox.margin>
+                <Insets bottom="2.0" left="5.0" top="5.0" />
+            </VBox.margin>
+        </Label>
+        <TextArea fx:id="rawAccessViewRequestArea" prefHeight="200.0" prefWidth="200.0" promptText="Enter the HTTP request body here.  Make sure you are using the correct request structure or check the wiki for help. The server probably expects JSON stuff. Also, be  nice to animals!" VBox.vgrow="ALWAYS">
+            <VBox.margin>
+                <Insets left="5.0" right="5.0" />
+            </VBox.margin>
+        </TextArea>
+        <HBox prefWidth="200.0">
+            <children>
+                <ChoiceBox fx:id="rawAccessHTTPMethodBox" prefWidth="150.0">
+
+                    <HBox.margin>
+                        <Insets left="5.0" />
+                    </HBox.margin>
+                </ChoiceBox>
+                <Label text="URL:">
+                    <HBox.margin>
+                        <Insets left="5.0" top="4.0" />
+                    </HBox.margin>
+                </Label>
+
+                <TextField fx:id="rawAccessViewURLField" promptText="Just enter the address and get it over with..." HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="5.0" right="5.0" />
+                    </HBox.margin>
+                </TextField>
+                <Button fx:id="rawAccessViewSendButton" mnemonicParsing="false" text="Send">
+                    <HBox.margin>
+                        <Insets right="5.0" />
+                    </HBox.margin>
+                </Button>
+            </children>
+            <VBox.margin>
+                <Insets top="5.0" />
+            </VBox.margin>
+        </HBox>
+    </children>
+   <padding>
+      <Insets bottom="5.0" />
+   </padding>
+</VBox>

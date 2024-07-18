@@ -135,7 +135,6 @@ public class SongbookApplication extends Application {
             switch (keyEvent.getCode()) {
                 case LEFT, PAGE_DOWN -> {
                     Environment.notifyOnPageTurnedBack();
-
                 }
                 case RIGHT, PAGE_UP -> {
                     Environment.notifyOnPageTurnedForward();
@@ -172,6 +171,11 @@ public class SongbookApplication extends Application {
                 case N -> {
                     if (keyEvent.isControlDown()) {
                         Environment.getInstance().getCollectionManager().addSongDialog();
+                    }
+                }
+                case A -> { // open server admin panel
+                    if (keyEvent.isControlDown() && keyEvent.isAltDown()) {
+                        AdminPanel.open();
                     }
                 }
             }

@@ -320,7 +320,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         editSongTwoHTML.setOnAction(event -> {
             if (SONG_TWO.id() < 0) {
                 new AlertDialog.Builder().setTitle("Message").setIcon(AlertDialog.Builder.Icon.INFO)
-                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH")))
+                        .setMessage(String.format("This page is generated automatically from a template. You can edit the template at %s.", (String) SettingsManager.getInstance().getValue("TEMPLATE_RESOURCES_FILE_PATH")))
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
                 return;
             }
