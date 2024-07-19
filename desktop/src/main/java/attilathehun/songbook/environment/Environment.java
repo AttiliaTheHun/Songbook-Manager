@@ -198,8 +198,8 @@ public final class Environment implements CollectionListener {
     }
 
     /**
-     * Performs a complete refresh of the environment without restarting it. This operation is quite heavy and may result in crash of the program. It is designed
-     * to be used only when absolute necessary, for example when loading a new songbook at runtime. If you only need to make sure some changes in the configuration
+     * Performs a complete refresh of the environment without restarting it. This operation is quite heavy and may result in crashing of the program. It is designed
+     * to be used only when absolutely necessary, for example when loading a new songbook at runtime. If you only need to make sure some changes in the configuration
      * or in the collections are applied, use {@link #refresh()} which is much lighter and much less likely to crash the application.
      * Emits {@link EnvironmentStateListener#onRefresh()}.
      */
@@ -222,13 +222,12 @@ public final class Environment implements CollectionListener {
             manager.init();
         }
 
+        SettingsEditor.refresh();
         HTMLGenerator.init();
         CollectionEditor.refresh();
-        SettingsEditor.refresh();
         CacheManager.getInstance().clearCache();
         BrowserFactory.init();
         EnvironmentVerificator.automated();
-
         notifyOnRefresh();
 
         logger.info("environment hard refreshed");

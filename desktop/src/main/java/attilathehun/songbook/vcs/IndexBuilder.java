@@ -8,6 +8,7 @@ import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.SHA256HashGenerator;
 import attilathehun.songbook.vcs.index.*;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,6 +17,9 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -35,12 +39,13 @@ public class IndexBuilder {
      */
     public static List<String> compareCollections(final Index localIndex, final Index remoteIndex) {
         final List<String> modifiedCollections = new ArrayList<>();
-        if (!localIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()).equals(remoteIndex.getCollections().get(StandardCollectionManager.getInstance().getCollectionName()))) {
-            modifiedCollections.add(StandardCollectionManager.getInstance().getCollectionName());
+
+        for (final String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
+            if (!localIndex.getCollections().get(collection).equals(remoteIndex.getCollections().get(collection))) {
+                modifiedCollections.add(collection);
+            }
         }
-        if (!localIndex.getCollections().get(EasterCollectionManager.getInstance().getCollectionName()).equals(remoteIndex.getCollections().get(EasterCollectionManager.getInstance().getCollectionName()))) {
-            modifiedCollections.add(EasterCollectionManager.getInstance().getCollectionName());
-        }
+
         return modifiedCollections;
     }
 
@@ -79,7 +84,7 @@ public class IndexBuilder {
      */
     public LoadIndex createLoadIndex(final Index local, final Index remote) {
         if (local == null || remote == null) {
-            throw new IllegalArgumentException("the index can not be null");
+            throw new IllegalArgumentException("neither index can be null");
         }
         final Property missing = new Property();
         Collection<String> missingSongs;
@@ -96,13 +101,15 @@ public class IndexBuilder {
     }
 
     /**
-     * Generates a complete index of the local songbook data. Performs blocking operations.
+     * Generates a complete index of the local songbook data. Performs blocking operations. Returns null if there is a problem with the generation process.
      *
-     * @return local songbook index
+     * @return local songbook index or null
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
      */
     public Index createLocalIndex() throws IOException, NoSuchAlgorithmException {
-        SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
-        Index index = new Index();
+        final SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
+        final Index index = new Index();
         index.setData(new Property());
         index.setHashes(new Property());
         index.setCollections(new Property());
@@ -110,12 +117,14 @@ public class IndexBuilder {
 
         Map<String, String> collectionSongs;
         String collectionHash;
-        for (CollectionManager collectionManager : Environment.getInstance().getRegisteredManagers().values()) {
-            BuildWorker.spamCPUAndMemoryWithThreads(listFiles(collectionManager.getSongDataFilePath()));
-            collectionSongs = BuildWorker.map;
+        for (final CollectionManager collectionManager : Environment.getInstance().getRegisteredManagers().values()) {
+            collectionSongs = performBuildTask(listFiles(collectionManager.getSongDataFilePath()));
+            if (collectionSongs == null) {
+                return null;
+            }
             collectionHash = hashGenerator.getHash(new File(collectionManager.getCollectionFilePath()));
-            index.getData().put(collectionManager.getCollectionName(), collectionSongs.keySet());
-            index.getHashes().put(collectionManager.getCollectionName(), collectionSongs.values());
+            index.getData().put(collectionManager.getCollectionName(), new ArrayList<>(collectionSongs.keySet()));
+            index.getHashes().put(collectionManager.getCollectionName(), new ArrayList<>(collectionSongs.values()));
             index.getCollections().put(collectionManager.getCollectionName(), collectionHash);
         }
 
@@ -195,30 +204,30 @@ public class IndexBuilder {
 
         for (final String collection : Environment.getInstance().getRegisteredManagers().keySet()) {
 
-            ArrayList<String> localSongs = (ArrayList<String>) localIndex.getData().get(collection);
-            ArrayList<String> localSongHashes = (ArrayList<String>) localIndex.getHashes().get(collection);
+            final ArrayList<String> localSongs = (ArrayList<String>) localIndex.getData().get(collection);
+            final ArrayList<String> localSongHashes = (ArrayList<String>) localIndex.getHashes().get(collection);
             if (localSongs.size() != localSongHashes.size()) {
                 throw new MalformedIndexException("Local song count and song hash count do not match!");
             }
-            ArrayList<String> remoteSongs = (ArrayList<String>) remoteIndex.getData().get(collection);
-            ArrayList<String> remoteSongHashes = (ArrayList<String>) remoteIndex.getHashes().get(collection);
+            final ArrayList<String> remoteSongs = (ArrayList<String>) remoteIndex.getData().get(collection);
+            final ArrayList<String> remoteSongHashes = (ArrayList<String>) remoteIndex.getHashes().get(collection);
             if (remoteSongs.size() != remoteSongHashes.size()) {
                 throw new MalformedIndexException("Remote song count and song hash count do not match!");
             }
 
-            HashMap<String, String> localSongData = new HashMap<>();
+            final HashMap<String, String> localSongData = new HashMap<>();
 
             for (int i = 0; i < localSongs.size(); i++) {
                 localSongData.put(localSongs.get(i), localSongHashes.get(i));
             }
 
-            HashMap<String, String> remoteSongData = new HashMap<>();
+            final HashMap<String, String> remoteSongData = new HashMap<>();
 
             for (int i = 0; i < remoteSongs.size(); i++) {
                 remoteSongData.put(remoteSongs.get(i), remoteSongHashes.get(i));
             }
 
-            Collection<String> collectionChanges = new ArrayList<>();
+            final Collection<String> collectionChanges = new ArrayList<>();
 
             for (final String song : localSongData.keySet()) {
                 if (remoteSongData.get(song) == null) {
@@ -237,9 +246,34 @@ public class IndexBuilder {
         return changes;
     }
 
+    private Map<String, String> performBuildTask(final Collection<File> dequeData) {
+        final ConcurrentLinkedDeque<File> deque = new ConcurrentLinkedDeque<>(dequeData);
+        final Map<String, String> map = Collections.synchronizedSortedMap(new TreeMap<>());
+        try (final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(SettingsManager.getInstance().getValue("VCS_THREAD_COUNT"))) {
+            executor.submit(() -> {
+                try {
+                    final SHA256HashGenerator hashGenerator = new SHA256HashGenerator();
+                    File file;
+                    while (deque.size() > 0) {
+                        file = deque.pollLast();
+                        map.put(file.getName(), hashGenerator.getHash(file));
+                    }
+                } catch (final Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
+            });
+         executor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (final InterruptedException e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+        return map;
+    }
+
     /**
      * A specially configured class for obtaining song file hashes.
      */
+    @Deprecated(forRemoval = true)
     private static class BuildWorker implements Runnable {
         private static final Logger logger = LogManager.getLogger(BuildWorker.class);
         static ConcurrentLinkedDeque<File> deque;
@@ -262,6 +296,7 @@ public class IndexBuilder {
          */
         private static void postExecution() {
             if (deque.size() > 0) {
+                System.out.println(new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(deque));
                 throw new IllegalStateException();
             }
             if (activeThreads.intValue() != 0) {
@@ -277,7 +312,7 @@ public class IndexBuilder {
          */
         static void spamCPUAndMemoryWithThreads(final Collection<File> collection) {
             init(collection);
-            Thread[] threads = new Thread[(int) SettingsManager.getInstance().getValue("VCS_THREAD_COUNT")];
+            final Thread[] threads = new Thread[(int) SettingsManager.getInstance().getValue("VCS_THREAD_COUNT")];
             for (int i = 0; i < threads.length; i++) {
                 threads[i] = new Thread(new BuildWorker());
                 threads[i].start();
@@ -285,7 +320,7 @@ public class IndexBuilder {
             while (activeThreads.intValue() > 0) {
                 try {
                     Thread.sleep(100);
-                } catch (InterruptedException e) {
+                } catch (final InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -305,7 +340,7 @@ public class IndexBuilder {
                     file = deque.pollLast();
                     map.put(file.getName(), hashGenerator.getHash(file));
                 }
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logger.error(e.getMessage(), e);
             }
             activeThreads.decrementAndGet();

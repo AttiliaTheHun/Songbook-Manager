@@ -1,13 +1,8 @@
 <?php
 /**
- * This endpoint can be used to create a complete backup of the songbook. It is an authenticated API route.
+ * This script creates a complete backup of the songbook. This file is not meant to be accessed through HTTP
+ * directly.
  */
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    include(dirname(__FILE__) . '/../../resources/pages/405.php');
-    die();
-}
 
 // first we need to authenticate the user
 require(dirname(__FILE__) . '/../../lib/lib_auth.php');
@@ -27,8 +22,7 @@ $filename = create_complete_backup();
 
 log_action(ACTION_BACKUP, $token, $filename);
 http_response_code(201); // 201 Created
-echo "Backup created under '$filename'";
+echo '{"message": "Backup created under ' . $filename . '"}';
 exit(0);
-
 
 ?>

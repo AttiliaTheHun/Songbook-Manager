@@ -31,16 +31,16 @@ class Index implements JsonSerializable {
 	    return $this->data;
 	}
 	
-	public function pushData($item) {
-	    array_push($this->data, $item);
+	public function addData($key, $value) {
+	    $this->data[$key] = $value;
 	}
 	
 	public function getHashes() {
 	    return $this->hashes;
 	}
 	
-	public function pushHashes($item) {
-	    array_push($this->hashes, $item);
+	public function addHashes($key, $value) {
+	    $this->hashes[$key] = $value;
 	}
 	
 	public function getMetadata() {
@@ -55,8 +55,8 @@ class Index implements JsonSerializable {
 	    return $this->collections;
 	}
 	
-	public function pushCollection($item) {
-	    array_push($this->collections, $item);
+	public function addCollection($name, $value) {
+	    $this->collections[$name] = $value;
 	}
     
     public function set($data) {
@@ -73,8 +73,7 @@ function init_index() {
         $index_file_contents = file_get_contents($GLOBALS['index_file_path']);
         $GLOBALS['index'] = new Index(json_decode($index_file_contents, true));
     } else {
-        $GLOBALS['index'] = generate_index();
-        save_index();
+        regenerate_index();
     }
 }
 
@@ -93,14 +92,15 @@ function save_index() {
 function generate_index() {
     $index = new Index();
     $version_timestamp = -1;
+    
     // we will index every registered collection
     foreach (array_keys($GLOBALS['collections']) as $collection_name) {
         $songs = [];
         $hashes = [];
-        $collection_record;
           
         // add collection file hash
-        $collection_record = [$collection_name => get_file_hash($GLOBALS['collection_data'][$collection_name]['file_path'])];
+        $collection_checksum = get_file_hash($GLOBALS['collection_data'][$collection_name]['file_path']);
+        
         $tempstamp = filemtime($GLOBALS['collection_data'][$collection_name]['file_path']);
         $version_timestamp = max($version_timestamp, $tempstamp);
  
@@ -115,9 +115,9 @@ function generate_index() {
             
         }
         // now we write what we found to the index
-        $index->pushData([$collection_name => $songs]);
-        $index->pushHashes([$collection_name => $hashes]);
-        $index->pushCollection($collection_record);
+        $index->addData($collection_name, $songs);
+        $index->addHashes($collection_name, $hashes);
+        $index->addCollection($collection_name, $collection_checksum);
     }
     
     // finally set the timestamp

@@ -165,7 +165,7 @@ public class ZipBuilder implements Closeable {
     /**
      * Initialises the builder by creating the output stream. Every functional method relies on this stream and will throw {@link IllegalStateException} if the stream is null.
      *
-     * @param outputPath
+     * @param outputPath the path of the zip file
      * @throws FileNotFoundException
      */
     private void init(final String outputPath) throws FileNotFoundException {
@@ -276,6 +276,7 @@ public class ZipBuilder implements Closeable {
         if (parentFolder == null || parentFolder.length() == 0) {
             return addFile(file);
         }
+        parentFolder = parentFolder.replace("\\", "/"); // anti-Windows stuff
         if (parentFolder.startsWith("/")) {
             parentFolder = parentFolder.substring(1);
         }
@@ -333,6 +334,7 @@ public class ZipBuilder implements Closeable {
         if (folder == null || parentFolder == null) {
             throw new IllegalArgumentException("Parameters must not be null");
         }
+        parentFolder = parentFolder.replace("\\", "/"); // anti-Windows stuff
         if (parentFolder.startsWith("/")) {
             parentFolder = parentFolder.substring(1);
         }
@@ -398,6 +400,7 @@ public class ZipBuilder implements Closeable {
         if (folder == null || parentFolder == null) {
             throw new IllegalArgumentException("Parameters must not be null");
         }
+        parentFolder = parentFolder.replace("\\", "/"); // anti-Windows stuff
         if (parentFolder.startsWith("/")) {
             parentFolder = parentFolder.substring(1);
         }

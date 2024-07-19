@@ -1,10 +1,10 @@
 :root {
 	--font-size: 16px;
 	--chords-margin: -0.1em -0.5em -2em;
-    --chords-padding: 0.1em 0.5em 0.15em;
+    	--chords-padding: 0.1em 0.5em 0.15em;
 	--line-margin-top: -65px;
+	--verse-margin-top: -50px;
 }
-
 
 html, body {
 	padding: 0;
@@ -21,13 +21,13 @@ html, body {
 a,
 a:active,
 a:visited {
-    color: #43d911;
-    text-decoration: none;
+    	color: #43d911;
+    	text-decoration: none;
 }
 
 a:hover {
-    color: #0ecfc8;
-    text-decoration: underline;
+    	color: #0ecfc8;
+    	text-decoration: underline;
 }
 
 /*for small screens (mobile)*/
@@ -43,15 +43,15 @@ a:hover {
 }
 
 .navbar a {
-    margin: auto;
+    	margin: auto;
 }
 
 div.song > img {
-    max-width: 100%;
-    height: 70%;
+    	max-width: 100%;
+    	height: 70%;
 	height: 210mm;
-    width: 148.5mm;
-    margin: auto;
+    	width: 148.5mm;
+    	margin: auto;
 }
 
 .songlist-wrapper {
@@ -61,7 +61,7 @@ div.song > img {
 	width: 100%;
 	margin: 0;
 	padding: 0;
-	border: 1px solid brick;
+	/*border: 1px solid brick;*/
 }
 
 ul {
@@ -71,7 +71,7 @@ ul {
 .songlist-column {
 	text-align: center;
 	display: table-cell;
-	border: 1px solid cyan;
+	/*border: 1px solid cyan;*/
 	overflow: visible;
 	min-width: 50%;
 }
@@ -83,31 +83,30 @@ ul {
 	block-size: fit-content;
 	overflow: visible;
 	z-index: 0;
-    font-family: Roboto Mono,Courier New,monospace;
-    line-height: 1em;
-    font-size: 15px;
+    	font-family: Roboto Mono,Courier New,monospace;
+    	line-height: 1em;
+    	font-size: 15px;
 	margin: auto;
-	border: 1px solid purple;
+	/*border: 1px solid purple;*/
 }
 
 
 .song-title {
-	//font-size: 32px; /* h1 default */
+	font-size: 32px; /* h1 default */
 	display: block;
 }
 
 .song-author {
 	text-align: right;
 	padding: 0;
-	//margin: 0;
 	margin-right: 10%;
 	margin-left: 10%;
 	margin-top: -10px;
 	color: gray;
 	z-index: 1;
-	//font-size: 16px; /* h4 default */
+	font-size: 16px; /* h4 default */
 	display: block;
-	border: 1px solid orange;
+	/*border: 1px solid orange;*/
 }
 
 .songbook-page {
@@ -121,12 +120,6 @@ ul {
 	border-spacing: 0;
 	border-collapse: collapse;
 }
-
-/*.songbook-page::after {
-	content: "";
-	clear: both;
-	display: table;
-}*/
 
 .song-text-formatting {
 	font-family: "Roboto Mono", "Courier New", monospace;
@@ -149,7 +142,7 @@ ul {
 	word-wrap: break-word;
 	text-align: center;
 	font-size: var(--font-size);
-	border: 1px solid grey;
+	/*border: 1px solid grey;*/
 }
 
 .song-text-wrapper {
@@ -157,14 +150,14 @@ ul {
 	table-layout: fixed;
 	text-align: center;
 	width: 100%;
-	border: 1px solid red;
+	/*border: 1px solid red;*/
 }
 
 
 .song-text-column {
 	display: table-cell;
 	min-width: 50%;
-	border: 1px solid green;
+	/*border: 1px solid green;*/
 }
 
 .song {
@@ -172,25 +165,29 @@ ul {
 	vertical-align: top;
 	display: table-cell;
 	min-width: 50%;
-	//max-width: 50%;
-	border: 1px solid black;
+	/*border: 1px solid black;*/
+}
+
+.verse {
+	display: block;
+	position: relative;
+	margin-top: var(--verse-margin-top);
 }
 
 .line {
 	overflow: hidden;
 	margin: auto;
 	margin-top: var(--line-margin-top);
-	//margin-bottom: -20px;
 	text-align: left;
 	display: block;
 	color: #212121;
 	padding: 0;
-	border: 1px solid blue;
+	/*border: 1px solid blue;*/
 	position: relative;
 }
 
 .lyrics {
-	border: 1px solid aquamarine;
+	/*border: 1px solid aquamarine;*/
 	position: relative;
 	display: block;
 }
@@ -198,90 +195,119 @@ ul {
 .chords {
 	display: block;
 	border-radius: 2px;
-    cursor: default;
-    font-weight: 700;
+    	cursor: default;
+    	font-weight: 700;
 	position: relative;
 	text-align: left;
 	margin: var(--chords-margin);
 	padding: var(--chords-padding);
-	border: 1px solid pink;
+	/*border: 1px solid pink;*/
 }
 
 .font-size-12-px {
 	--font-size: 12px;
 	--chords-margin: -0.1em -0.5em -2em;
-    --chords-padding: 0.1em 0.5em 0.25em;
-	--line-margin-top: -50px;
+    	--chords-padding: 0.1em 0.5em 0.25em;
+	--line-margin-top: -60px;
+	--verse-margin-top: -50px;
 }
 
 .font-size-13-px {
 	--font-size: 13px;
 	--chords-margin: -0.1em -0.5em -2em;
-    --chords-padding: 0.1em 0.5em 0.25em;
-	--line-margin-top: -55px;
+   	 --chords-padding: 0.1em 0.5em 0.25em;
+	--line-margin-top: -60px;
+	--verse-margin-top: -45px;
 }
 
 .font-size-14-px {
 	--font-size: 14px;
 	--chords-margin: -0.1em -0.5em -2em;
-    --chords-padding: 0.1em 0.5em 0.25em;
-	--line-margin-top: -55px;
+    	--chords-padding: 0.1em 0.5em 0.25em;
+	--line-margin-top: -65px;
+	--verse-margin-top: -50px;
 }
 
 .font-size-15-px {
 	--font-size: 15px;
 	--chords-margin: -0.1em -0.5em -2.05em;
-    --chords-padding: 0.1em 0.5em 0.25em;
-	--line-margin-top: -60px;
+    	--chords-padding: 0.1em 0.5em 0.25em;
+	--line-margin-top: -70px;
+	--verse-margin-top: -50px;
 }
 
 
 
 /* Legacy classes to use when CSS variables are not an option */
 
+/** to replace the .verse class */
+.verse-12-px {
+	display: block;
+	position: absolute;
+	margin-top: var(--verse-margin-top);
+}
+
+.verse-13-px  {
+	display: block;
+	position: absolute;
+	margin-top: var(--verse-margin-top);
+}
+
+.verse-14-px  {
+	display: block;
+	position: absolute;
+	margin-top: var(--verse-margin-top);
+}
+
+.verse-15-px  {
+	display: block;
+	position: absolute;
+	margin-top: var(--verse-margin-top);
+}
+
 /* to replace the .chords class */
 .chords-12-px {
 	display: block;
 	border-radius: 2px;
-    cursor: default;
-    font-weight: 700;
+    	cursor: default;
+    	font-weight: 700;
 	position: relative;
 	text-align: left;
 	margin: -0.1em -0.5em -2em;
-    padding: 0.1em 0.5em 0.25em;
+    	padding: 0.1em 0.5em 0.25em;
 }
 
 .chords-13-px {
 	display: block;
 	border-radius: 2px;
-    cursor: default;
-    font-weight: 700;
+    	cursor: default;
+    	font-weight: 700;
 	position: relative;
 	text-align: left;
 	margin: -0.1em -0.5em -2em;
-    padding: 0.1em 0.5em 0.25em;
+    	padding: 0.1em 0.5em 0.25em;
 }
 
 .chords-14-px {
 	display: block;
 	border-radius: 2px;
-    cursor: default;
-    font-weight: 700;
+    	cursor: default;
+    	font-weight: 700;
 	position: relative;
 	text-align: left;
 	margin: -0.1em -0.5em -2em;
-    padding: 0.1em 0.5em 0.25em;
+    	padding: 0.1em 0.5em 0.25em;
 }
 
 .chords-15-px {
 	display: block;
 	border-radius: 2px;
-    cursor: default;
-    font-weight: 700;
+    	cursor: default;
+    	font-weight: 700;
 	position: relative;
 	text-align: left;
 	margin: -0.1em -0.5em -2.05em;
-    padding: 0.1em 0.5em 0.25em;
+    	padding: 0.1em 0.5em 0.25em;
 }
 
 /* to replace the .song-text-formatting class */

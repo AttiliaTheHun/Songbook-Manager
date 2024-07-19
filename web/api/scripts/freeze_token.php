@@ -1,13 +1,8 @@
 <?php
 /**
- * This endpoint can be used to freeze an authentication token. It is an authenticated API route.
+ * This script handles the freezing of authentication tokens. This file is not meant to be accessed through HTTP
+ * directly.
  */
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    include(dirname(__FILE__) . '/../../resources/pages/405.php');
-    die();
-}
 
 // first we need to authenticate the user
 require(dirname(__FILE__) . '/../../lib/lib_auth.php');
@@ -25,7 +20,7 @@ $request_body = file_get_contents('php://input');
 // this action is all about input, so we can as well abort when we have none
 if ($request_body == NULL || strlen($request_body) == 0) {
     http_response_code(400); // 400 Bad Request
-    echo "request body expected";
+    echo '{"message": "request body expected"}';
     die();
 }
 
@@ -36,7 +31,7 @@ foreach ($request['freeze'] as $index) {
 }
 save_tokens();
 
-http_response_code(201); // 200 Created
+http_response_code(200); // 200 Ok
 exit(0);
 
 ?>

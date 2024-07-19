@@ -30,15 +30,15 @@ class IndexBuilderTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    Index createTestLocalIndex(int timestamp) {
-        Index local = Index.empty();
-        HashMap<String, String> standardSongs = new HashMap<>();
+    Index createTestLocalIndex(final int timestamp) {
+        final Index local = Index.empty();
+        final HashMap<String, String> standardSongs = new HashMap<>();
         standardSongs.put("song1", "abc");
         standardSongs.put("song2", "acb");
         standardSongs.put("song3", "abc");
         local.getData().put(StandardCollectionManager.getInstance().getCollectionName(), new ArrayList<>(List.of(standardSongs.keySet().toArray())));
         local.getHashes().put(StandardCollectionManager.getInstance().getCollectionName(), new ArrayList<>(standardSongs.values()));
-        HashMap<String, String> easterSongs = new HashMap<>();
+        final HashMap<String, String> easterSongs = new HashMap<>();
         easterSongs.put("song1", "acb");
         easterSongs.put("song2", "abc");
         local.getData().put(EasterCollectionManager.getInstance().getCollectionName(), new ArrayList<>(List.of(easterSongs.keySet().toArray())));
@@ -49,14 +49,14 @@ class IndexBuilderTest {
         return local;
     }
 
-    Index createTestRemoteIndex(int timestamp) {
-        Index local = Index.empty();
-        HashMap<String, String> standardSongs = new HashMap<>();
+    Index createTestRemoteIndex(final int timestamp) {
+        final Index local = Index.empty();
+        final HashMap<String, String> standardSongs = new HashMap<>();
         standardSongs.put("song1", "abc");
         standardSongs.put("song2", "abc");
         local.getData().put(StandardCollectionManager.getInstance().getCollectionName(), new ArrayList<>(List.of(standardSongs.keySet().toArray())));
         local.getHashes().put(StandardCollectionManager.getInstance().getCollectionName(), new ArrayList<>(standardSongs.values()));
-        HashMap<String, String> easterSongs = new HashMap<>();
+        final HashMap<String, String> easterSongs = new HashMap<>();
         easterSongs.put("song1", "abc");
         easterSongs.put("song2", "abc");
         easterSongs.put("song3", "abc");
@@ -70,22 +70,22 @@ class IndexBuilderTest {
 
     @Test
     void createLoadIndexTest() {
-        IndexBuilder builder = new IndexBuilder();
-        Index local = createTestLocalIndex(12);
-        Index remote = createTestRemoteIndex(27);
+        final IndexBuilder builder = new IndexBuilder();
+        final Index local = createTestLocalIndex(12);
+        final Index remote = createTestRemoteIndex(27);
 
-        // init the mock
-        Environment environmentMock = mock(Environment.class);
-        HashMap<String, CollectionManager> fakeRegisteredManagers = new HashMap<>();
+        // init the mocks
+        final Environment environmentMock = mock(Environment.class);
+        final HashMap<String, CollectionManager> fakeRegisteredManagers = new HashMap<>();
         fakeRegisteredManagers.put(STANDARD_COLLECTION_NAME, new TestCollectionManager());
         fakeRegisteredManagers.put(EASTER_COLLECTION_NAME, new TestCollectionManager());
         when(environmentMock.getRegisteredManagers()).thenReturn(fakeRegisteredManagers);
 
-        try (MockedStatic<Environment> staticEnvironmentMock = mockStatic(Environment.class)) {
+        try (final MockedStatic<Environment> staticEnvironmentMock = mockStatic(Environment.class)) {
             staticEnvironmentMock.when(Environment::getInstance).thenReturn(environmentMock);
 
             // what we were waiting for all the time
-            LoadIndex index = builder.createLoadIndex(local, remote);
+            final LoadIndex index = builder.createLoadIndex(local, remote);
 
             assertEquals(((ArrayList<String>) index.getMissing().get(STANDARD_COLLECTION_NAME)).size(), 0);
             assertEquals(((ArrayList<String>) index.getMissing().get(EASTER_COLLECTION_NAME)).size(), 1);
@@ -103,27 +103,27 @@ class IndexBuilderTest {
     @Test
     void createSaveIndexTest() {
         final long CACHED_TIMESTAMP = 227;
-        IndexBuilder builder = new IndexBuilder();
-        Index local = createTestLocalIndex(27);
-        Index remote = createTestRemoteIndex(12);
+        final IndexBuilder builder = new IndexBuilder();
+        final Index local = createTestLocalIndex(27);
+        final Index remote = createTestRemoteIndex(12);
 
         // init the mocks
-        Environment environmentMock = mock(Environment.class);
-        HashMap<String, CollectionManager> fakeRegisteredManagers = new HashMap<>();
+        final Environment environmentMock = mock(Environment.class);
+        final HashMap<String, CollectionManager> fakeRegisteredManagers = new HashMap<>();
         fakeRegisteredManagers.put(STANDARD_COLLECTION_NAME, new TestCollectionManager());
         fakeRegisteredManagers.put(EASTER_COLLECTION_NAME, new TestCollectionManager());
         when(environmentMock.getRegisteredManagers()).thenReturn(fakeRegisteredManagers);
-        CacheManager cacheManagerMock = mock(CacheManager.class);
+        final CacheManager cacheManagerMock = mock(CacheManager.class);
         when(cacheManagerMock.getCachedSongbookVersionTimestamp()).thenReturn(CACHED_TIMESTAMP);
 
         try (
-                MockedStatic<Environment> staticEnvironmentMock = mockStatic(Environment.class);
-                MockedStatic<CacheManager> staticCacheManagerMock = mockStatic(CacheManager.class);
+                final MockedStatic<Environment> staticEnvironmentMock = mockStatic(Environment.class);
+                final MockedStatic<CacheManager> staticCacheManagerMock = mockStatic(CacheManager.class);
                 ) {
             staticEnvironmentMock.when(Environment::getInstance).thenReturn(environmentMock);
             staticCacheManagerMock.when(CacheManager::getInstance).thenReturn(cacheManagerMock);
 
-            SaveIndex index = builder.createSaveIndex(local, remote);
+            final SaveIndex index = builder.createSaveIndex(local, remote);
 
             assertEquals(((ArrayList<String>) index.getAdditions().get(STANDARD_COLLECTION_NAME)).size(), 1);
             assertEquals(((ArrayList<String>) index.getAdditions().get(STANDARD_COLLECTION_NAME)).get(0), "song3");

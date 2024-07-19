@@ -5,6 +5,7 @@ import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.vcs.index.Index;
 import attilathehun.songbook.vcs.index.LoadIndex;
+import attilathehun.songbook.vcs.index.SaveIndex;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.SongbookApplication;
 import org.apache.logging.log4j.LogManager;
@@ -18,6 +19,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 /**
  * The Version Control System Administrator. This class is the main class of the Version Control System and provides a simple API to be used from other components.
@@ -25,15 +28,10 @@ import java.time.format.DateTimeFormatter;
  */
 public final class VCSAdmin {
     private static final Logger logger = LogManager.getLogger(VCSAdmin.class);
-
-    private static final String REQUEST_ZIP_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH"), "request.zip").toString();
-    private static final String LOCAL_INDEX_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_FILE_PATH"), "index.json").toString();
-    private static final String CHANGE_LOG_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("DATA_FILE_PATH"), "change_log.txt").toString();
-    private static final String VERSION_TIMESTAMP_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_FILE_PATH"), "timestamp.txt").toString();
-
     private static final VCSAdmin INSTANCE = new VCSAdmin();
+    public static final String CHANGE_LOG_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_PATH"), "changelog.txt").toString();
+    public static final boolean FLAG_USE_CACHE = true;
 
-    private VCSAgent defaultAgent = null;
 
     private VCSAdmin() {}
 
@@ -41,30 +39,15 @@ public final class VCSAdmin {
         return INSTANCE;
     }
 
-
-    public VCSAgent getAgent() {
-        if (defaultAgent == null) {
-            defaultAgent = new VCSAgent();
-        }
-        return defaultAgent;
-    }
-
-    /**
-     * Pushes local changes to the server. Upon overshadowing danger, asks the user what to do. Requests an access token if none
-     * is loaded.
-     */
     public void push() {
         push(null);
     }
 
-    /**
-     * Pushes local changes to the server using custom vcs agent. In this case, it is up to the agent to check status of the songbook and prevent
-     * overshadowing of the remote changes.
-     */
-    public void push(VCSAgent agent) {
+
+    public void push(final VCSAgent agent) {
         try {
-            saveLocalChanges(agent);
-        } catch (Exception e) {
+            saveLocalChanges2(agent);
+        } catch (final Exception e) {
             logger.error(e.getMessage(), e);
         }
     }
@@ -73,14 +56,88 @@ public final class VCSAdmin {
         pull(null);
     }
 
-    public void pull(VCSAgent agent) {
+    public void pull(final VCSAgent agent) {
         try {
-            loadRemoteChanges(agent);
-        } catch (Exception e) {
+            loadRemoteChanges2(agent);
+        } catch (final Exception e) {
             logger.error(e.getMessage(), e);
         }
     }
 
+    private void saveLocalChanges2(final VCSAgent a) throws IOException, ExecutionException, InterruptedException, NoSuchAlgorithmException {
+        if (!(Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
+            new AlertDialog.Builder().setTitle("Remote saving and loading disabled").setIcon(AlertDialog.Builder.Icon.WARNING)
+                    .setMessage("Remote saving and loading is disabled. You can enable it in settings.")
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
+            return;
+        }
+
+        CacheManager.getInstance().cacheSongbookVersionTimestamp();
+
+        final VCSAgent agent = (a == null) ? new VCSAgent() : a;
+        final int status = agent.compare();
+
+        if (status == VCSAgent.STATUS_UP_TO_DATE) {
+            new AlertDialog.Builder().setTitle("Already up to date").setIcon(AlertDialog.Builder.Icon.INFO)
+                    .setMessage("The remote version of the songbook matches the local version.")
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
+            return;
+        } else if (status == VCSAgent.STATUS_BEHIND) {
+            final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Overwrite remote changes?").setIcon(AlertDialog.Builder.Icon.CONFIRM)
+                    .setMessage("The remote version of the songbook has some changes that are not present in the local version. If the changes have been made to the same files you are trying to upload to the server, these changes will be lost!")
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton("Overwrite").addCloseButton("Cancel").build().awaitResult();
+            if (result.get() != AlertDialog.RESULT_OK) {
+                return;
+            }
+        }
+
+        updateSongbookChangeLog();
+
+        final IndexBuilder indexBuilder = new IndexBuilder();
+        boolean useCachedRemoteIndex = false;
+
+        final Index cachedRemoteIndex = CacheManager.getInstance().getCachedRemoteIndex();
+        if (FLAG_USE_CACHE) {
+            if (cachedRemoteIndex != null) {
+                if (cachedRemoteIndex.getVersionTimestamp() == agent.getLastRemoteVersionTimestamp()) {
+                    useCachedRemoteIndex = true;
+                }
+            }
+        }
+        final Index remote = (useCachedRemoteIndex) ? cachedRemoteIndex : agent.getRemoteIndex();
+
+        boolean useCachedLocalIndex = false;
+        final Index cachedLocalIndex = CacheManager.getInstance().getCachedIndex();
+
+        if (FLAG_USE_CACHE) {
+            if (cachedLocalIndex != null) {
+                if (cachedLocalIndex.getVersionTimestamp() == CacheManager.getInstance().getCachedSongbookVersionTimestamp()) {
+                    useCachedLocalIndex = true;
+                }
+            }
+        }
+
+        final Index local = (useCachedRemoteIndex) ? cachedRemoteIndex : indexBuilder.createLocalIndex();
+
+        if (!useCachedLocalIndex){
+            CacheManager.getInstance().cacheIndex(local);
+        }
+
+        if (local == null || remote == null) {
+            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage("Something went wrong when indexing the changes.")
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
+            return;
+        }
+        final SaveIndex saveIndex = indexBuilder.createSaveIndex(local, remote);
+        final RequestFileAssembler RFAssembler = new RequestFileAssembler().assembleSaveFile(saveIndex, IndexBuilder.compareCollections(local, remote));
+        agent.saveDataRemotely(RFAssembler.getOutputFilePath());
+
+    }
+
+
+
+    @Deprecated
     private void saveLocalChanges(VCSAgent a) throws IOException, NoSuchAlgorithmException {
         if (!(Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             new AlertDialog.Builder().setTitle("Remote saving and loading disabled").setIcon(AlertDialog.Builder.Icon.ERROR)
@@ -137,7 +194,7 @@ public final class VCSAdmin {
         }
         updateSongbookChangeLog();
         IndexBuilder indexBuilder = new IndexBuilder();
-        Index remote = agent.getRemoteIndex(token);
+        Index remote = agent.getRemoteIndex();
         Index local = indexBuilder.createLocalIndex();
         CacheManager.getInstance().cacheIndex(local);
         if (local == null || remote == null) {
@@ -161,7 +218,97 @@ public final class VCSAdmin {
         }
     }
 
-    // TODO
+    private void loadRemoteChanges2(final VCSAgent a) throws IOException, ExecutionException, InterruptedException, NoSuchAlgorithmException {
+        if (!(Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
+            new AlertDialog.Builder().setTitle("Remote saving and loading disabled").setIcon(AlertDialog.Builder.Icon.INFO)
+                    .setMessage("Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation.")
+                    .addOkButton().build().open();
+            return;
+        }
+
+        CacheManager.getInstance().cacheSongbookVersionTimestamp();
+
+        final VCSAgent agent = (a == null) ? new VCSAgent() : a;
+        final int status = agent.compare();
+
+        if (status == VCSAgent.STATUS_UP_TO_DATE) {
+            new AlertDialog.Builder().setTitle("Already up to date").setIcon(AlertDialog.Builder.Icon.INFO)
+                    .setMessage("The remote version of the songbook matches the local version.")
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
+            return;
+        } else if (status == VCSAgent.STATUS_AHEAD) {
+            final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Overwrite local changes?").setIcon(AlertDialog.Builder.Icon.CONFIRM)
+                    .setMessage("The local version of the songbook has some changes that are not present in the remote version. If the changes have been made to the same files you are trying to download from the server, these changes will be lost!")
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton("Overwrite").addCloseButton("Cancel").build().awaitResult();
+            if (result.get() != AlertDialog.RESULT_OK) {
+                return;
+            }
+        }
+
+        final IndexBuilder indexBuilder = new IndexBuilder();
+        boolean useCachedRemoteIndex = false;
+
+        final Index cachedRemoteIndex = CacheManager.getInstance().getCachedRemoteIndex();
+        if (FLAG_USE_CACHE) {
+            if (cachedRemoteIndex != null) {
+                if (cachedRemoteIndex.getVersionTimestamp() == agent.getLastRemoteVersionTimestamp()) {
+                    useCachedRemoteIndex = true;
+                }
+            }
+        }
+        final Index remote = (useCachedRemoteIndex) ? cachedRemoteIndex : agent.getRemoteIndex();
+
+        boolean useCachedLocalIndex = false;
+        final Index cachedLocalIndex = CacheManager.getInstance().getCachedIndex();
+
+        if (FLAG_USE_CACHE) {
+            if (cachedLocalIndex != null) {
+                if (cachedLocalIndex.getVersionTimestamp() == CacheManager.getInstance().getCachedSongbookVersionTimestamp()) {
+                    useCachedLocalIndex = true;
+                }
+            }
+        }
+
+        Index local;
+        if (useCachedRemoteIndex)  {
+            local = cachedRemoteIndex;
+        } else {
+            local = indexBuilder.createLocalIndex();
+            CacheManager.getInstance().cacheIndex(local);
+        }
+
+
+        if (local == null || remote == null) {
+            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
+                    .setMessage("Something went wrong when indexing the changes.")
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
+            return;
+        }
+        final LoadIndex index = indexBuilder.createLoadIndex(local, remote);
+        final String responseFilePath = agent.loadRemoteData(index);
+
+        if (responseFilePath == null) {
+            return; // the agent has already shown the error message
+        }
+
+        final RequestFileAssembler disassembler = RequestFileAssembler.disassemble(responseFilePath);
+        if (!disassembler.success()) {
+            new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING)
+                    .setMessage("Something went wring while loading the remote data. Check the application log for more information.")
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
+            return;
+        }
+        local = indexBuilder.createLocalIndex();
+        local.setVersionTimestamp(remote.getVersionTimestamp());
+        CacheManager.getInstance().cacheIndex(local);
+        CacheManager.getInstance().cacheSongbookVersionTimestamp(local.getVersionTimestamp());
+        new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO)
+                .setMessage("Remote data loaded successfully.")
+                .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
+
+    }
+
+    @Deprecated
     public void loadRemoteChanges(VCSAgent a) throws IOException, NoSuchAlgorithmException {
         if (!(Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             new AlertDialog.Builder().setTitle("Remote saving and loading disabled").setIcon(AlertDialog.Builder.Icon.INFO)
@@ -218,7 +365,7 @@ public final class VCSAdmin {
         }
 
         IndexBuilder indexBuilder = new IndexBuilder();
-        Index remote = agent.getRemoteIndex(token);
+        Index remote = agent.getRemoteIndex();
         Index local = indexBuilder.createLocalIndex();
         CacheManager.getInstance().cacheIndex(local);
         if (local == null || remote == null) {
@@ -255,6 +402,7 @@ public final class VCSAdmin {
 
     }
 
+    @Deprecated
     private String requestOneTimeToken() {
         JLabel label = new JLabel("Fill in the access token to access the remote server. Depending on the operation, the token must have READ or WRITE permission. The token will be used this time only!");
         JTextField token = new JPasswordField();
@@ -273,10 +421,9 @@ public final class VCSAdmin {
 
     private void updateSongbookChangeLog() throws IOException {
         final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        final LocalDateTime now = LocalDateTime.ofInstant(Instant.ofEpochMilli(CacheManager.getInstance().getCachedSongbookVersionTimestamp()), ZoneId.systemDefault());
         final String date = dtf.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(CacheManager.getInstance().getCachedSongbookVersionTimestamp()), ZoneId.systemDefault()));
         final String username = System.getProperty("user.name");
-        final PrintWriter printWriter = new PrintWriter(new FileWriter((String) SettingsManager.getInstance().getValue("CHANGE_LOG_FILE_PATH"), true));
+        final PrintWriter printWriter = new PrintWriter(new FileWriter(CHANGE_LOG_FILE_PATH, true));
         printWriter.write(date + " " + username + "\n");
         printWriter.close();
     }

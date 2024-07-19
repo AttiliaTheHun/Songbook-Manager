@@ -1,17 +1,10 @@
 <?php
 /**
- * This scripts processes requests for data downloads. It is an authenticated API route.
+ * This scripts processes requests for data downloads. This file is not meant to be accessed through HTTP directly.
  */
 
-// GET is for empty request body, POST may have a request body (a load index)
-if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    include(dirname(__FILE__) . '/../../resources/pages/405.php');
-    die();
-}
-
 // first we need to authenticate the user
-require(dirname(__FILE__) . '../../lib/lib_auth.php');
+require(dirname(__FILE__) . '/../../lib/lib_auth.php');
 auth_init();
 
 // if the token is invalid, we abort
@@ -63,7 +56,7 @@ if ($request_body == NULL || strlen($request_body) == 0) {
     // headers are weird, abort
     if (!$content_type_correct || !$content_disposition_correct) {
         http_response_code(400); // Bad request
-        echo "invalid request headers";
+        echo '{"message": "invalid request headers"}';
         die();
     }
     
@@ -72,7 +65,7 @@ if ($request_body == NULL || strlen($request_body) == 0) {
     // the index can not be parsed to an associated array, abort
     if (!is_array($request_index)) {
         http_response_code(400); // Bad request
-        echo "invalid request index";
+        echo '{"message": "invalid request index"}';
         die();
     }
     

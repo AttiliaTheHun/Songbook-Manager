@@ -1,10 +1,18 @@
 <?php
 /**
- * This endpoint can be used to list the available backup files. No authentication is required.
+ * This endpoint can be used to manage backups. Authentication may be required for certain actions.
  */
 
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    include(dirname(__FILE__) . '/scripts/backup.php');
+} else if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    include(dirname(__FILE__) . '/scripts/restore.php');
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    http_response_code(405);
+    http_response_code(405); // 405 Method not allowed
     include(dirname(__FILE__) . '/../../resources/pages/405.php');
     die();
 }
@@ -34,6 +42,8 @@ $response = [
     ];
 
 http_response_code(200); // 200 Ok
+header('Content-Type: application/json');         
+header("Content-Disposition: attachment;filename=backups.json");
 echo json_encode($response);
 exit(0);
 

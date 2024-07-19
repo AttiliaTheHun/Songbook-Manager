@@ -28,7 +28,8 @@ public class Index implements Serializable {
      *
      * @param object null object
      */
-    public Index(Object object) {
+    @Deprecated
+    public Index(final Object object) {
         if (object != null) {
             throw new IllegalArgumentException();
         }
@@ -40,7 +41,7 @@ public class Index implements Serializable {
      * @return well-formed empty Index object
      */
     public static Index empty() {
-        Index index = new Index();
+        final Index index = new Index();
         index.setData(new Property());
         index.getData().put(StandardCollectionManager.getInstance().getCollectionName(), new ArrayList<>());
         index.getData().put(EasterCollectionManager.getInstance().getCollectionName(), new ArrayList<>());
@@ -59,7 +60,7 @@ public class Index implements Serializable {
         return collections;
     }
 
-    public void setCollections(Property collections) {
+    public void setCollections(final Property collections) {
         this.collections = collections;
     }
 
@@ -67,7 +68,7 @@ public class Index implements Serializable {
         return data;
     }
 
-    public void setData(Property data) {
+    public void setData(final Property data) {
         this.data = data;
     }
 
@@ -75,7 +76,7 @@ public class Index implements Serializable {
         return hashes;
     }
 
-    public void setHashes(Property hashes) {
+    public void setHashes(final Property hashes) {
         this.hashes = hashes;
     }
 
@@ -83,7 +84,7 @@ public class Index implements Serializable {
         return metadata;
     }
 
-    public void setMetadata(Property metadata) {
+    public void setMetadata(final Property metadata) {
         this.metadata = metadata;
     }
 
@@ -91,7 +92,7 @@ public class Index implements Serializable {
         return versionTimestamp;
     }
 
-    public void setVersionTimestamp(long versionTimestamp) {
+    public void setVersionTimestamp(final long versionTimestamp) {
         this.versionTimestamp = versionTimestamp;
     }
 

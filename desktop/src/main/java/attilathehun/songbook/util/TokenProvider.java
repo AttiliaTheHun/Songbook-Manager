@@ -1,6 +1,7 @@
 package attilathehun.songbook.util;
 
 import attilathehun.songbook.environment.SettingsManager;
+import attilathehun.songbook.vcs.VCSAgent;
 import attilathehun.songbook.window.AlertDialog;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
@@ -40,11 +41,11 @@ public class TokenProvider {
      *
      * @return UTF-8 encoded byte array or null
      */
-    public byte[] getAuthenticationToken() {
+    public byte[] getAuthenticationToken(final VCSAgent.Certificate certificate) {
         byte[] token = null;
         try {
             token = getLocalAuthenticationToken();
-            // if the decryption fails, null is returned and so it would simply ask to enter a token (undesirable)
+            // if the decryption fails this code is skipped, so it does not ask for a token
             if (token == null) {
                 token = requestAuthenticationToken();
             }
@@ -158,7 +159,7 @@ public class TokenProvider {
      * @return the key generation password or null
      */
     private char[] getKeyPassword() {
-        if (SettingsManager.getInstance().getValue("USE_DEFAULT_ENCRYPTION_PASSWORD")) {
+        if (!(Boolean) SettingsManager.getInstance().getValue("USE_DEFAULT_ENCRYPTION_PASSWORD")) {
             final String k = openInputDialog("Enter custom encryption password", "Password", "Enter the encryption key derivation password");
             if (k == null || k.trim().length() == 0) {
                 return null;

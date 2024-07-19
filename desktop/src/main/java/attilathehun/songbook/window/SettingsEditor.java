@@ -352,6 +352,7 @@ public final class SettingsEditor extends Stage {
             exportEnabledSwitch.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
                 SettingsManager.getInstance().set("EXPORT_ENABLED", newValue);
                 keepBrowserInstanceAliveSwitch.setDisable(oldValue);
+                defaultExportFileNameField.setDisable(oldValue);
                 printableExportFileNameField.setDisable(oldValue);
                 singlepageExportFileNameField.setDisable(oldValue);
             });
@@ -841,7 +842,7 @@ public final class SettingsEditor extends Stage {
             });
 
 
-            final Setting<String> remoteIndexSetting = (Setting<String>) SettingsManager.getInstance().get("REMOTE_DATA_INDEX_URL");
+            final Setting<String> remoteIndexSetting = (Setting<String>) SettingsManager.getInstance().get("REMOTE_INDEX_URL");
             remoteDataIndexURLField.setText(remoteIndexSetting.getValue());
             remoteDataIndexURLField.setPromptText(remoteIndexSetting.getInputFormatDescription());
             final Tooltip remoteDataIndexFieldTooltip = new Tooltip();
@@ -857,7 +858,7 @@ public final class SettingsEditor extends Stage {
                 }
             });
 
-            final Setting<String> remoteVersionTimestampSetting = (Setting<String>) SettingsManager.getInstance().get("REMOTE_DATA_VERSION_TIMESTAMP_URL");
+            final Setting<String> remoteVersionTimestampSetting = (Setting<String>) SettingsManager.getInstance().get("REMOTE_VERSION_TIMESTAMP_URL");
             remoteDataVersionTimestampField.setText(remoteVersionTimestampSetting.getValue());
             remoteDataVersionTimestampField.setPromptText(remoteVersionTimestampSetting.getInputFormatDescription());
             final Tooltip remoteDataVersionTimestampFieldTooltip = new Tooltip();

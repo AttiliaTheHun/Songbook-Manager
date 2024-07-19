@@ -545,7 +545,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             SONG_ONE = s;
 
             refreshWebView();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             logger.error(e.getMessage(), e);
         }
     }
@@ -580,7 +580,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         if (!name.equals("EXPORT_ENABLED")) {
             return;
         }
-
+        // TODO: this does nothing in fact, fix it!
         final boolean status = (Boolean) _new.getValue();
         singlepageSelection.setVisible(status);
         defaultSelection.setVisible(status);

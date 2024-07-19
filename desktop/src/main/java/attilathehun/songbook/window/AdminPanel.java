@@ -78,7 +78,7 @@ public class AdminPanel extends Stage {
             }
         });
 
-        //sceneContainer.getChildren().add(processedAccessScene.getRoot());
+        sceneContainer.getChildren().add(processedAccessScene.getRoot());
 
         rawAccessSwitch.setSelected(true);
         rawAccessSwitch.setSelected(false);

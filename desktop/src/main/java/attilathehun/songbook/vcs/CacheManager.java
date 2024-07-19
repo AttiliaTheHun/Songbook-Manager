@@ -22,7 +22,11 @@ import java.util.stream.Stream;
 public class CacheManager {
     private static final Logger logger = LogManager.getLogger(CacheManager.class);
 
-    private static final String CACHED_INDEX_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_PATH"), "index.json").toString();
+    private static final String CACHED_INDEX_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_PATH"), "local", "index.json").toString();
+    private static final String VERSION_TIMESTAMP_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_PATH"), "local", "version_timestamp.txt").toString();
+    private static final String CACHED_REMOTE_INDEX_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_PATH"),  "index.json").toString();
+    private static long localVersionTimestamp = -1;
+
 
     private static final CacheManager instance = new CacheManager();
 
@@ -37,11 +41,12 @@ public class CacheManager {
      * Clears Version Control System cache folder.
      */
     public void clearCache() {
+        localVersionTimestamp = -1;
         try {
-            for (File f : new File((String) SettingsManager.getInstance().getValue("VCS_CACHE_PATH")).listFiles()) {
+            for (final File f : new File((String) SettingsManager.getInstance().getValue("VCS_CACHE_PATH")).listFiles()) {
                 f.delete();
             }
-        } catch (NullPointerException npe) {
+        } catch (final NullPointerException npe) {
             logger.error(npe.getMessage(), npe);
         }
     }
@@ -53,15 +58,15 @@ public class CacheManager {
      */
     public Index getCachedIndex() {
         try {
-            File file = getCachedIndexFile();
+            final File file = getCachedIndexFile();
             if (!file.exists()) {
                 return null;
             }
 
-            String json = String.join("", Files.readAllLines(file.toPath()));
-            Type targetClassType = new TypeToken<Index>(){}.getType();
+            final String json = String.join("", Files.readAllLines(file.toPath()));
+            final Type targetClassType = new TypeToken<Index>(){}.getType();
             return new Gson().fromJson(json, targetClassType);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
         }
         return null;
@@ -71,52 +76,79 @@ public class CacheManager {
         return new File(CACHED_INDEX_FILE_PATH);
     }
 
+    public Index getCachedRemoteIndex() {
+        try {
+            final File file = getCachedRemoteIndexFile();
+            if (!file.exists()) {
+                return null;
+            }
+
+            final String json = String.join("", Files.readAllLines(file.toPath()));
+            final Type targetClassType = new TypeToken<Index>(){}.getType();
+            return new Gson().fromJson(json, targetClassType);
+        } catch (final IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
+    public File getCachedRemoteIndexFile() {
+        return new File(CACHED_REMOTE_INDEX_FILE_PATH);
+    }
+
     /**
      * Save an index to the vcs cache folder.
      *
      * @param index the index to save
      */
-    void cacheIndex(Index index) {
+    void cacheIndex(final Index index) {
         if (index == null) {
             throw new IllegalArgumentException();
         }
         try {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(CACHED_INDEX_FILE_PATH, false);
+            final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            new File(CACHED_INDEX_FILE_PATH).getParentFile().mkdirs();
+            final FileWriter writer = new FileWriter(CACHED_INDEX_FILE_PATH, false);
             gson.toJson(index, writer);
             writer.close();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
         }
     }
 
     public long getCachedSongbookVersionTimestamp() {
+        if (localVersionTimestamp != -1) {
+            return  localVersionTimestamp;
+        }
         try {
-            File file = getCachedSongbookVersionTimestampFile();
+            final File file = getCachedSongbookVersionTimestampFile();
             if (!file.exists()) {
                 cacheSongbookVersionTimestamp();
             }
-            return Long.parseLong(Files.readAllLines(file.toPath()).get(0));
-        } catch (IOException e) {
+            final long timestamp = Long.parseLong(Files.readAllLines(file.toPath()).get(0));
+            localVersionTimestamp = timestamp;
+            return timestamp;
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
         }
         return -1;
     }
 
     public File getCachedSongbookVersionTimestampFile() {
-        return new File((String) SettingsManager.getInstance().getValue("VERSION_TIMESTAMP_FILE_PATH"));
+        return new File(VERSION_TIMESTAMP_FILE_PATH);
     }
 
-    void cacheSongbookVersionTimestamp(long versionTimestamp) {
+    void cacheSongbookVersionTimestamp(final long versionTimestamp) {
         if (versionTimestamp < 0) {
             throw new IllegalArgumentException();
         }
         try {
-            new File((String) SettingsManager.getInstance().getValue("VCS_CACHE_FILE_PATH")).mkdir();
-            PrintWriter printWriter = new PrintWriter(new FileWriter((String) SettingsManager.getInstance().getValue("VERSION_TIMESTAMP_FILE_PATH"), false));
+            localVersionTimestamp = versionTimestamp;
+            new File(VERSION_TIMESTAMP_FILE_PATH).getParentFile().mkdirs();
+            final PrintWriter printWriter = new PrintWriter(new FileWriter(VERSION_TIMESTAMP_FILE_PATH, false));
             printWriter.write(String.valueOf(versionTimestamp));
             printWriter.close();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
         }
 
@@ -129,8 +161,8 @@ public class CacheManager {
         long timestamp = -1;
         long tempStamp;
 
-        for (CollectionManager collectionManager : Environment.getInstance().getRegisteredManagers().values()) {
-            for (File file : Stream.of(new File(collectionManager.getSongDataFilePath()).listFiles())
+        for (final CollectionManager collectionManager : Environment.getInstance().getRegisteredManagers().values()) {
+            for (final File file : Stream.of(new File(collectionManager.getSongDataFilePath()).listFiles())
                     .filter(file -> !file.isDirectory())
                     .toList()) {
                 tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();
@@ -140,7 +172,7 @@ public class CacheManager {
             }
         }
 
-        for (File file : Stream.of(new File((String) SettingsManager.getInstance().getValue("DATA_FILE_PATH")).listFiles())
+        for (final File file : Stream.of(new File((String) SettingsManager.getInstance().getValue("DATA_FILE_PATH")).listFiles())
                 .filter(file -> !file.isDirectory())
                 .filter(file -> file.getName().endsWith(".json"))
                 .toList()) {

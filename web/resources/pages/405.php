@@ -1,5 +1,5 @@
 <?php
-include '../../lib/lib_settings.php';
+include(dirname(__FILE__) . '/../../lib/lib_settings.php');
 $url = $settings['url'];
 ?>
 

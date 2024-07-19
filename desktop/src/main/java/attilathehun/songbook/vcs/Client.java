@@ -20,16 +20,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-
+@Deprecated
 public class Client {
     private static final Logger logger = LogManager.getLogger(Client.class);
     private static final String HTTP_GET = "GET";
     private static final String HTTP_POST = "POST";
+    private static final String HTTP_PUT = "PUT";
+    private static final String HTTP_DELETE = "DELETE";
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
     private static final String CONTENT_TYPE_ZIP = "application/zip";
     private static final String CONTENT_TYPE_JSON = "application/json";
     private static final String CONTENT_DISPOSITION_HEADER = "Content-Disposition";
     private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String AUTHORIZATION_HEADER_VALUE = "Bearer %s";
 
     public static final int OK = 200;
     public static final int CREATED = 201;
@@ -38,7 +41,7 @@ public class Client {
     public static final int FORBIDDEN = 403;
     public static final int NOT_FOUND = 404;
     public static final int METHOD_NOT_ALLOWED = 405;
-    public static final int I_AM_A_TEAPOT = 418;
+    public static final int SERVICE_UNAVAILABLE = 503;
     public static final int NA = -1;
 
 

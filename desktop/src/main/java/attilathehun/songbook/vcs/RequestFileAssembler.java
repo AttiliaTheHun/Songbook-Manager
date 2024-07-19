@@ -23,6 +23,7 @@ import java.util.List;
 
 public class RequestFileAssembler {
     private static final Logger logger = LogManager.getLogger(RequestFileAssembler.class);
+    private static final String REQUEST_ZIP_TEMP_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH"), "save_request.zip").toString();
     private String outputFilePath = null;
     private boolean disassemblySuccessful = false;
     private LoadIndex loadIndex = null;
@@ -44,9 +45,8 @@ public class RequestFileAssembler {
         }
         final String json = String.join("", Files.readAllLines(indexFile.toPath()));
         final Type targetClassType = new TypeToken<LoadIndex>(){}.getType();
-        final LoadIndex index = new Gson().fromJson(json, targetClassType);
 
-        assembler.loadIndex = index;
+        assembler.loadIndex = new Gson().fromJson(json, targetClassType);
         assembler.disassemblySuccessful = true;
         return assembler;
     }
@@ -62,18 +62,20 @@ public class RequestFileAssembler {
      */
     public RequestFileAssembler assembleSaveFile(final SaveIndex index, final List<String> collections) throws IOException {
         if (index == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("index can not be null");
         }
-        outputFilePath =  SettingsManager.getInstance().getValue("REQUEST_ZIP_TEMP_FILE_PATH");
-        try (ZipBuilder builder = new ZipBuilder()
+        outputFilePath = REQUEST_ZIP_TEMP_FILE_PATH;
+        try (final ZipBuilder builder = new ZipBuilder()
                 .setOutputPath(outputFilePath)) {
 
             for (final CollectionManager manager : Environment.getInstance().getRegisteredManagers().values()) {
                 for (final Object s : (Collection) index.getAdditions().get(manager.getCollectionName())) {
-                    builder.addFile(new File(Paths.get(manager.getSongDataFilePath(), (String) s).toUri()), manager.getRelativeFilePath());
+                    System.out.println(new File(Paths.get(manager.getSongDataFilePath(), (String) s).toString()));
+                    System.out.println(manager.getRelativeFilePath());
+                    builder.addFile(new File(Paths.get(manager.getSongDataFilePath(), (String) s).toString()), manager.getRelativeFilePath());
                 }
                 for (final Object s : (Collection) index.getChanges().get(manager.getCollectionName())) {
-                    builder.addFile(new File(Paths.get(manager.getSongDataFilePath(), (String) s).toUri()), manager.getRelativeFilePath());
+                    builder.addFile(new File(Paths.get(manager.getSongDataFilePath(), (String) s).toString()), manager.getRelativeFilePath());
                 }
             }
 
@@ -81,11 +83,12 @@ public class RequestFileAssembler {
                 builder.addFile(new File(Environment.getInstance().getRegisteredManagers().get(collection).getCollectionFilePath()), "");
             }
 
-            builder.addFile(new File((String) SettingsManager.getInstance().getValue("CHANGE_LOG_FILE_PATH")), "");
+            builder.addFile(new File(VCSAdmin.CHANGE_LOG_FILE_PATH), "");
             final File saveIndexTemp = new File(Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH"), "index.json").toString());
             Misc.saveObjectToFileInJSON(index, saveIndexTemp);
             builder.addFile(saveIndexTemp, "");
         }
+
         return this;
     }
 

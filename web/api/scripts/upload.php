@@ -1,13 +1,7 @@
 <?php
 /**
- * This scripts processes requests for data uploads. It is an authenticated API route.
+ * This scripts processes requests for data uploads. This file is not meant to be accessed through HTTP directly.
  */
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    include(dirname(__FILE__) . '/../../resources/pages/405.php');
-    die();
-}
 
 // first we need to authenticate the user
 require(dirname(__FILE__) . '/../../lib/lib_auth.php');
@@ -25,7 +19,7 @@ $request_body = file_get_contents('php://input');
 // this action is all about input, so we can as well abort when we have none
 if ($request_body == NULL || strlen($request_body) == 0) {
     http_response_code(400); // 400 Bad Request
-    echo "request body expected";
+    echo '{"message": "request body expected"}';
     die();
 }
 
@@ -54,9 +48,9 @@ if (is_array($success) && $success[0] === true) {
 } else {
     http_response_code(400); // 400 Bad Request
     if ($success === false) {
-        echo "could not parse the request body";
+        echo '{"message": "could not parse the request body"}';
     } else { // otherwise contains a string message
-        echo $success;
+        echo '{"message": "' . $success . '"}';
     }
     die();
 }
