@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutionException;
 public final class VCSAdmin {
     private static final Logger logger = LogManager.getLogger(VCSAdmin.class);
     private static final VCSAdmin INSTANCE = new VCSAdmin();
-    public static final String CHANGE_LOG_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_PATH"), "changelog.txt").toString();
+    public static final String CHANGE_LOG_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_PATH"), "local", "changelog.txt").toString();
     public static final boolean FLAG_USE_CACHE = true;
 
 
@@ -270,8 +270,8 @@ public final class VCSAdmin {
         }
 
         Index local;
-        if (useCachedRemoteIndex)  {
-            local = cachedRemoteIndex;
+        if (useCachedLocalIndex)  {
+            local = cachedLocalIndex;
         } else {
             local = indexBuilder.createLocalIndex();
             CacheManager.getInstance().cacheIndex(local);
@@ -284,20 +284,15 @@ public final class VCSAdmin {
                     .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
             return;
         }
-        final LoadIndex index = indexBuilder.createLoadIndex(local, remote);
-        final String responseFilePath = agent.loadRemoteData(index);
+        final LoadIndex loadIndex = indexBuilder.createLoadIndex(local, remote);
+        final String responseFilePath = agent.loadRemoteData(loadIndex);
 
         if (responseFilePath == null) {
             return; // the agent has already shown the error message
         }
 
-        final RequestFileAssembler disassembler = RequestFileAssembler.disassemble(responseFilePath);
-        if (!disassembler.success()) {
-            new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING)
-                    .setMessage("Something went wring while loading the remote data. Check the application log for more information.")
-                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
-            return;
-        }
+        RequestFileAssembler.disassemble(responseFilePath, loadIndex);
+
         local = indexBuilder.createLocalIndex();
         local.setVersionTimestamp(remote.getVersionTimestamp());
         CacheManager.getInstance().cacheIndex(local);
@@ -386,16 +381,8 @@ public final class VCSAdmin {
                                     .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
             return;
         }
-        RequestFileAssembler disassembler = RequestFileAssembler.disassemble(responseFilePath);
-        if (disassembler.success()) {
-            local = indexBuilder.createLocalIndex();
-            //local.setVersionTimestamp(disassembler.index().getVersionTimestamp());
-            CacheManager.getInstance().cacheIndex(local);
-            CacheManager.getInstance().cacheSongbookVersionTimestamp(local.getVersionTimestamp());
-            new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO)
-                    .setMessage("Remote data loaded successfully.")
-                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
-        }
+        RequestFileAssembler.disassemble(responseFilePath, index);
+
         new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING)
                 .setMessage("Something went wring when loading the remote data. Check the application log for more information.")
                 .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();

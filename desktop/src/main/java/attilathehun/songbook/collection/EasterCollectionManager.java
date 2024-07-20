@@ -3,6 +3,7 @@ package attilathehun.songbook.collection;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.HTMLGenerator;
+import attilathehun.songbook.vcs.CacheManager;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.CodeEditor;
 import attilathehun.songbook.window.SongbookApplication;
@@ -57,19 +58,21 @@ public final class EasterCollectionManager extends CollectionManager {
 
     @Override
     public void init() {
+        if (!Environment.IS_IT_EASTER_ALREADY) {
+            return;
+        }
+
         try {
             final File collectionJSONFile = new File(getCollectionFilePath());
+
             if (!collectionJSONFile.exists()) {
-                if (!Environment.IS_IT_EASTER_ALREADY) {
-                    return;
-                }
                 final File songDataFolder = new File(getSongDataFilePath());
                 if (songDataFolder.exists() && songDataFolder.isDirectory()) {
                     repairCollectionDialog();
                 } else {
                     createCollectionDialog();
+                    return;
                 }
-                return;
             }
 
             Environment.getInstance().registerCollectionManager(this);
@@ -603,12 +606,12 @@ public final class EasterCollectionManager extends CollectionManager {
     private void repairMissingCollectionFile() {
         logger.info("Repairing easter collection");
         collection = new ArrayList<>();
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(getSongDataFilePath()))) {
-            for (Path path : stream) {
+        try (final DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(getSongDataFilePath()))) {
+            for (final Path path : stream) {
 
                 if (!Files.isDirectory(path) && path.toString().trim().endsWith(".html")) {
                     int songId;
-                    String pathString = path.toString();
+                    final String pathString = path.toString();
                     if (pathString.contains(File.separator)) {
                         songId = Integer.parseInt(pathString.substring(pathString.lastIndexOf(File.separator) + 1, pathString.indexOf(".html")));
                     } else {
@@ -617,7 +620,13 @@ public final class EasterCollectionManager extends CollectionManager {
                     collection.add(createSongRecordFromLocalFile(songId));
                 }
             }
+            // cache it before the collection file is created so its last modified date does not get cached
+            CacheManager.getInstance().cacheSongbookVersionTimestamp();
+
             save();
+            // no changes were done by creating the collection file, so we do not want to make the VCS think we changed something
+            new File(getCollectionFilePath()).setLastModified(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
+
             logger.info("Success!");
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
@@ -626,16 +635,16 @@ public final class EasterCollectionManager extends CollectionManager {
 
     private void createNewCollection() {
         try {
-            File songDataFolder = new File(getSongDataFilePath());
+            final File songDataFolder = new File(getSongDataFilePath());
             songDataFolder.mkdirs();
-            File collectionJSONFile = new File(getCollectionFilePath());
+            final File collectionJSONFile = new File(getCollectionFilePath());
             collectionJSONFile.createNewFile();
             collection = new ArrayList<Song>();
-            PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
+            final PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
             printWriter.write("[]");
             printWriter.close();
 
-            CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Add Easter Song?").setMessage("Do you want to create your first easter song?").setIcon(AlertDialog.Builder.Icon.CONFIRM)
+            final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Add Easter Song?").setMessage("Do you want to create your first easter song?").setIcon(AlertDialog.Builder.Icon.CONFIRM)
                     .addOkButton("Create").addCloseButton("Cancel").build().awaitResult();
             result.thenAccept(dialogResult -> {
                if (dialogResult == AlertDialog.RESULT_OK) {
@@ -643,7 +652,7 @@ public final class EasterCollectionManager extends CollectionManager {
                }
             });
 
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setMessage("Could not create a new easter song!").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .addOkButton().build().open();

@@ -4,6 +4,10 @@ import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.SongbookApplication;
 import com.google.gson.Gson;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,7 +17,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 
-public class Client2 {
+@Deprecated
+public class Client3 {
     private static final Logger logger = LogManager.getLogger(Client.class);
     public static final String HTTP_GET = "GET";
     public static final String HTTP_POST = "POST";
@@ -27,14 +32,6 @@ public class Client2 {
     private static final String AUTHORIZATION_HEADER_VALUE = "Bearer %s";
     private static final String ZIP_EXTENSION = ".zip";
     private static final String JSON_EXTENSION = ".json";
-
-    @Deprecated
-    public static final int OK = 200;
-    @Deprecated
-    public static final int CREATED = 201;
-    @Deprecated
-    public static final int NO_CONTENT = 204;
-    @Deprecated
     public static final int ACCESS_DENIED = 401;
     @Deprecated
     public static final int FORBIDDEN = 403;
@@ -44,8 +41,6 @@ public class Client2 {
     public static final int METHOD_NOT_ALLOWED = 405;
     @Deprecated
     public static final int SERVICE_UNAVAILABLE = 503;
-    @Deprecated
-    public static final int NA = -1;
 
 
     public Result http(final String url, final String method, final String token, final Object data, final String metadata) throws IOException {
@@ -56,83 +51,83 @@ public class Client2 {
         if (method == null || !(method.equals(HTTP_GET) || method.equals(HTTP_POST) || method.equals(HTTP_PUT) || method.equals(HTTP_DELETE))) {
             throw new IllegalArgumentException("invalid method");
         }
+        final OkHttpClient httpClient = new OkHttpClient();
+        final Request.Builder requestBuilder = new Request.Builder().url(url);
 
-        final URL endpoint = new URL(url);
-        final HttpURLConnection conn = (HttpURLConnection) endpoint.openConnection();
-        conn.setRequestMethod(method);
-        conn.setDoInput(true);
         if (token != null && token.length() != 0) {
-            conn.setRequestProperty(AUTHORIZATION_HEADER, String.format(AUTHORIZATION_HEADER_VALUE, token));
+            requestBuilder.addHeader(AUTHORIZATION_HEADER, String.format(AUTHORIZATION_HEADER_VALUE, token));
         }
 
         if (data != null) {
-            conn.setDoOutput(true);
-            conn.setRequestMethod(method);
+
             if (data instanceof File) {
                 if (((File) data).getName().endsWith(ZIP_EXTENSION)) {
-                    conn.setRequestProperty(CONTENT_TYPE_HEADER, CONTENT_TYPE_ZIP);
+                    requestBuilder.addHeader(CONTENT_TYPE_HEADER, CONTENT_TYPE_ZIP);
                 } else if (((File) data).getName().endsWith(JSON_EXTENSION)) {
-                    conn.setRequestProperty(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON);
+                    requestBuilder.addHeader(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON);
                 } else {
-                    conn.setRequestProperty(CONTENT_TYPE_HEADER, "application/custom; charset=utf-8");
+                    requestBuilder.addHeader(CONTENT_TYPE_HEADER, "application/custom; charset=utf-8");
                 }
                 if (metadata != null && metadata.length() != 0) {
-                    conn.setRequestProperty(CONTENT_DISPOSITION_HEADER, String.format("attachment; filename=%s", metadata));
+                    requestBuilder.addHeader(CONTENT_DISPOSITION_HEADER, String.format("attachment; filename=%s", metadata));
                 } else {
-                    conn.setRequestProperty(CONTENT_DISPOSITION_HEADER, String.format("attachment; filename=%s", ((File) data).getName()));
+                    requestBuilder.addHeader(CONTENT_DISPOSITION_HEADER, String.format("attachment; filename=%s", ((File) data).getName()));
                 }
 
-                final OutputStream outputStream = conn.getOutputStream();
                 final InputStream fileInputStream = new FileInputStream((File) data);
-                outputStream.write(fileInputStream.readAllBytes());
-                outputStream.flush();
-                outputStream.close();
+                final RequestBody requestBody = RequestBody.create(fileInputStream.readAllBytes());
+                fileInputStream.close();
+                requestBuilder.method(method, requestBody);
 
             } else {
 
-                conn.setRequestProperty(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON);
+                requestBuilder.addHeader(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON);
                 if (metadata != null && metadata.length() != 0) {
-                    conn.setRequestProperty(CONTENT_DISPOSITION_HEADER, String.format("attachment; filename=%s", metadata));
+                    requestBuilder.addHeader(CONTENT_DISPOSITION_HEADER, String.format("attachments; filename=%s", metadata));
                 }
 
-                final OutputStream outputStream = conn.getOutputStream();
+                RequestBody requestBody;
+
                 if (data instanceof String) {
-                    outputStream.write(((String) data).getBytes(StandardCharsets.UTF_8));
+                    requestBody = RequestBody.create(((String) data).getBytes(StandardCharsets.UTF_8));
                 } else {
                     final String jsonRequestBody = new Gson().toJson(data);
-                    outputStream.write(jsonRequestBody.getBytes(StandardCharsets.UTF_8));
+                    requestBody = RequestBody.create(jsonRequestBody.getBytes(StandardCharsets.UTF_8));
                 }
-                outputStream.flush();
-                outputStream.close();
+
+                requestBuilder.method(method, requestBody);
 
             }
+        } else {
+            requestBuilder.method(method, null);
         }
 
-        byte[] response = null;
-        String filename = null;
-
-        if (conn.getResponseCode() < 400) { // prevent {@link HttpURLConnection#getInputStream()} from throwing exception
-            if (conn.getHeaderFields().get(CONTENT_DISPOSITION_HEADER) != null) {
-                filename = conn.getHeaderFields().get(CONTENT_DISPOSITION_HEADER).get(0).replace("attachment; filename=", "")
+        try (final Response response = httpClient.newCall(requestBuilder.build()).execute()) {
+            String filename = null;
+            if (response.header(CONTENT_DISPOSITION_HEADER, null) != null) {
+                filename = response.header(CONTENT_DISPOSITION_HEADER, null).replace("attachment; filename=", "")
                         .replace("attachment;filename=", "");
-                final InputStream in = conn.getInputStream();
+                final InputStream in = response.body().byteStream();
                 filename = Paths.get(SettingsManager.getInstance().getValue("VCS_CACHE_PATH"), filename).toString();
                 Files.copy(in, Path.of(filename), StandardCopyOption.REPLACE_EXISTING);
                 in.close();
-
-            } else {
-                response = (conn.getInputStream() == null) ? null : conn.getInputStream().readAllBytes();
             }
+            String content = null;
+            String error = null;
+            if (response.code() >= 300 || response.code() < 200) {
+                error = response.body().string();
+            } else {
+                content = response.body().string();
+            }
+
+            return new Result(response.code(), content, error, filename);
+        } catch (final IOException e) {
+            logger.error(e.getMessage(), e);
+            return new Result(-1, null,e.getLocalizedMessage(), null);
         }
-
-
-        byte[] error = (conn.getErrorStream() == null) ? null : conn.getErrorStream().readAllBytes();
-        conn.disconnect();
-        return new Result(conn.getResponseCode(), response, error, filename);
-
     }
 
-    public record Result(int responseCode, byte[] response, byte[] error, String metadata) {
+    public record Result(int responseCode, String response, String error, String metadata) {
        /* public Result(int responseCode, byte[] response, byte[] error, String metadata) {
             this.responseCode = responseCode;
             this.response = response;

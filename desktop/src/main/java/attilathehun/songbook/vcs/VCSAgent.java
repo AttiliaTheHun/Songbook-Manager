@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 
 
@@ -232,7 +233,7 @@ public class VCSAgent {
         if (requestFilePath == null || requestFilePath.length() == 0) {
             throw new IllegalArgumentException("invalid request file path");
         }
-        final String SERVER_EXPECTED_FILENAME = "request.zip";
+        final String SERVER_EXPECTED_FILENAME = "save_request.zip";
         final File requestFile = new File(requestFilePath);
         final Client2 client = new Client2();
         Client2.Result result;
@@ -269,29 +270,29 @@ public class VCSAgent {
 
     public String loadRemoteData(final LoadIndex index) {
         String SERVER_EXPECTED_FILENAME = null;
+        String method = Client2.HTTP_GET;
         if (index != null) {
             SERVER_EXPECTED_FILENAME = "index.json";
+            method = Client2.HTTP_POST;
         }
         final Client2 client = new Client2();
         Client2.Result result;
         try {
-            result = client.http(SettingsManager.getInstance().getValue("REMOTE_DATA_URL"), Client2.HTTP_GET, token, index, SERVER_EXPECTED_FILENAME);
+            result = client.http(SettingsManager.getInstance().getValue("REMOTE_DATA_URL"), method, token, index, SERVER_EXPECTED_FILENAME);
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR).setParent(SongbookApplication.getMainWindow())
                     .setMessage("Something went wrong when downloading the data: " + e.getLocalizedMessage()).addOkButton().build().open();
             return null;
         }
-        if (result.responseCode() == Client2.OK) {
+        if (result.responseCode() == HttpURLConnection.HTTP_OK) {
             logger.info("data download successful");
             if (index != null) {
                 logger.debug("load index: " + new Gson().toJson(index));
             }
 
-            new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO).setParent(SongbookApplication.getMainWindow())
-                    .setMessage("Data has been downloaded from the remote server.").addOkButton().build().open();
             return result.metadata();
-        } else if (result.responseCode() == Client2.ACCESS_DENIED) {
+        } else if (result.responseCode() == Client3.ACCESS_DENIED) {
             logger.info("data download access denied");
             new AlertDialog.Builder().setTitle("Access denied").setIcon(AlertDialog.Builder.Icon.WARNING).setParent(SongbookApplication.getMainWindow())
                     .setMessage("The token that was used does not have sufficient permissions. Use a different token or contact the VCS server admin.").addOkButton().build().open();

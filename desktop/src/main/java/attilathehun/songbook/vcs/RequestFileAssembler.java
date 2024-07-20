@@ -25,11 +25,10 @@ public class RequestFileAssembler {
     private static final Logger logger = LogManager.getLogger(RequestFileAssembler.class);
     private static final String REQUEST_ZIP_TEMP_FILE_PATH = Paths.get(SettingsManager.getInstance().getValue("TEMP_FILE_PATH"), "save_request.zip").toString();
     private String outputFilePath = null;
-    private boolean disassemblySuccessful = false;
-    private LoadIndex loadIndex = null;
 
-    public static RequestFileAssembler disassemble(final String filePath) throws IOException {
-        final RequestFileAssembler assembler = new RequestFileAssembler();
+    public static void disassemble(final String filePath, final LoadIndex index) throws IOException {
+        logger.debug("disassembly file path: " + filePath);
+
         if (filePath == null || filePath.length() == 0) {
             throw new IllegalArgumentException("Invalid response file path for disassembly!");
         }
@@ -38,17 +37,11 @@ public class RequestFileAssembler {
         if (!file.exists()) {
             throw new FileNotFoundException("Could not find the response file");
         }
-        final String responseFilesPath = ZipBuilder.extract(filePath);
-        final File indexFile = new File(Paths.get(responseFilesPath, "index.json").toString());
-        if (!indexFile.exists()) {
-            throw new FileNotFoundException("Could not find the response load index file");
-        }
-        final String json = String.join("", Files.readAllLines(indexFile.toPath()));
-        final Type targetClassType = new TypeToken<LoadIndex>(){}.getType();
+        final String extractedPath = ZipBuilder.extract(filePath);
 
-        assembler.loadIndex = new Gson().fromJson(json, targetClassType);
-        assembler.disassemblySuccessful = true;
-        return assembler;
+
+        
+
     }
 
     /**
@@ -100,12 +93,6 @@ public class RequestFileAssembler {
     public String getOutputFilePath() {
         return outputFilePath;
     }
+    
 
-    public boolean success() {
-        return disassemblySuccessful;
-    }
-
-    public LoadIndex index() {
-        return loadIndex;
-    }
 }

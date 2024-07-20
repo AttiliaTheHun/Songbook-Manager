@@ -134,4 +134,6 @@ function regenerate_index() {
     save_index();
 }
 
+init_index();
+
 ?>

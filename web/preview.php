@@ -36,6 +36,13 @@ $head_html .= "<title>{$strings['preview']['page_title']}</title>" . PHP_EOL;
 
 $head_html = $head_html . PHP_EOL . "<link rel=\"stylesheet\" href=\"$url/resources/css/style.css\">";
 
+// someone can also go directly for the .php file, in that case we do not receive our params (not even empty),
+// so we redirect manually
+if (!isset($_GET['params'])) {
+    header("Location: $url/preview/");
+    exit(0);
+}
+
 // parse URL parameters that will be provided as ?params=param1/param2/... through htaccess redirection
 $params = rtrim($_GET['params'], '/');
 $params = filter_var($params, FILTER_SANITIZE_URL);
@@ -44,13 +51,6 @@ $params = explode('/', $params);
 // init default values
 $nodecoration = false;
 $nobuttons = false;
-
-// someone can also go directly for the .php file, in that case we do not receive our params (not even empty),
-// so we redirect manually
-if (!isset($_GET['params'])) {
-    header("Location: $url/preview/");
-    exit(0);
-}
 
 // sometimes when args are actually not provided, we get the ".php" as args instead
 if (count($params) == 1 && $params[0] == ".php") {

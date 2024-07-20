@@ -851,7 +851,7 @@ public final class SettingsEditor extends Stage {
             remoteDataIndexFieldTooltip.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
                 if (!newValue) { // focus lost
                     if (remoteIndexSetting.verifyValue(remoteDataIndexURLField.getText().trim())) {
-                        SettingsManager.getInstance().set("REMOTE_DATA_INDEX_URL", remoteDataIndexURLField.getText().trim());
+                        SettingsManager.getInstance().set("REMOTE_INDEX_URL", remoteDataIndexURLField.getText().trim());
                     } else {
                         remoteDataIndexURLField.setText(remoteIndexSetting.getValue());
                     }
@@ -866,8 +866,8 @@ public final class SettingsEditor extends Stage {
             remoteDataVersionTimestampField.setTooltip(remoteDataVersionTimestampFieldTooltip);
             remoteDataVersionTimestampField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
                 if (!newValue) { // focus lost
-                    if (remoteDownloadSetting.verifyValue(remoteDataVersionTimestampField.getText().trim())) {
-                        SettingsManager.getInstance().set("REMOTE_DATA_VERSION_TIMESTAMP_URL", remoteDataVersionTimestampField.getText().trim());
+                    if (remoteVersionTimestampSetting.verifyValue(remoteDataVersionTimestampField.getText().trim())) {
+                        SettingsManager.getInstance().set("REMOTE_VERSION_TIMESTAMP_URL", remoteDataVersionTimestampField.getText().trim());
                     } else {
                         remoteDataVersionTimestampField.setText(remoteVersionTimestampSetting.getValue());
                     }

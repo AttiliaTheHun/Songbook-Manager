@@ -20,6 +20,7 @@ import java.awt.Desktop;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
@@ -149,9 +150,18 @@ public class SongbookApplication extends Application {
                         EnvironmentManager.getInstance().save();
                     }
                 }
-                case L -> { // load
+                case L -> {
                     if (keyEvent.isControlDown()) {
-                        EnvironmentManager.getInstance().load();
+                        if (keyEvent.isAltDown()) { // open log
+                            try {
+                                Desktop.getDesktop().open(new File((String) SettingsManager.getInstance().getValue("LOG_FILE_PATH")));
+                            } catch (final Exception e) {
+                                logger.error(e.getMessage(), e);
+                            }
+                        } else {
+                            EnvironmentManager.getInstance().load(); // load
+                        }
+
                     }
                 }
                 case H -> { // help
@@ -168,7 +178,7 @@ public class SongbookApplication extends Application {
                         openAssociatedLink();
                     }
                 }
-                case N -> {
+                case N -> { // add new song
                     if (keyEvent.isControlDown()) {
                         Environment.getInstance().getCollectionManager().addSongDialog();
                     }

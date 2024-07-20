@@ -242,12 +242,10 @@ public class ZipBuilder implements Closeable {
         }
         zos.putNextEntry(new ZipEntry(file.getName()));
         final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
-        long bytesRead = 0;
         byte[] bytesIn = new byte[BUFFER_SIZE];
         int read = 0;
         while ((read = bis.read(bytesIn)) != -1) {
             zos.write(bytesIn, 0, read);
-            bytesRead += read;
         }
         zos.closeEntry();
         return this;
@@ -285,12 +283,10 @@ public class ZipBuilder implements Closeable {
         }
         zos.putNextEntry(new ZipEntry(parentFolder + "/" + file.getName()));
         final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
-        long bytesRead = 0;
         byte[] bytesIn = new byte[BUFFER_SIZE];
         int read = 0;
         while ((read = bis.read(bytesIn)) != -1) {
             zos.write(bytesIn, 0, read);
-            bytesRead += read;
         }
         zos.closeEntry();
         return this;
@@ -348,12 +344,10 @@ public class ZipBuilder implements Closeable {
             }
             zos.putNextEntry(new ZipEntry(parentFolder + "/" + file.getName()));
             final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
-            long bytesRead = 0;
             byte[] bytesIn = new byte[BUFFER_SIZE];
             int read = 0;
             while ((read = bis.read(bytesIn)) != -1) {
                 zos.write(bytesIn, 0, read);
-                bytesRead += read;
             }
             zos.closeEntry();
         }
@@ -407,7 +401,7 @@ public class ZipBuilder implements Closeable {
         if (parentFolder.endsWith("/")) {
             parentFolder = parentFolder.substring(0, parentFolder.length() - 1);
         }
-        for (File file : folder.listFiles()) {
+        for (final File file : folder.listFiles()) {
             if (file.isDirectory()) {
                 addFolder(file, file.getName());
                 continue;
@@ -420,12 +414,10 @@ public class ZipBuilder implements Closeable {
 
             BufferedInputStream bis = new BufferedInputStream(
                     new FileInputStream(file));
-            long bytesRead = 0;
             byte[] bytesIn = new byte[BUFFER_SIZE];
             int read = 0;
             while ((read = bis.read(bytesIn)) != -1) {
                 zos.write(bytesIn, 0, read);
-                bytesRead += read;
             }
             zos.closeEntry();
         }

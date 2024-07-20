@@ -25,7 +25,7 @@ public class SaveIndex extends PartialIndex {
     }
 
     public static SaveIndex empty(final Collection<String> collections) {
-        SaveIndex index = new SaveIndex(-1);
+        final SaveIndex index = new SaveIndex(-1);
         index.setAdditions(new Property());
         index.setCollections(new ArrayList<>());
         index.setChanges(new Property());
@@ -42,7 +42,7 @@ public class SaveIndex extends PartialIndex {
         return additions;
     }
 
-    public void setAdditions(Property additions) {
+    public void setAdditions(final Property additions) {
         this.additions = additions;
     }
 
@@ -50,7 +50,7 @@ public class SaveIndex extends PartialIndex {
         return deletions;
     }
 
-    public void setDeletions(Property deletions) {
+    public void setDeletions(final Property deletions) {
         this.deletions = deletions;
     }
 
@@ -58,7 +58,7 @@ public class SaveIndex extends PartialIndex {
         return changes;
     }
 
-    public void setChanges(Property changes) {
+    public void setChanges(final Property changes) {
         this.changes = changes;
     }
 
@@ -66,7 +66,7 @@ public class SaveIndex extends PartialIndex {
         return collections;
     }
 
-    public void setCollections(Collection<String> collections) {
+    public void setCollections(final Collection<String> collections) {
         this.collections = collections;
     }
 

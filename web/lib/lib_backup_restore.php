@@ -4,7 +4,7 @@
  * 
  **/
 
-require_once(dirname(__FILE__) . '/lib_init.php');
+require_once(dirname(__FILE__) . '/lib_index.php');
 require_once(dirname(__FILE__) . '/lib_zip_util.php');
 
 const BACKUP_TYPE_COMPLETE = "COMPLETE";

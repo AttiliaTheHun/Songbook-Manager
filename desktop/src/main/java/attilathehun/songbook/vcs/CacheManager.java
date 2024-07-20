@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class CacheManager {
@@ -42,9 +43,23 @@ public class CacheManager {
      */
     public void clearCache() {
         localVersionTimestamp = -1;
+        clearDirectory(new File((String) SettingsManager.getInstance().getValue("VCS_CACHE_PATH")));
+    }
+
+    /**
+     * Recursively deletes all files in a directory and subdirectories and then tries to delete these directories, too
+     *
+     * @param directory the directory to clean
+     */
+    private void clearDirectory(final File directory) {
         try {
-            for (final File f : new File((String) SettingsManager.getInstance().getValue("VCS_CACHE_PATH")).listFiles()) {
-                f.delete();
+            for (final File f : directory.listFiles()) {
+                if (f.isDirectory()) {
+                    clearDirectory(f);
+                    f.delete();
+                } else {
+                    f.delete();
+                }
             }
         } catch (final NullPointerException npe) {
             logger.error(npe.getMessage(), npe);
@@ -165,7 +180,7 @@ public class CacheManager {
             for (final File file : Stream.of(new File(collectionManager.getSongDataFilePath()).listFiles())
                     .filter(file -> !file.isDirectory())
                     .toList()) {
-                tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();
+                tempStamp = Files.getLastModifiedTime(file.toPath()).to(TimeUnit.SECONDS);
                 if (tempStamp > timestamp) {
                     timestamp = tempStamp;
                 }
@@ -176,7 +191,7 @@ public class CacheManager {
                 .filter(file -> !file.isDirectory())
                 .filter(file -> file.getName().endsWith(".json"))
                 .toList()) {
-            tempStamp = Files.getLastModifiedTime(file.toPath()).toMillis();
+            tempStamp = Files.getLastModifiedTime(file.toPath()).to(TimeUnit.SECONDS);
             if (tempStamp > timestamp) {
                 timestamp = tempStamp;
             }

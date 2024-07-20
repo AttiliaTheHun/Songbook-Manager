@@ -21,7 +21,8 @@ if ($token == null || !$token->has_read_permission()) {
     
     
 $filename = 'index.json';
-require(dirname(__FILE__) . '/../lib/lib_init.php');
+require(dirname(__FILE__) . '/../lib/lib_index.php');
+
 header('HTTP/1.1 200 Ok');
 header('Content-Type: application/json');         
 header("Content-Disposition: attachment;filename=$filename"); 

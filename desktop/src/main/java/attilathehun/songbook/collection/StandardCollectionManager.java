@@ -6,6 +6,7 @@ import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.util.DynamicSonglist;
 import attilathehun.songbook.util.HTMLGenerator;
+import attilathehun.songbook.vcs.CacheManager;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.CodeEditor;
 import attilathehun.songbook.window.SongbookApplication;
@@ -70,8 +71,8 @@ public final class StandardCollectionManager extends CollectionManager {
                 repairSongbookDialog();
             } else {
                 createSongbookDialog();
+                return;
             }
-            return;
         }
 
         collection = Misc.loadObjectFromFileInJSON(new TypeToken<ArrayList<Song>>(){}, collectionJSONFile);
@@ -100,11 +101,11 @@ public final class StandardCollectionManager extends CollectionManager {
     @Override
     public void save() {
         try {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            FileWriter writer = new FileWriter(getCollectionFilePath());
+            final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            final FileWriter writer = new FileWriter(getCollectionFilePath());
             gson.toJson(collection, writer);
             writer.close();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage("Can not save the song collection, for complete error message view the log file.")
@@ -633,12 +634,12 @@ public final class StandardCollectionManager extends CollectionManager {
     private void repairMissingCollectionFile() {
         logger.info("Repairing standard collection");
         collection = new ArrayList<>();
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(getSongDataFilePath()))) {
-            for (Path path : stream) {
+        try (final DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(getSongDataFilePath()))) {
+            for (final Path path : stream) {
 
                 if (!Files.isDirectory(path) && path.toString().trim().endsWith(".html")) {
                     int songId = -1;
-                    String pathString = path.toString();
+                    final String pathString = path.toString();
                     if (pathString.contains(File.separator)) {
                         songId = Integer.parseInt(pathString.substring(pathString.lastIndexOf(File.separator) + 1, pathString.indexOf(".html")));
                     } else {
@@ -647,9 +648,15 @@ public final class StandardCollectionManager extends CollectionManager {
                     collection.add(createSongRecordFromLocalFile(songId));
                 }
             }
+            // cache it before the collection file is created so its last modified date does not get cached
+            CacheManager.getInstance().cacheSongbookVersionTimestamp();
+
             save();
+            // no changes were done by creating the collection file, so we do not want to make the VCS think we changed something
+            new File(getCollectionFilePath()).setLastModified(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
+
             logger.info("Success!");
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
         }
     }
