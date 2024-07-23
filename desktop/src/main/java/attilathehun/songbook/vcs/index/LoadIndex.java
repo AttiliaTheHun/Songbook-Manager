@@ -20,7 +20,7 @@ public class LoadIndex extends PartialIndex {
     public LoadIndex() { }
 
     public static LoadIndex empty() {
-        LoadIndex index = new LoadIndex();
+        final LoadIndex index = new LoadIndex();
         index.setMissing(new Property());
         index.setOutdated(new Property());
         index.setCollections(new ArrayList<>());
@@ -51,4 +51,15 @@ public class LoadIndex extends PartialIndex {
         this.collections = collections;
     }
 
+    @Override
+    public boolean isEmpty() {
+        if (!missing.isEffectivelyEmpty()) {
+            return false;
+        }
+
+        if (!outdated.isEffectivelyEmpty()) {
+            return false;
+        }
+        return collections.isEmpty();
+    }
 }

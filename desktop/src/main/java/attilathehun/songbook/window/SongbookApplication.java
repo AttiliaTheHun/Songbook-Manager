@@ -6,6 +6,8 @@ import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.*;
 import attilathehun.songbook.util.BrowserFactory;
 import attilathehun.songbook.util.TokenProvider;
+import attilathehun.songbook.vcs.RequestFileAssembler;
+import attilathehun.songbook.vcs.VCSAgent;
 import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;

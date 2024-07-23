@@ -170,7 +170,7 @@ public class CacheManager {
     }
 
     /**
-     * Scans all the songbook files to find the newest modify date which becomes the new version timestamp. If the currently cached timestamp is
+     * Scans all the songbook files to find the newest modify date which becomes the new version timestamp. This timestamp is then stored in a local file.
      */
     public void cacheSongbookVersionTimestamp() throws IOException {
         long timestamp = -1;

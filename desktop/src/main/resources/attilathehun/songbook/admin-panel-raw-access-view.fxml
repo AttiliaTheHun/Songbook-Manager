@@ -34,6 +34,10 @@
                         <Insets left="5.0" />
                     </HBox.margin>
                 </ChoiceBox>
+                <Button fx:id="rawAccessViewHeadersButton" text="Headers">
+               <HBox.margin>
+                  <Insets left="4.0" />
+               </HBox.margin></Button>
                 <Label text="URL:">
                     <HBox.margin>
                         <Insets left="5.0" top="4.0" />

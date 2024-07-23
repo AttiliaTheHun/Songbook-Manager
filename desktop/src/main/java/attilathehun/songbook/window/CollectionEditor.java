@@ -1,10 +1,13 @@
 package attilathehun.songbook.window;
 
-import attilathehun.songbook.collection.*;
+import attilathehun.songbook.collection.CollectionListener;
+import attilathehun.songbook.collection.CollectionManager;
+import attilathehun.songbook.collection.EasterCollectionManager;
+import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
-import attilathehun.songbook.util.PDFGenerator;
 import attilathehun.songbook.util.Misc;
+import attilathehun.songbook.util.PDFGenerator;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
@@ -23,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 import java.awt.*;
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
+
 // TODO on right click upon a list item, a menu with "delete", "create easter song from template" and "open link" could open ;)
 public final class CollectionEditor extends Stage {
     private static final Logger logger = LogManager.getLogger(CollectionEditor.class);
@@ -78,6 +82,14 @@ public final class CollectionEditor extends Stage {
     }
 
     /**
+     * Recreates the UI that works with data that is subject to runtime changes.
+     */
+    public static void refresh() {
+        INSTANCE.tabbedPane.getTabs().clear();
+        INSTANCE.initTabbedPane();
+    }
+
+    /**
      * JavaFX method called when the FXML file is being inflated.
      */
     @FXML
@@ -108,14 +120,6 @@ public final class CollectionEditor extends Stage {
             tabbedPane.getTabs().add(new CollectionPanel(manager));
         }
 
-    }
-
-    /**
-     * Recreates the UI that works with data that is subject to runtime changes.
-     */
-    public static void refresh() {
-        INSTANCE.tabbedPane.getTabs().clear();
-        INSTANCE.initTabbedPane();
     }
 
     /**

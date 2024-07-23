@@ -3,6 +3,7 @@ package attilathehun.songbook.vcs.index;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 /**
@@ -32,5 +33,22 @@ public class Property extends HashMap<String, Object> {
         }
 
         return ((Property) o).values().equals(values());
+    }
+
+    /**
+     * Checks whether the property is effectively empty. Effectively empty does not mean its size is 0, because there may be some obligatory structures that need to be present
+     * every time the property is used. Instead, effectively empty means there is no actual data stored in the property.
+     *
+     * @return true if the property is effectively empty, false otherwise
+     */
+    public boolean isEffectivelyEmpty() {
+        for (final Object o : values()) {
+            if (o instanceof Collection) {
+                if (((Collection) o).size() != 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

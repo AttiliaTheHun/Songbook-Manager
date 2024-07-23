@@ -24,10 +24,10 @@ if ($request_body == NULL || strlen($request_body) == 0) {
     die();
 }
 
-$request = json_decode($request_body);
+$request = json_decode($request_body, true);
 
 foreach ($request['freeze'] as $index) {
-    $tokens[$index]['frozen'] = true;
+    $GLOBALS['tokens'][$index]['frozen']['frozen'] = true;
 }
 save_tokens();
 

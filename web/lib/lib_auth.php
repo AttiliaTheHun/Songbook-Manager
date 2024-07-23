@@ -3,7 +3,7 @@
  * This library is used to authenticate HTTP requests on the API. It features basic token authentication.
  **/
  
-class Token {
+class Token implements \JsonSerializable {
     
     private $token = "";
     private $name = "";
@@ -34,6 +34,11 @@ class Token {
 		    $this->set(func_get_arg(0));
 		}
 	}
+	
+	public function jsonSerialize() {
+        $vars = get_object_vars($this);
+        return $vars;
+    }
 	
 	function get_token() {
 	    return $this->token;
@@ -79,13 +84,9 @@ class Token {
         foreach ($data AS $key => $value) $this->{$key} = $value;
     }
     
-    public static function generate(string $secret = NULL, string $name, mixed $permissions) {
-        if ($secret == NULL) {
-            $secret = base64_encode(random_bytes(10));
-        } else {
-            $secret = base64_encode($secret);
-        }
-        return new Token($secret, $name, date("d-m-Y"), $permissions[0], $permissions[1], $permissions[2], $permissions[3], $permissions[4]);
+    public static function generate(string $name, mixed $permissions) {
+        $secret = base64_encode(random_bytes(64));
+        return new Token($secret, $name, date("d-m-Y"), false, $permissions[0], $permissions[1], $permissions[2], $permissions[3], $permissions[4]);
     }
     
     public function to_string() {
@@ -95,7 +96,7 @@ class Token {
         }
         $output .= " ";
         foreach($this->permissions as $permission => $value) {
-            if (value) {
+            if ($value === true) {
                 $output .= '1';
             } else {
                 $output .= '0';
@@ -106,7 +107,7 @@ class Token {
  	
 }
 
-$tokens_file_path = dirname(__FILE__) . '/../data/tokens.json';
+$GLOBALS['tokens_file_path'] = dirname(__FILE__) . '/../data/tokens.json';
 
 /**
 * Scans the local token list for the presented token. Returns its complete representation when found and null otherwise.
@@ -114,9 +115,9 @@ $tokens_file_path = dirname(__FILE__) . '/../data/tokens.json';
 * @param $token the authentification token's value
 * @return a Token object or null
 */
-function get_token_object($token) {
+function get_token_object($auth_token) {
     for ($x = 0; $x < count($GLOBALS['tokens']); $x++) {
-        if ($GLOBALS['tokens'][$x]['token'] == $token) {
+        if ($GLOBALS['tokens'][$x]['token'] == $auth_token) {
             return new Token(json_decode(json_encode($GLOBALS['tokens'][$x]), true));
         }
     }
@@ -154,8 +155,8 @@ function auth_init() {
  * 
  * @param $token the token to register
  **/
-function register_token(mixed $token) {
-    array_push($GLOBALS['tokens'], $token);
+function register_token(mixed $target_token) {
+    array_push($GLOBALS['tokens'], $target_token);
     save_tokens();
 }
 

@@ -13,25 +13,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405); // 405 Method not allowed
-    include(dirname(__FILE__) . '/../../resources/pages/405.php');
+    include(dirname(__FILE__) . '/../resources/pages/405.php');
     die();
 }
 
 
-require(dirname(__FILE__) . '/../../lib/lib_backup_restore.php');
+require(dirname(__FILE__) . '/../lib/lib_backup_restore.php');
 
 $complete_backups = [];
 $inverse_backups = [];
 
-foreach (scandir($directory) as $file) {
-    if (!str_ends_with('.zip')) {
+foreach (scandir($GLOBALS['backup_file_path']) as $file) {
+    if (!str_ends_with($file, '.zip')) {
         continue;
     }
+	try {
+		$creation_date = date("F d Y H:i:s.", filemtime($GLOBALS['backup_file_path'].$file));
+	} catch (\Throwable $t) {
+		$creation_date = 'N/A';
+	}
     
-    if (str_starts_with('complete_backup')) {
-        array_push($complete_backup, $file . " " . date("F d Y H:i:s.", filemtime($file)));
-    } elseif (str_starts_with('inverse_backup')) {
-        array_push($inverse_backup, $file . " " . date("F d Y H:i:s.", filemtime($file)));
+    if (str_starts_with($file, 'complete_backup')) {
+        array_push($complete_backups, $file . " " . $creation_date);
+    } elseif (str_starts_with($file, 'inverse_backup')) {
+        array_push($inverse_backups, $file . " " . $creation_date);
     }
 }
 

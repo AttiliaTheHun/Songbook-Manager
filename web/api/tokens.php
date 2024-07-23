@@ -30,7 +30,7 @@ if ($token == NULL || !$token->has_manage_tokens_permission()) {
 
 $stringified_tokens = [];
 
-foreach ($tokens as $token_mixed) {
+foreach ($GLOBALS['tokens'] as $token_mixed) {
     $token_object = get_token_object($token_mixed['token']);
     array_push($stringified_tokens, $token_object->to_string());
 }

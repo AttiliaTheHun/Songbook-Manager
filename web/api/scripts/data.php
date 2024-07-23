@@ -66,6 +66,12 @@ function handle_data_download($has_index = false) {
     if (!$has_index) {
         // in this case we simply create a zip archive with all of the songbooks data and send it back
         $archive_name = create_complete_load_request_response_archive();
+		
+		if (!file_exists($archivename)) {
+			http_response_code(500) // 500 Internal server error
+			die('{"message": "failed to create the response archive file"}');
+		}
+		
         // now we sent the archive to the client
         header('HTTP/1.1 200 Ok');
         header('Content-Type: application/zip');         
@@ -91,6 +97,12 @@ function handle_data_download($has_index = false) {
     }
     
     $archive_name = create_partial_load_request_response_archive($request_index);
+	
+	if (!file_exists($archive_name)) {
+		http_response_code(500)
+		die('{"message": "failed to create the response archive file"}');
+	}
+	
     // now we sent the archive to the client
     header('HTTP/1.1 200 Ok');
     header('Content-Type: application/zip');         

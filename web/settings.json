@@ -4,19 +4,11 @@
 	    "max_backup_count": 3,
 	    "backup_type": "INVERSE"
     },
-	"plugin": {
-	    "Frontpage": {
-	        "enabled": true
+	 "frontpage": {
+	    "enabled": true
 	    },
-	    "DynamicSonglist": {
-	        "enabled": true
-	    },
-	    "Export": {
-	        "enabled": true,
-	        "defaultExportFileName": "ExportDefault.pdf",
-	        "singlepageExportFileName": "ExportSinglepage.pdf",
-	        "printableExportFileName": "ExportPrintable.pdf"
-	    }
+	"dynamic_songlist": {
+	    "enabled": true
 	},
 	"homepage": {
 	    "enabled": true

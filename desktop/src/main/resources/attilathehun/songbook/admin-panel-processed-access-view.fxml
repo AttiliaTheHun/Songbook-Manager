@@ -3,15 +3,18 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox prefHeight="575" prefWidth="800" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1">
-   <children>
-      <ListView fx:id="processedAccessViewDataListView" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
-      <HBox prefWidth="200.0">
-         <children>
-            <Button fx:id="processedAccessViewCreateTokenButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Create token" HBox.hgrow="ALWAYS" />
-            <Button fx:id="processedAccessViewFreezeTokenButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Freeze token" HBox.hgrow="ALWAYS" />
-            <Button fx:id="processedAccessViewCreateBackupButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Create backup" HBox.hgrow="ALWAYS" />
-            <Button fx:id="processedAccessViewRestoreBackupButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Restore backup" HBox.hgrow="ALWAYS" />
-         </children></HBox>
-   </children>
-</VBox>
+<BorderPane fx:id="processedAccessRoot" prefHeight="575" prefWidth="800" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1">
+    <center>
+        <ListView fx:id="processedAccessViewDataListView" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+    </center>
+    <bottom>
+        <HBox minHeight="30.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <children>
+                <Button fx:id="processedAccessViewCreateTokenButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Create token" HBox.hgrow="ALWAYS" />
+                <Button fx:id="processedAccessViewFreezeTokenButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Freeze token" HBox.hgrow="ALWAYS" />
+                <Button fx:id="processedAccessViewCreateBackupButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Create backup" HBox.hgrow="ALWAYS" />
+                <Button fx:id="processedAccessViewRestoreBackupButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Restore backup" HBox.hgrow="ALWAYS" />
+            </children>
+        </HBox>
+    </bottom>
+</BorderPane>

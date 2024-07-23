@@ -1,5 +1,6 @@
 package attilathehun.songbook.vcs;
 
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.Misc;
@@ -8,6 +9,7 @@ import attilathehun.songbook.vcs.index.LoadIndex;
 import attilathehun.songbook.vcs.index.SaveIndex;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.SongbookApplication;
+import attilathehun.songbook.window.SongbookController;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -64,7 +66,7 @@ public final class VCSAdmin {
         }
     }
 
-    private void saveLocalChanges2(final VCSAgent a) throws IOException, ExecutionException, InterruptedException, NoSuchAlgorithmException {
+    private void saveLocalChanges2(final VCSAgent a) throws Exception {
         if (!(Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             new AlertDialog.Builder().setTitle("Remote saving and loading disabled").setIcon(AlertDialog.Builder.Icon.WARNING)
                     .setMessage("Remote saving and loading is disabled. You can enable it in settings.")
@@ -130,15 +132,24 @@ public final class VCSAdmin {
             return;
         }
         final SaveIndex saveIndex = indexBuilder.createSaveIndex(local, remote);
+
+        if (saveIndex.isEmpty()) {
+            new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING)
+                    .setMessage("There appear to be no changes in the local version of the songbook, but for some reason, the timestamps do not match!")
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
+            return;
+        }
+
         final RequestFileAssembler RFAssembler = new RequestFileAssembler().assembleSaveFile(saveIndex, IndexBuilder.compareCollections(local, remote));
         agent.saveDataRemotely(RFAssembler.getOutputFilePath());
+
 
     }
 
 
 
-    @Deprecated
-    private void saveLocalChanges(VCSAgent a) throws IOException, NoSuchAlgorithmException {
+    @Deprecated(forRemoval = true)
+    private void saveLocalChanges(VCSAgent a) throws Exception {
         if (!(Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             new AlertDialog.Builder().setTitle("Remote saving and loading disabled").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage("Remote saving and loading is disabled. You can enable it in settings.")
@@ -218,7 +229,7 @@ public final class VCSAdmin {
         }
     }
 
-    private void loadRemoteChanges2(final VCSAgent a) throws IOException, ExecutionException, InterruptedException, NoSuchAlgorithmException {
+    private void loadRemoteChanges2(final VCSAgent a) throws Exception {
         if (!(Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             new AlertDialog.Builder().setTitle("Remote saving and loading disabled").setIcon(AlertDialog.Builder.Icon.INFO)
                     .setMessage("Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation.")
@@ -285,26 +296,42 @@ public final class VCSAdmin {
             return;
         }
         final LoadIndex loadIndex = indexBuilder.createLoadIndex(local, remote);
+
+        if (loadIndex.isEmpty()) {
+            new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING)
+                    .setMessage("There appear to be no changes in the remote version of the songbook, but for some reason, the timestamps do not match!")
+                    .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
+            return;
+        }
+
         final String responseFilePath = agent.loadRemoteData(loadIndex);
 
         if (responseFilePath == null) {
             return; // the agent has already shown the error message
         }
 
-        RequestFileAssembler.disassemble(responseFilePath, loadIndex);
+        if (!RequestFileAssembler.disassemble(responseFilePath, loadIndex)) {
+            throw new RuntimeException("could not disassemble to request file");
+        }
 
         local = indexBuilder.createLocalIndex();
         local.setVersionTimestamp(remote.getVersionTimestamp());
         CacheManager.getInstance().cacheIndex(local);
         CacheManager.getInstance().cacheSongbookVersionTimestamp(local.getVersionTimestamp());
+
+        // we need to refresh some components to make the changes visible and persistent
+        for (final CollectionManager manager : Environment.getInstance().getRegisteredManagers().values()) {
+            manager.init();
+        }
+        Environment.getInstance().refresh();
+
         new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO)
                 .setMessage("Remote data loaded successfully.")
                 .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
-
     }
 
-    @Deprecated
-    public void loadRemoteChanges(VCSAgent a) throws IOException, NoSuchAlgorithmException {
+    @Deprecated(forRemoval = true)
+    public void loadRemoteChanges(VCSAgent a) throws Exception {
         if (!(Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
             new AlertDialog.Builder().setTitle("Remote saving and loading disabled").setIcon(AlertDialog.Builder.Icon.INFO)
                             .setMessage("Remote saving and loading is disabled in the settings. Enable it and restart the client or read more in the documentation.")
@@ -389,7 +416,7 @@ public final class VCSAdmin {
 
     }
 
-    @Deprecated
+    @Deprecated(forRemoval = true)
     private String requestOneTimeToken() {
         JLabel label = new JLabel("Fill in the access token to access the remote server. Depending on the operation, the token must have READ or WRITE permission. The token will be used this time only!");
         JTextField token = new JPasswordField();
@@ -406,6 +433,11 @@ public final class VCSAdmin {
         return null;
     }
 
+    /**
+     * Adds an entry about the current user and their last changes to the songbook changelog file.
+     *
+     * @throws IOException
+     */
     private void updateSongbookChangeLog() throws IOException {
         final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         final String date = dtf.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(CacheManager.getInstance().getCachedSongbookVersionTimestamp()), ZoneId.systemDefault()));

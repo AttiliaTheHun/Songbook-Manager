@@ -20,10 +20,18 @@ public class SaveIndex extends PartialIndex {
     @SerializedName("version_timestamp")
     private long versionTimestamp;
 
+    public SaveIndex() {};
+
     public SaveIndex(long versionTimestamp) {
         this.versionTimestamp = versionTimestamp;
     }
 
+    /**
+     * Creates an empty save index that is fully compatible with the rest of the framework.
+     *
+     * @param collections the collections to include in the index
+     * @return the empty index
+     */
     public static SaveIndex empty(final Collection<String> collections) {
         final SaveIndex index = new SaveIndex(-1);
         index.setAdditions(new Property());
@@ -72,5 +80,23 @@ public class SaveIndex extends PartialIndex {
 
     public long getVersionTimestamp() {
         return versionTimestamp;
+    }
+
+    public void setVersionTimestamp(final long versionTimestamp) {
+        this.versionTimestamp = versionTimestamp;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        if (!additions.isEffectivelyEmpty()) {
+            return false;
+        }
+        if (!deletions.isEffectivelyEmpty()) {
+            return false;
+        }
+        if (!changes.isEffectivelyEmpty()) {
+            return false;
+        }
+        return collections.isEmpty();
     }
 }

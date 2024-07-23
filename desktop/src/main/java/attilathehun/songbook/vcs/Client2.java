@@ -1,18 +1,20 @@
 package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.environment.SettingsManager;
-import attilathehun.songbook.window.AlertDialog;
-import attilathehun.songbook.window.SongbookApplication;
 import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 
+/**
+ * This class is used for communication with the remote server over HTTP.
+ */
 public class Client2 {
     private static final Logger logger = LogManager.getLogger(Client.class);
     public static final String HTTP_GET = "GET";
@@ -28,27 +30,10 @@ public class Client2 {
     private static final String ZIP_EXTENSION = ".zip";
     private static final String JSON_EXTENSION = ".json";
 
-    @Deprecated
-    public static final int OK = 200;
-    @Deprecated
-    public static final int CREATED = 201;
-    @Deprecated
-    public static final int NO_CONTENT = 204;
-    @Deprecated
     public static final int ACCESS_DENIED = 401;
-    @Deprecated
-    public static final int FORBIDDEN = 403;
-    @Deprecated
-    public static final int NOT_FOUND = 404;
-    @Deprecated
-    public static final int METHOD_NOT_ALLOWED = 405;
-    @Deprecated
-    public static final int SERVICE_UNAVAILABLE = 503;
-    @Deprecated
-    public static final int NA = -1;
 
 
-    public Result http(final String url, final String method, final String token, final Object data, final String metadata) throws IOException {
+    public Result http(final String url, final String method, final String token, final Object data, final String metadata) throws Exception  {
         if (url == null || url.length() == 0) {
             throw new IllegalArgumentException("invalid url");
         }
@@ -57,7 +42,7 @@ public class Client2 {
             throw new IllegalArgumentException("invalid method");
         }
 
-        final URL endpoint = new URL(url);
+        final URL endpoint = new URI(url).toURL();
         final HttpURLConnection conn = (HttpURLConnection) endpoint.openConnection();
         conn.setRequestMethod(method);
         conn.setDoInput(true);
@@ -125,13 +110,22 @@ public class Client2 {
             }
         }
 
-
         byte[] error = (conn.getErrorStream() == null) ? null : conn.getErrorStream().readAllBytes();
         conn.disconnect();
         return new Result(conn.getResponseCode(), response, error, filename);
-
     }
 
+    /**
+     * This class represents the result of the HTTP request. Depending on the nature of the request and the corresponding response, the fields may or may not
+     * be defined (we call this being null in Java). If the response had a body, this body will be stored in {@param responseCode}. If something went wring with
+     * the connection, the error message will be stored in {@param error}. If the response contained an attachment, this attachment is saved locally rather than
+     * stored in {@param response} and the path to the local copy will be stored in {@param metadata}. Any of these fields can be null.
+     *
+     * @param responseCode the HTTP response code
+     * @param response the HTTP response body or null
+     * @param error the connection error information on null
+     * @param metadata attachment file path or null
+     */
     public record Result(int responseCode, byte[] response, byte[] error, String metadata) {
        /* public Result(int responseCode, byte[] response, byte[] error, String metadata) {
             this.responseCode = responseCode;

@@ -1,17 +1,21 @@
 package attilathehun.songbook.util;
 
 import attilathehun.songbook.window.AlertDialog;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.FileTime;
+import java.util.List;
 import java.util.MissingResourceException;
 import java.util.Random;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
+import java.util.concurrent.TimeUnit;
 
 public class Misc {
     private static final Logger logger = LogManager.getLogger(Misc.class);
@@ -77,6 +81,43 @@ public class Misc {
             case 8 -> throw new IllegalCallerException();
             case 9 -> throw new SecurityException();
         }
+    }
+
+    public static boolean setLastModifiedDate(final String filePath, long timestamp) {
+        final File file = new File(filePath);
+        if (!file.exists()) {
+            return false;
+        }
+        try {
+            final BasicFileAttributeView attributes = Files.getFileAttributeView(Paths.get(filePath), BasicFileAttributeView.class);
+            final FileTime time = FileTime.from(timestamp, TimeUnit.SECONDS);
+            attributes.setTimes(time, time, time);
+            if (file.lastModified() == timestamp) {
+                return true;
+            }
+        } catch (final IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+        return false;
+    }
+
+    /**
+     * A very memory-inefficient way to format a JSON string as pretty printing.
+     *
+     * @param jsonString the json string
+     * @return the formatted json string
+     */
+    public static String formatJSON(final String jsonString) {
+        if (jsonString == null || jsonString.length() == 0) {
+            throw new IllegalArgumentException("the string must not be empty");
+        }
+        final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        if (jsonString.startsWith("[") && jsonString.endsWith("]")) { // arrays need special treatment
+            final JsonArray jsonArray = gson.fromJson(jsonString, JsonArray.class);
+            return gson.toJson(jsonArray);
+        }
+        final JsonObject jsonObject = new Gson().fromJson(jsonString, JsonObject.class);
+        return gson.toJson(jsonObject);
     }
 
 }
