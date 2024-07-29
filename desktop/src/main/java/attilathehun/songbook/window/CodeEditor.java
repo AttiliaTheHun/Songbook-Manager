@@ -186,7 +186,7 @@ public class CodeEditor extends Stage implements CollectionListener {
                     return;
                 }
                 event.consume();
-                final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("HTML Editor").setIcon(AlertDialog.Builder.Icon.ERROR)
+                final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("HTML Editor").setIcon(AlertDialog.Builder.Icon.CONFIRM)
                         .setMessage("Saves changes?").addOkButton("Save").addCloseButton("Discard").build().awaitResult();
                 result.thenAccept(dialogResult -> {
                     if (dialogResult == AlertDialog.RESULT_OK) {

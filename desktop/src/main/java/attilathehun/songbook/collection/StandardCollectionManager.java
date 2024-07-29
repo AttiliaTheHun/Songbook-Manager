@@ -186,20 +186,23 @@ public final class StandardCollectionManager extends CollectionManager {
                     .addOkButton().build().open();
         }
         onSongRemoved(s);
-        /*if (Environment.getInstance().getCollectionManager().equals(getInstance())) {
-            Environment.getInstance().refresh();
-        }*/
     }
 
     @Override
-    public void activateSong(Song s) {
+    public void activateSong(final Song s) {
+        if (s == null || (s.getManager() != null && s.getManager() != this)) {
+            throw new IllegalArgumentException();
+        }
         collection.get(getCollectionSongIndex(s)).setActive(true);
         save();
         onSongUpdated(s);
     }
 
     @Override
-    public void deactivateSong(Song s) {
+    public void deactivateSong(final Song s) {
+        if (s == null || (s.getManager() != null && s.getManager() != this)) {
+            throw new IllegalArgumentException();
+        }
         collection.get(getCollectionSongIndex(s)).setActive(false);
         save();
         onSongUpdated(s);
@@ -207,6 +210,9 @@ public final class StandardCollectionManager extends CollectionManager {
 
     @Override
     public Song updateSongRecord(final Song s) {
+        if (s == null || (s.getManager() != null && s.getManager() != this)) {
+            throw new IllegalArgumentException();
+        }
         int index = getCollectionSongIndex(s.id());
 
         collection.get(index).setName(s.name());
@@ -230,11 +236,10 @@ public final class StandardCollectionManager extends CollectionManager {
             return;
         }
         try {
-            String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
-            Document document = Jsoup.parse(songHTML);
-            Element element = document.select(".song-title").first();
-            String songName = element.text();
-            System.out.println(songName);
+            final String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
+            final Document document = Jsoup.parse(songHTML);
+            final Element element = document.select(".song-title").first();
+            final String songName = element.text();
 
             if (!s.name().equals(songName)) {
                 collection.get(getCollectionSongIndex(s)).setName(songName);
@@ -242,7 +247,7 @@ public final class StandardCollectionManager extends CollectionManager {
                 onSongUpdated(collection.get(getCollectionSongIndex(s)));
             }
 
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(String.format("song id: %s", s.id()));
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
@@ -253,29 +258,24 @@ public final class StandardCollectionManager extends CollectionManager {
 
     @Override
     public void updateSongHTMLTitleFromRecord(final Song s) {
-        System.out.println((String) SettingsManager.getInstance().getValue("BIND_SONG_TITLES"));
-        System.out.println(s.name() + s.id());
         if (!(Boolean) SettingsManager.getInstance().getValue("BIND_SONG_TITLES")) {
             return;
         }
-        System.out.println(1);
         if (s == null || !CollectionManager.isValidId(s.id())) {
             return;
         }
-        System.out.println(2);
+
         try {
-            String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
-            Document document = Jsoup.parse(songHTML);
-            Element element = document.select(".song-title").first();
+            final String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
+            final Document document = Jsoup.parse(songHTML);
+            final Element element = document.select(".song-title").first();
             element.text(s.name());
-            System.out.println(element.text());
             FileOutputStream out = new FileOutputStream(getSongFilePath(s));
-            System.out.println(document);
             out.write(document.toString().getBytes(StandardCharsets.UTF_8));
             out.flush();
             out.close();
 
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage(String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()))
@@ -289,19 +289,19 @@ public final class StandardCollectionManager extends CollectionManager {
             throw new IllegalArgumentException();
         }
         try {
-            String songHTML = String.join("\n", Files.readAllLines(Path.of(getSongFilePath(s))));
-            Document document = Jsoup.parse(songHTML);
+            final String songHTML = String.join("\n", Files.readAllLines(Path.of(getSongFilePath(s))));
+            final Document document = Jsoup.parse(songHTML);
             Element element = document.select("meta[name=url]").first();
             element.attr("value", s.getUrl());
             element = document.select("meta[name=active]").first();
             element.attr("value", String.valueOf(s.isActive()));
 
-            FileOutputStream out = new FileOutputStream(getSongFilePath(s));
+            final FileOutputStream out = new FileOutputStream(getSongFilePath(s));
             out.write(document.toString().getBytes(StandardCharsets.UTF_8));
             out.flush();
             out.close();
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
             logger.error(String.format("Target song: %d", s.id()));
             logger.error(e.getMessage(), e);
         }

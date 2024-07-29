@@ -1,8 +1,10 @@
 package attilathehun.songbook.window;
 
 import attilathehun.songbook.Main;
+import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.Misc;
+import attilathehun.songbook.vcs.Client2;
 import attilathehun.songbook.vcs.VCSAgent;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -16,6 +18,7 @@ import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -27,11 +30,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.controlsfx.control.ToggleSwitch;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -63,7 +68,7 @@ public final class AdminPanel extends Stage {
 
     public static void open() {
         if (instance == null) {
-            instance = initialInit();
+            initialInit();
             instance.show();
         }
         instance.toFront();
@@ -78,8 +83,9 @@ public final class AdminPanel extends Stage {
         return instance;
     }
 
-    private static AdminPanel initialInit() {
+    private static void initialInit() {
         final AdminPanel panelController = new AdminPanel(VCSAgent.getAdminPanelAgent(new Certificate()));
+        instance = panelController;
         final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("admin-panel.fxml"));
         fxmlLoader.setController(panelController);
         Scene scene;
@@ -90,7 +96,6 @@ public final class AdminPanel extends Stage {
         }
         panelController.setScene(scene);
         panelController.postInit();
-        return panelController;
     }
 
     /**
@@ -299,7 +304,38 @@ public final class AdminPanel extends Stage {
             });
 
             rawAccessViewSendButton.setOnAction((handler) -> {
+                final String url = rawAccessViewURLField.getText();
+                final String method = rawAccessHTTPMethodBox.getValue();
+                final String body = rawAccessViewRequestArea.getText();
+                String headers = null;
+                final String headerDialogInput = rawAccessHeaderDialogArea.getText();
+                if (headerDialogInput != null && !headerDialogInput.equalsIgnoreCase(HEADER_DIALOG_HINT_TEXT)) {
+                    headers = headerDialogInput;
+                }
+                try {
+                    final HttpURLConnection connection = instance.agent.httpWithHeaders(url, method, body, headers);
+                    final StringBuffer connectionOutput = new StringBuffer("Response headers:\n");
+                    for (final String header : connection.getHeaderFields().keySet()) {
+                        for (final String value : connection.getHeaderFields().get(header)) {
+                            connectionOutput.append(header).append(": ").append(value).append("\n");
+                        }
+                    }
 
+                    if (connection.getResponseCode() < 400) { // prevent {@link HttpURLConnection#getInputStream()} from throwing exception
+                        connectionOutput.append("\nResponse body: \n");
+                        final InputStream in = connection.getInputStream();
+                        connectionOutput.append(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+                        in.close();
+                    }
+
+                    instance.jsonData = null;
+                    rawAccessViewResponseArea.setText(connectionOutput.toString());
+                } catch (final Exception e) {
+                    instance.jsonData = null;
+                    final StringWriter stackTraceWriter = new StringWriter();
+                    e.printStackTrace(new PrintWriter(stackTraceWriter));
+                    rawAccessViewResponseArea.setText(e + "\n" + stackTraceWriter);
+                }
             });
 
             rawAccessHeaderDialogArea.setText(HEADER_DIALOG_HINT_TEXT);
@@ -315,6 +351,7 @@ public final class AdminPanel extends Stage {
                 return;
             }
             rawAccessViewURLField.setText(SettingsManager.getInstance().getValue("REMOTE_BACKUPS_URL"));
+            rawAccessViewResponseArea.setText(Misc.formatJSON(instance.jsonData));
         }
 
         public void initUIForTokens() {
@@ -374,7 +411,20 @@ public final class AdminPanel extends Stage {
                             .setMessage("The path to the api endpoint is not specified.").addOkButton().build().open();
                     return;
                 }
-                instance.agent.restoreRemoteBackup();
+                if (processedAccessViewDataListView.getSelectionModel().getSelectedIndex() == -1) {
+                    new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING).setParent(instance)
+                            .setMessage("You need to select an item first.").addOkButton().build().open();
+                    return;
+                }
+                final String backupEntry = processedAccessViewDataListView.getSelectionModel().getSelectedItems().get(0);
+                String fileName;
+                try {
+                    fileName = backupEntry.substring(0, backupEntry.indexOf(" "));
+                } catch (final Exception e) {
+                    logger.error(e.getMessage(), e);
+                    return;
+                }
+                instance.agent.restoreRemoteBackup(fileName);
             });
 
             processedAccessViewCreateTokenButton.setOnAction(handler -> {
@@ -405,6 +455,10 @@ public final class AdminPanel extends Stage {
             initActionLogListviewTitleBar();
         }
 
+        /**
+         * Creates and opens a dialog where the user can create a token by filling in its name and permissions. If the action is valid, the agent is then tasked to forward
+         * it to the server.
+         */
         private void createTokenCreationDialog() {
             final CheckBox readPermissionBox = new CheckBox("Read");
             final CheckBox writePermissionBox = new CheckBox("Write");
@@ -469,7 +523,6 @@ public final class AdminPanel extends Stage {
             fileNameLabel.setPadding(new Insets(0, 0, 0, 8));
             fileNameLabel.setFont(new Font("System Bold", 12.0));
             backupsListviewTitlebar.getChildren().add(fileNameLabel);
-            backupsListviewTitlebar = new HBox();
             final Label creationDateLabel = new Label("creation date");
             creationDateLabel.setPrefWidth(230);
             creationDateLabel.setPadding(new Insets(0, 0, 0, 8));
@@ -533,6 +586,7 @@ public final class AdminPanel extends Stage {
         }
 
         private void initListviewForBackups() {
+            System.out.println(instance.jsonData);
             processedAccessViewDataListView.getItems().clear();
             final JsonObject object = new Gson().fromJson(instance.jsonData, JsonObject.class);
             final ReadOnlyListWrapper<String> listViewData = new ReadOnlyListWrapper<>(FXCollections.observableArrayList());
@@ -540,7 +594,7 @@ public final class AdminPanel extends Stage {
             listViewData.addAll(object.get("complete").getAsJsonArray().asList().stream().map(JsonElement::toString).toList());
             listViewData.add("inverse:");
             listViewData.addAll(object.get("inverse").getAsJsonArray().asList().stream().map(JsonElement::toString).toList());
-            processedAccessViewDataListView.setCellFactory(list -> new TokenCell());
+            processedAccessViewDataListView.setCellFactory(list -> new BackupCell());
             processedAccessViewDataListView.getItems().addAll(listViewData);
             processedAccessViewDataListView.refresh();
         }
@@ -562,11 +616,10 @@ public final class AdminPanel extends Stage {
             processedAccessViewDataListView.refresh();
         }
 
-        private void postInit() {
-            initListview();
-        }
-
-        public void initUIForBackups() {
+        /**
+         * Changes the UI of the embedded scene so that it corresponds to the backup actions.
+         */
+        private void initUIForBackups() {
             if (instance.jsonData == null) {
                 return;
             }
@@ -576,6 +629,10 @@ public final class AdminPanel extends Stage {
             processedAccessViewCreateTokenButton.setDisable(true);
             processedAccessViewCreateBackupButton.setDisable(false);
             processedAccessViewRestoreBackupButton.setDisable(false);
+        }
+
+        private void postInit() {
+            initListview();
         }
 
         private static class BackupCell extends ListCell<String> {
@@ -636,6 +693,9 @@ public final class AdminPanel extends Stage {
 
         }
 
+        /**
+         * Changes the UI of the embedded scene so that it corresponds to the token actions.
+         */
         public void initUIForTokens() {
             if (instance.jsonData == null) {
                 return;
@@ -648,6 +708,9 @@ public final class AdminPanel extends Stage {
             processedAccessViewRestoreBackupButton.setDisable(true);
         }
 
+        /**
+         * Custom list cell class for displaying authentication tokens in the listview.
+         */
         private static class TokenCell extends ListCell<String> {
 
             public TokenCell() {
@@ -708,6 +771,9 @@ public final class AdminPanel extends Stage {
 
         }
 
+        /**
+         * Changes the UI of the embedded scene so that it corresponds to the action log action.
+         */
         public void initUIForActionLog() {
             if (instance.jsonData == null) {
                 return;

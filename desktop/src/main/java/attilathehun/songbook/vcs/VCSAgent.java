@@ -377,6 +377,11 @@ public final class VCSAgent {
         return null;
     }
 
+    /**
+     * Fetches the list of backups from the server and stores them locally. The path to the local file is then returned. Upon failure notifies the user.
+     *
+     * @return path to the file with the list of the backups or null
+     */
     public String listRemoteBackups() {
         final Client2 client = new Client2();
         Client2.Result result;
@@ -384,7 +389,7 @@ public final class VCSAgent {
             result = client.http(SettingsManager.getInstance().getValue("REMOTE_BACKUPS_URL"), Client2.HTTP_GET, token, null, null);
         } catch (final Exception e) {
             logger.error(e.getMessage(), e);
-            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR).setParent(SongbookApplication.getMainWindow())
+            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR).setParent(AdminPanel.getInstance())
                     .setMessage("Something went wrong when getting the backup list: " + e.getLocalizedMessage()).addOkButton().build().open();
             return null;
         }
@@ -394,7 +399,7 @@ public final class VCSAgent {
             return result.metadata();
         } else if (result.responseCode() == Client2.ACCESS_DENIED) {
             logger.info("backup list access denied");
-            new AlertDialog.Builder().setTitle("Access denied").setIcon(AlertDialog.Builder.Icon.WARNING).setParent(SongbookApplication.getMainWindow())
+            new AlertDialog.Builder().setTitle("Access denied").setIcon(AlertDialog.Builder.Icon.WARNING).setParent(AdminPanel.getInstance())
                     .setMessage("The token that was used does not have sufficient permissions. Use a different token or contact the VCS server admin.").addOkButton().build().open();
         } else {
             logger.warn("backup list unexpected HTTP code " + result.responseCode());
@@ -404,7 +409,7 @@ public final class VCSAgent {
             if (result.error() != null && result.error().length != 0) {
                 logger.error("HTTP error: " + new String(result.error(), StandardCharsets.UTF_8));
             }
-            new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING).setParent(SongbookApplication.getMainWindow())
+            new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING).setParent(AdminPanel.getInstance())
                     .setMessage(String.format("The server returned the response code %d when fetching the backup list. Check the log for more information.", result.responseCode()))
                     .addOkButton().build().open();
         }
@@ -412,11 +417,75 @@ public final class VCSAgent {
     }
 
     public void createRemoteBackup() {
+        final Client2 client = new Client2();
+        Client2.Result result;
+        try {
+            result = client.http(SettingsManager.getInstance().getValue("REMOTE_BACKUPS_URL"), Client2.HTTP_POST, token, null, null);
+        } catch (final Exception e) {
+            logger.error(e.getMessage(), e);
+            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR).setParent(AdminPanel.getInstance())
+                    .setMessage("Something went wrong when creating a backup: " + e.getLocalizedMessage()).addOkButton().build().open();
+            return;
+        }
+        if (result.responseCode() == HttpURLConnection.HTTP_CREATED) {
+            logger.info("backup created successfully");
+            new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO).setParent(AdminPanel.getInstance())
+                    .setMessage(new String(result.response(), StandardCharsets.UTF_8)).addOkButton().build().open();
 
+        } else if (result.responseCode() == Client2.ACCESS_DENIED) {
+            logger.info("create backup access denied");
+            new AlertDialog.Builder().setTitle("Access denied").setIcon(AlertDialog.Builder.Icon.WARNING).setParent(AdminPanel.getInstance())
+                    .setMessage("The token that was used does not have sufficient permissions. Use a different token or contact the VCS server admin.").addOkButton().build().open();
+        } else {
+            logger.warn("create backup unexpected HTTP code " + result.responseCode());
+            if (result.response() != null && result.response().length != 0) {
+                logger.warn("HTTP response: " + new String(result.response(), StandardCharsets.UTF_8));
+            }
+            if (result.error() != null && result.error().length != 0) {
+                logger.error("HTTP error: " + new String(result.error(), StandardCharsets.UTF_8));
+            }
+            new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING).setParent(AdminPanel.getInstance())
+                    .setMessage(String.format("The server returned the response code %d when creating the backup. Check the log for more information.", result.responseCode()))
+                    .addOkButton().build().open();
+        }
     }
 
-    public void restoreRemoteBackup() {
+    public void restoreRemoteBackup(final String filename) {
+        if (filename == null || filename.length() == 0) {
+            throw new IllegalArgumentException();
+        }
+        final Client2 client = new Client2();
+        Client2.Result result;
+        final String bodyTemplate = "{\"restore\": \"%s\"}";
+        try {
+            result = client.http(SettingsManager.getInstance().getValue("REMOTE_BACKUPS_URL"), Client2.HTTP_POST, token, String.format(bodyTemplate, filename), null);
+        } catch (final Exception e) {
+            logger.error(e.getMessage(), e);
+            new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR).setParent(AdminPanel.getInstance())
+                    .setMessage("Something went wrong when restoring a backup: " + e.getLocalizedMessage()).addOkButton().build().open();
+            return;
+        }
+        if (result.responseCode() == HttpURLConnection.HTTP_OK) {
+            logger.info("backup restored successfully");
+            new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO).setParent(AdminPanel.getInstance())
+                    .setMessage(new String(result.response(), StandardCharsets.UTF_8)).addOkButton().build().open();
 
+        } else if (result.responseCode() == Client2.ACCESS_DENIED) {
+            logger.info("restore backup access denied");
+            new AlertDialog.Builder().setTitle("Access denied").setIcon(AlertDialog.Builder.Icon.WARNING).setParent(AdminPanel.getInstance())
+                    .setMessage("The token that was used does not have sufficient permissions. Use a different token or contact the VCS server admin.").addOkButton().build().open();
+        } else {
+            logger.warn("restore backup unexpected HTTP code " + result.responseCode());
+            if (result.response() != null && result.response().length != 0) {
+                logger.warn("HTTP response: " + new String(result.response(), StandardCharsets.UTF_8));
+            }
+            if (result.error() != null && result.error().length != 0) {
+                logger.error("HTTP error: " + new String(result.error(), StandardCharsets.UTF_8));
+            }
+            new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING).setParent(AdminPanel.getInstance())
+                    .setMessage(String.format("The server returned the response code %d when restoring the backup. Check the log for more information.", result.responseCode()))
+                    .addOkButton().build().open();
+        }
     }
 
     /**
@@ -592,6 +661,20 @@ public final class VCSAgent {
                     .addOkButton().build().open();
         }
         return null;
+    }
+
+    /**
+     * A relay method for {@link Client#httpWithHeaders(String, String, String, String, String)} to use the agent's authentication token.
+     *
+     * @param url
+     * @param method
+     * @param body
+     * @param headers
+     * @return
+     * @throws Exception
+     */
+    public HttpURLConnection httpWithHeaders(final String url, final String method, final String body, final String headers) throws Exception {
+        return new Client2().httpWithHeaders(url, method, token, body, headers);
     }
 
     public static final class Certificate {

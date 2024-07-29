@@ -204,31 +204,36 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
                 event.consume();
             }
         });
+        openSettingsButton.setFocusTraversable(false);
 
         editCollectionButton.setOnAction(event -> {
             CollectionEditor.open();
         });
+        editCollectionButton.setFocusTraversable(false);
 
         loadDataButton.setOnAction(event -> {
             EnvironmentManager.getInstance().load();
         });
+        loadDataButton.setFocusTraversable(false);
 
         saveDataButton.setOnAction(event -> {
             EnvironmentManager.getInstance().save();
         });
+        saveDataButton.setFocusTraversable(false);
 
         songOneIdField.setOnKeyPressed(keyEvent -> {
             if (keyEvent.getCode() == KeyCode.ENTER) {
                 applySongOneId.fire();
             }
         });
-
+        songOneIdField.setFocusTraversable(false);
 
         songTwoIdField.setOnKeyPressed(keyEvent -> {
             if (keyEvent.getCode() == KeyCode.ENTER) {
                 applySongTwoId.fire();
             }
         });
+        songTwoIdField.setFocusTraversable(false);
 
         applySongOneId.setOnAction(event -> {
             final String text = songOneIdField.getText().trim().toLowerCase();
@@ -265,6 +270,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
             songOneIdField.setText(SONG_ONE.getDisplayId());
         });
+        applySongOneId.setFocusTraversable(false);
 
         applySongTwoId.setOnAction(event -> {
             final String text = songTwoIdField.getText().trim().toLowerCase();
@@ -301,10 +307,12 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
             songTwoIdField.setText(SONG_TWO.getDisplayId());
         });
+        applySongTwoId.setFocusTraversable(false);
 
         refreshButton.setOnAction(event -> {
             Environment.getInstance().hardRefresh();
         });
+        refreshButton.setFocusTraversable(false);
 
         editSongOneHTML.setOnAction(event -> {
             if (SONG_ONE.id() < 0) {
@@ -315,6 +323,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
             CodeEditor.open(SONG_ONE, Environment.getInstance().getCollectionManager());
         });
+        editSongOneHTML.setFocusTraversable(false);
 
         // TODO when SML is enabled, change text to "Edit SML" and allow for "Edit HTML" with Shift-Click
         editSongTwoHTML.setOnAction(event -> {
@@ -326,6 +335,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
             }
             CodeEditor.open(SONG_TWO, Environment.getInstance().getCollectionManager());
         });
+        editSongTwoHTML.setFocusTraversable(false);
 
         exportButton.showingProperty().addListener((event) -> {
             if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
@@ -335,6 +345,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
                 return;
             }
         });
+        exportButton.setFocusTraversable(false);
 
         if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
             singlepageSelection.setVisible(false);
@@ -402,6 +413,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
             refreshWebView();
         });
+        easterSwitch.setFocusTraversable(false);
 
         previewButton.setOnAction(event -> {
 
@@ -423,6 +435,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
                         .setMessage(ex.getLocalizedMessage()).setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
             }
         });
+        previewButton.setFocusTraversable(false);
 
         initAddSongButton();
     }
@@ -431,12 +444,13 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         addSongButton.setOnAction(event -> {
             Environment.getInstance().getCollectionManager().addSongDialog();
         });
+        addSongButton.setFocusTraversable(false);
     }
 
     /**
      * Turns the page in the songbook.
      *
-     * @param toTheRight if true, the page will be turned to the right; it gets turned to the left otehrwise
+     * @param toTheRight if true, the page will be turned to the right; it gets turned to the left otherwise
      */
     private void switchPage(final boolean toTheRight) {
         if (toTheRight) {

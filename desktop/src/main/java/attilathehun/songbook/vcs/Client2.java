@@ -2,6 +2,7 @@ package attilathehun.songbook.vcs;
 
 import attilathehun.songbook.environment.SettingsManager;
 import com.google.gson.Gson;
+import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,6 +12,8 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * This class is used for communication with the remote server over HTTP.
@@ -32,7 +35,18 @@ public class Client2 {
 
     public static final int ACCESS_DENIED = 401;
 
-
+    /**
+     * Sends an HTTP request with the specified parameters and returns a pre-parsed response.
+     *
+     * @param url the url to send the request to
+     * @param method the HTTP method
+     * @param token the authentication token
+     * @param data the request data; {@link File} will be transmitted as byte stream, {@link String} will be sent as-is and anything else will be attempted to
+     *             encode as JSON
+     * @param metadata will be assigned as an attachment name in the content-type header
+     * @return the result containing the response code, response body, error stream and path to the local copy of the response body
+     * @throws Exception
+     */
     public Result http(final String url, final String method, final String token, final Object data, final String metadata) throws Exception  {
         if (url == null || url.length() == 0) {
             throw new IllegalArgumentException("invalid url");
@@ -134,6 +148,76 @@ public class Client2 {
             this.metadata = metadata;
             System.out.println(new Gson().toJson(this));
         }*/
+    }
+
+    /**
+     * Sends an HTTP request with custom request body and headers.
+     *
+     * @param url the address to send the request to
+     * @param method the HTTP method
+     * @param token the authentication token
+     * @param body the request body
+     * @param headers the request headers (will be parsed through {@link #parseHeaders(String)})
+     * @return the connection object (closed)
+     * @throws Exception you bet
+     */
+    public HttpURLConnection httpWithHeaders(final String url, final String method, final String token, final String body, final String headers) throws Exception  {
+        if (url == null || url.length() == 0) {
+            throw new IllegalArgumentException("invalid url");
+        }
+
+        if (method == null || !(method.equals(HTTP_GET) || method.equals(HTTP_POST) || method.equals(HTTP_PUT) || method.equals(HTTP_DELETE))) {
+            throw new IllegalArgumentException("invalid method");
+        }
+
+        final URL endpoint = new URI(url).toURL();
+        final HttpURLConnection conn = (HttpURLConnection) endpoint.openConnection();
+        conn.setRequestMethod(method);
+        conn.setDoInput(true);
+        if (token != null && token.length() != 0) {
+            conn.setRequestProperty(AUTHORIZATION_HEADER, String.format(AUTHORIZATION_HEADER_VALUE, token));
+        }
+        for (final Pair<String, String> header : parseHeaders(headers)) {
+            conn.setRequestProperty(header.getKey(), header.getValue());
+        }
+
+        if (body != null && body.length() != 0) {
+            conn.setDoOutput(true);
+            final OutputStream outputStream = conn.getOutputStream();
+            outputStream.write((body).getBytes(StandardCharsets.UTF_8));
+            outputStream.flush();
+            outputStream.close();
+        }
+        conn.connect();
+        conn.disconnect();
+
+       return conn;
+    }
+
+    /**
+     * <p></p>Parses a string into a {@link Collection} of {@link Pair} elements of header names and header value. The collection may be empty.</p>
+     * <p></p>The headers are expected to be separated by line breaks and header names from header values are expected to be separated by semicolons (;).</p>
+     *
+     * @param headers the string to parse
+     * @return collection of the headers where header names are the keys of the pair element and header values are the values of the pair element
+     */
+    private Collection<Pair<String, String>> parseHeaders(final String headers) {
+        final Collection<Pair<String, String>> parsedHeaders = new ArrayList<>();
+        if (headers == null || headers.length() == 0) {
+            return parsedHeaders;
+        }
+        for (final String line : headers.split("\n")) {
+            try {
+                final String headerName = line.substring(0, line.indexOf(";"));
+                final String headerValue = line.substring(line.indexOf(";") + 1);
+                parsedHeaders.add(new Pair<>(headerName, headerValue));
+            } catch (final Exception e) {
+                logger.error("could not parse header: " + line);
+                logger.error(e.getMessage(), e);
+            }
+        }
+
+        return parsedHeaders;
     }
 
 }

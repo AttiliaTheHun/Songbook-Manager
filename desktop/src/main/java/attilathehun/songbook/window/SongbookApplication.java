@@ -147,9 +147,13 @@ public class SongbookApplication extends Application {
                         Environment.getInstance().hardRefresh();
                     }
                 }
-                case S -> { // save
+                case S -> {
                     if (keyEvent.isControlDown()) {
-                        EnvironmentManager.getInstance().save();
+                        if (keyEvent.isAltDown()) {
+                            SettingsEditor.open(); // open settings
+                        } else {
+                            EnvironmentManager.getInstance().save(); // save
+                        }
                     }
                 }
                 case L -> {
