@@ -1,10 +1,8 @@
 #Desktop client
-desktop/scripts/node_modules/
-desktop/scripts/package.json
-desktop/scripts/package-lock.json
 desktop/temp/
 desktop/vcs/
 desktop/target/
+desktop/data/
 desktop/log.txt
 desktop/easter.exe
 desktop/pdf/
@@ -12,4 +10,4 @@ desktop/*.zip
 desktop/out/
 desktop/settings.json
 #Web server
-web/tokens.json
+web/data/tokens.json
