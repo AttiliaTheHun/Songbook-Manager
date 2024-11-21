@@ -169,6 +169,7 @@ public final class CollectionEditor extends Stage {
                         .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
                 return;
             }
+            if (Environment.getInstance().getCollectionManager().equals(selectedManager)) 
             Environment.navigateWebViewToSong(selectedSong);
         });
         previewPDFButton.setOnAction(actionEvent -> {
@@ -291,7 +292,7 @@ public final class CollectionEditor extends Stage {
             this.list = new ListView<Song>();
             list.setOrientation(Orientation.VERTICAL);
             list.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-            ReadOnlyListWrapper<Song> listViewData = new ReadOnlyListWrapper<>(FXCollections.observableArrayList(manager.getSortedCollection()));
+            final ReadOnlyListWrapper<Song> listViewData = new ReadOnlyListWrapper<>(FXCollections.observableArrayList(manager.getSortedCollection()));
             list.setCellFactory(list -> new SongCell());
             list.getItems().addAll(listViewData);
             list.refresh();
@@ -368,10 +369,10 @@ public final class CollectionEditor extends Stage {
          */
         private class SongEntry extends HBox {
             private SongEntry(final Song s) {
-                if (s == null || s.getManager() == null) {
+                if (s == null) {
                     throw new IllegalArgumentException();
                 }
-                int index = s.getManager().getSortedCollectionSongIndex(s);
+                int index = getManager().getSortedCollectionSongIndex(s);
                 final Label nLabel = new Label(String.valueOf(index));
                 nLabel.setPrefWidth(30);
                 this.getChildren().add(nLabel);
@@ -390,10 +391,10 @@ public final class CollectionEditor extends Stage {
                 activityCheckBox.setOnAction(actionEvent -> {
                     if (activityCheckBox.isSelected()) {
                         manager.activateSong(s);
-                        logger.debug("Song activated: " + s.id());
+                        logger.debug("song activated: {}", s.id());
                     } else {
                         manager.deactivateSong(s);
-                        logger.debug("Song deactivated: " + s.id());
+                        logger.debug("song deactivated: {}", s.id());
                     }
                 });
                 this.getChildren().add(activityCheckBox);

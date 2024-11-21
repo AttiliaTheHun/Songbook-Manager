@@ -29,6 +29,7 @@ public class Installer {
         logger.info("Running installer diagnostics...");
         final Installer installer = new Installer();
         final EnvironmentVerificator verificator = new EnvironmentVerificator();
+        installer.initTemp();
         if (!verificator.verifyResources()) {
             installer.installResources();
         }/*
@@ -89,6 +90,15 @@ public class Installer {
             new AlertDialog.Builder().setTitle("Installation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage("Cannot install scripts!").addOkButton().build().open();
         }
+    }
+
+    private void initTemp() {
+        if (new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).exists() && !new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).isDirectory()) {
+            if (!new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).delete()) {
+                throw new IllegalStateException("cannot initialize temp folder: already exists as a file");
+            }
+        }
+        new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).mkdirs();
     }
 
     /**

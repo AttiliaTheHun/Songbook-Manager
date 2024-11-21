@@ -63,7 +63,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     @FXML
     private Button refreshButton;
     @FXML
-    private Button previewButton;
+    public Button previewButton;
     @FXML
     private Button addSongButton;
     @FXML
@@ -399,6 +399,9 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         if (Environment.IS_IT_EASTER_ALREADY) {
             easterSwitch.setManaged(true);
             easterSwitch.setVisible(true);
+            if (Environment.getInstance().getRegisteredManagers().get(EasterCollectionManager.getInstance().getCollectionName()) == null) {
+                easterSwitch.setDisable(true);
+            }
         } else {
             easterSwitch.setManaged(false);
             easterSwitch.setVisible(false);
@@ -411,7 +414,6 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
                 Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
             }
 
-            refreshWebView();
         });
         easterSwitch.setFocusTraversable(false);
 
@@ -523,12 +525,14 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     public void onRefresh() {
         generator = new HTMLGenerator();
         webview.getEngine().reload();
+        SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_ONE_INDEX);
+        SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
         refreshWebView();
     }
 
     @Override
     public void onPageTurnedBack() {
-        if ((SONG_ONE.name().equals("frontpage") || SONG_ONE.name().equals("songlist0") || SONG_ONE.equals(Environment.getInstance().getCollectionManager().getFormalCollection().get(0))) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1) {
+        if ((SONG_ONE.name().equals("frontpage") || SONG_ONE.name().equals("songlist0") || SONG_ONE.equals(Environment.getInstance().getCollectionManager().getFormalCollection().getFirst())) || SONG_TWO_INDEX - SONG_ONE_INDEX != 1) {
             return;
         } else {
             switchPage(false);

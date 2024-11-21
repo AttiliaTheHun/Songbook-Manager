@@ -61,7 +61,7 @@ public class EnvironmentVerificator {
     private static void verificationFail(final String message) {
         new AlertDialog.Builder().setTitle("Environment Verification Failed").setIcon(AlertDialog.Builder.Icon.ERROR)
                 .setMessage(message).addOkButton().build().open();
-        logger.error("Environment verification failed: %s", message);
+        logger.error("Environment verification failed: {}", message);
         Environment.getInstance().exit();
     }
 
@@ -157,14 +157,16 @@ public class EnvironmentVerificator {
     }
 
     /**
-     * Verifies the state of the temp folder and performs a soft refresh.
+     * Verifies the presence of temp folder.
      */
-    public void verifyTemp() {
-        if (!(new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).exists() && new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).isDirectory())) {
-            new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).mkdirs();
-        } else {
-            Environment.getInstance().refresh();
+    public boolean verifyTemp() {
+        if (!new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).exists() && new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).isDirectory()) {
+            if (automated) {
+                verificationFail("Temp folder does not exist");
+            }
+            return false;
         }
+        return true;
     }
 
 }

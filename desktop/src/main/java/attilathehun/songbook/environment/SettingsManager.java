@@ -73,17 +73,17 @@ public final class SettingsManager {
      * @throws ClassCastException if the new value does not match the setting value type
      */
     public <T> void set(final String setting, final T value) {
-        final Setting current = settings.get(setting);
+        final Setting<?> current = settings.get(setting);
         setSilent(setting, value);
         notifySettingChanged(setting, current, settings.get(setting));
     }
 
     /**
-     * Changes the value of the setting to the value provided without triggering any events. If the new value is of incorrect type, this method will throw an exception. Successful changing of a setting
-     * will make the manager save the current state of the settings.
+     * <p>Changes the value of the setting to the value provided without triggering any events. If the new value is of incorrect type, this method will throw an exception. Successful changing of a setting
+     * will make the manager save the current state of the settings.</p>
      *
-     * This method is meant to be used for automatic procedures and configuration to avoid producing unnecessary events. For regular runtime and most application components the
-     * {@link #set(String, Object)} method should be used.
+     * <p>This method is meant to be used for automatic procedures and configuration to avoid producing unnecessary events. For regular runtime and most application components the
+     * {@link #set(String, Object)} method should be used.</p>
      *
      * @param setting target setting name
      * @param value new value for the setting
@@ -136,8 +136,7 @@ public final class SettingsManager {
 
             final Type type = new TypeToken<ArrayList<Setting<?>>>(){}.getType();
 
-            final ArrayList<Setting<?>> values = new Gson().fromJson(json, type);
-            return values;
+            return new Gson().fromJson(json, type);
         } catch (final NoSuchFileException nsf) {
             // this is not really an exception from the program's point of view
         } catch (final Exception e) {
@@ -189,9 +188,9 @@ public final class SettingsManager {
         // export settings
         map.put("EXPORT_ENABLED", new Setting<Boolean>("EXPORT_ENABLED", Boolean.TRUE, Boolean.TRUE, Setting.TYPE_BOOLEAN, "Whether exporting of the songbook is desirable", "true or false"));
         map.put("EXPORT_BROWSER_EXECUTABLE_PATH", new Setting<String>("EXPORT_BROWSER_EXECUTABLE_PATH", "", "", Setting.TYPE_URL_ALLOW_EMPTY, "Path to the headless browser executable file", "true or false"));
-        map.put("EXPORT_KEEP_BROWSER_INSTANCE", new Setting<Boolean>("EXPORT_KEEP_BROWSER_INSTANCE", Boolean.TRUE, Boolean.TRUE, Setting.TYPE_BOOLEAN, "Speeds up export and preview but uses more memory", "true or false"));
+        map.put("EXPORT_KEEP_BROWSER_INSTANCE", new Setting<Boolean>("EXPORT_KEEP_BROWSER_INSTANCE", Boolean.FALSE, Boolean.FALSE, Setting.TYPE_BOOLEAN, "Speeds up export and preview but uses more memory", "true or false"));
         map.put("EXPORT_DEFAULT_FILE_NAME", new Setting<String>("EXPORT_DEFAULT_FILE_NAME", "Default.pdf", "Default.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the default export file", "Insert a file name"));
-        map.put("EXPORT_PRINTABLE_FILE_NAME", new Setting<String>("EXPORT_PRINTABLE_FILE_NAME", "Printable.pdf", "Printable.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the print-format export file", "Insert a file name"));
+        map.put("EXPORT_PRINTABLE_FILE_NAME", new Setting<String>("EXPORT_PRINTABLE_FILE_NAME", "Print.pdf", "Print.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the print-format export file", "Insert a file name"));
         map.put("EXPORT_SINGLEPAGE_FILE_NAME", new Setting<String>("EXPORT_SINGLEPAGE_FILE_NAME", "Singlepage.pdf", "Singlepage.pdf", Setting.TYPE_NON_EMPTY_STRING, "Name of the singlepage-format export file", "Insert a file name"));
         return map;
     }

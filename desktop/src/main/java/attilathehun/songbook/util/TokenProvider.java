@@ -3,6 +3,7 @@ package attilathehun.songbook.util;
 import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.vcs.VCSAgent;
 import attilathehun.songbook.window.AlertDialog;
+import attilathehun.songbook.window.SongbookApplication;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.util.Pair;
@@ -181,7 +182,7 @@ public class TokenProvider {
         }
         try {
             final int result = new AlertDialog.Builder().setTitle("Save token").setMessage("Do you want to save the token locally so that you don't have to enter it every time?")
-                    .addOkButton("Save").addCloseButton("Don't save").setCancelable(false).build().awaitResult().get();
+                    .addOkButton("Save").addCloseButton("Don't save").setCancelable(false).setParent(SongbookApplication.getMainWindow()).build().awaitResult().get();
             if (result == AlertDialog.RESULT_OK) {
                 saveToken(k.getBytes(StandardCharsets.UTF_8), new File((String) SettingsManager.getInstance().getValue("AUTH_FILE_PATH")));
             }

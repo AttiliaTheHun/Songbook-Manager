@@ -21,7 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,9 +66,9 @@ public class BrowserFactory {
                 return;
             }
         }
-        logger.info("chromium browser executable found at " + path);
-        playwright = factory.getPlaywright();
+        logger.info("chromium browser executable found at {}", path);
         if ((Boolean) SettingsManager.getInstance().getValue("EXPORT_KEEP_BROWSER_INSTANCE")) {
+            playwright = factory.getPlaywright();
             browserInstance = factory.getBrowserInstance(playwright);
             logger.debug("default browser instance initialised");
         } else if (browserInstance != null) {
@@ -87,7 +87,6 @@ public class BrowserFactory {
         playwrightEnv.put("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
         try {
             return Playwright.create(new Playwright.CreateOptions().setEnv(playwrightEnv));
-
         } catch (final Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -118,6 +117,9 @@ public class BrowserFactory {
      * @return a Browser instance
      */
     public static Browser getDefaultBrowserInstance() {
+        if (playwright == null) {
+            BrowserFactory.playwright = new BrowserFactory().getPlaywright();
+        }
         return (browserInstance == null) ? new BrowserFactory().getBrowserInstance(playwright) : browserInstance;
     }
 
@@ -138,11 +140,21 @@ public class BrowserFactory {
      */
     public static Page.PdfOptions getPrintOptionsPortrait() {
         return new Page.PdfOptions().setDisplayHeaderFooter(false).setLandscape(false)
-                .setMargin(new Margin().setRight("0").setTop("0").setBottom("0").setLeft("0")).setPrintBackground(false).setFormat("A4");
+                .setMargin(new Margin().setRight("0.4in").setTop("0.4in").setLeft("0.4in").setBottom("0.4in")).setPrintBackground(false).setFormat("A4");
     }
 
     /**
-     * Resolves a chromium-based browser executable to a file path, if possible. It starts with verifying the available path, but it will stop at nothing
+     * Returns the {@link Page.PdfOptions} for portrait printing with zero margin.
+     *
+     * @return portrait pdf options object
+     */
+    public static Page.PdfOptions getPrintOptionsPortraitNoMargin() {
+        return new Page.PdfOptions().setDisplayHeaderFooter(false).setLandscape(false)
+                .setMargin(new Margin().setRight("0").setTop("0").setLeft("0").setBottom("0")).setPrintBackground(false).setFormat("A4");
+    }
+
+    /**
+     * Attempts to find and resolve a chromium-based browser executable on the machine to a file path, if possible. It starts with verifying the available path, but it will stop at nothing
      * and eventually summon demons, if necessary. It may return null at will.
      *
      * @return chromium browser executable path or null
@@ -358,7 +370,7 @@ public class BrowserFactory {
             stdin.flush();
             stdin.close();
 
-            // TODO I have no idea how the output of these commands looks like so this needs to be filled out
+            // TODO I have no idea how the output of these commands looks like so this needs to be filled in
 
 
         } catch (final IOException e) {
@@ -409,7 +421,7 @@ public class BrowserFactory {
 
     public boolean requestInstallChromium() {
         final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("No suitable browser found").setIcon(AlertDialog.Builder.Icon.CONFIRM)
-                .setMessage("The export of the songbook is done using a chromium-based headless web browser (Chrome, Edge), however no such browser was found on your computer. Do you wish to install Chromium on your computer? If you have such a browser installed, you can help the program find it in inside the program settings.")
+                .setMessage("The export of the songbook is done using a chromium-based headless web browser (Chrome, Edge), however no such browser was found on your computer. Do you wish to install Chromium on your computer? If you have such a browser installed, you can help the program find it inside the program settings.")
                 .setCancelable(false).addOkButton("Proceed").addCloseButton("Cancel").build().awaitResult();
         final AtomicReference<Boolean> success = new AtomicReference<>();
         result.thenAccept(code -> {
@@ -446,7 +458,7 @@ public class BrowserFactory {
         new Thread(() -> {
             Platform.runLater(dialog::open);
             boolean skip = false;
-            try (final InputStream in = new URL(url).openStream()) {
+            try (final InputStream in = new URI(url).toURL().openStream()) {
                 final long bytesRead = Files.copy(in, DOWNLOAD_FILE_NAME);
 
                 if (bytesRead == 0) {

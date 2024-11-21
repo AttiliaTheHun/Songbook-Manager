@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="controlsfx-11.2.1">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/controlsfx/controlsfx/11.2.1/controlsfx-11.2.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -236,7 +236,7 @@ public class HTMLGenerator {
         } else if (songOne.name().equals(CollectionManager.SHADOW_SONG_NAME)) {
             songOnePath = SHADOW_SONG_PATH;
         } else if (songOne.id() != CollectionManager.INVALID_SONG_ID) {
-            songOnePath = manager.getSongFilePath(songOne.id());
+            songOnePath = (songOne.getManager() == null) ? manager.getSongFilePath(songOne.id()) : songOne.getManager().getSongFilePath(songOne.id());
         }
 
         if (songTwo.name().equals("frontpage")) {
@@ -247,7 +247,7 @@ public class HTMLGenerator {
         } else if (songTwo.name().equals(CollectionManager.SHADOW_SONG_NAME)) {
             songTwoPath = SHADOW_SONG_PATH;
         } else if (songTwo.id() != CollectionManager.INVALID_SONG_ID) {
-            songTwoPath = manager.getSongFilePath(songTwo.id());
+            songTwoPath = (songTwo.getManager() == null) ? manager.getSongFilePath(songTwo.id()) : songTwo.getManager().getSongFilePath(songTwo.id());
         }
 
 
@@ -333,13 +333,13 @@ public class HTMLGenerator {
     }
 
     /**
-     * Generates a new song file from the template to the data folder. Uses the default Collection Manager.
+     * Generates a new song file from the template to the data folder.
      *
      * @param s target song
      * @return true if the file has been created
      */
     public boolean generateSongFile(final Song s) {
-        return generateSongFile(s, Environment.getInstance().getCollectionManager());
+        return generateSongFile(s, s.getManager());
     }
 
     /**
@@ -464,9 +464,13 @@ public class HTMLGenerator {
         final Path templatePath = Paths.get(SONG_WRAPPER_TEMPLATE_PATH);
         final String songHTML = String.join("\n", Files.readAllLines(Paths.get(songPath)));
         String html = String.join("\n", Files.readAllLines(templatePath));
-
-        html = html.replace(HEAD_REPLACE_MARK, getHead());
+        if (s.id() == CollectionManager.FRONTPAGE_SONG_ID) {
+            html = html.replace(HEAD_REPLACE_MARK, ""); // not wrapping it in <div class="song"> will make it cover the page
+        } else {
+            html = html.replace(HEAD_REPLACE_MARK, getHead());
+        }
         html = html.replace(SONG_ONE_REPLACE_MARK, songHTML);
+        html = html.replace(LANGUAGE_REPLACE_MARK, Locale.of(SettingsManager.getInstance().getValue("SONGBOOK_LANGUAGE")).getDisplayName());
         return html;
     }
 

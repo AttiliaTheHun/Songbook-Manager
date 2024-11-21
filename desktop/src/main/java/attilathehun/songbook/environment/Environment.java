@@ -185,7 +185,7 @@ public final class Environment implements CollectionListener {
                 if (!f.delete() && !f.getName().endsWith(PDFGenerator.EXTENSION_PDF)) {
                     new AlertDialog.Builder().setTitle("Refreshing error").setIcon(AlertDialog.Builder.Icon.ERROR)
                                     .setMessage("Cannot clean temp folder!").addOkButton().build().open();
-                    exit();
+                    //exit();
                 }
             }
 
@@ -211,7 +211,7 @@ public final class Environment implements CollectionListener {
                     new AlertDialog.Builder().setTitle("Refreshing error").setIcon(AlertDialog.Builder.Icon.ERROR)
                             .setMessage("Cannot clean temp folder!").addOkButton().build().open();
                     logger.error("failed to clean temp folder on full refresh");
-                    exit();
+                    //exit();
                 }
             }
         } catch (final NullPointerException e) {

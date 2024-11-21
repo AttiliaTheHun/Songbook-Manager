@@ -1,10 +1,13 @@
 package attilathehun.songbook.window;
 
 import attilathehun.songbook.Main;
+import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
+import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.*;
 import attilathehun.songbook.util.BrowserFactory;
+import attilathehun.songbook.util.Shell;
 import attilathehun.songbook.util.TokenProvider;
 import attilathehun.songbook.vcs.RequestFileAssembler;
 import attilathehun.songbook.vcs.VCSAgent;
@@ -12,10 +15,18 @@ import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
+import com.google.gson.Gson;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 import java.awt.Desktop;
 
@@ -24,7 +35,9 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
@@ -32,12 +45,9 @@ import java.util.concurrent.CompletableFuture;
 public class SongbookApplication extends Application {
     private static final Logger logger = LogManager.getLogger(SongbookApplication.class);
 
-    static {
-        System.setProperty("log4j2.configurationFile", Main.class.getResource("log4j2.yaml").toString());
-    }
-
     private static boolean CONTROL_PRESSED = false;
     private static boolean SHIFT_PRESSED = false;
+    private static SongbookController controller = null;
 
     private static Stage mainWindow;
 
@@ -98,6 +108,8 @@ public class SongbookApplication extends Application {
     public void start(final Stage stage) throws IOException {
         SettingsManager.init();
         Installer.runDiagnostics();
+        final EnvironmentVerificator verificator = new EnvironmentVerificator();
+        verificator.verifyTemp();
         Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
         StandardCollectionManager.getInstance().init();
         EasterCollectionManager.getInstance().init();
@@ -150,7 +162,11 @@ public class SongbookApplication extends Application {
                 case S -> {
                     if (keyEvent.isControlDown()) {
                         if (keyEvent.isAltDown()) {
-                            SettingsEditor.open(); // open settings
+                            if (keyEvent.isShiftDown()) {
+                                Shell.start();
+                            } else {
+                                SettingsEditor.open(); // open settings
+                            }
                         } else {
                             EnvironmentManager.getInstance().save(); // save
                         }
@@ -173,7 +189,7 @@ public class SongbookApplication extends Application {
                 case H -> { // help
                     if (keyEvent.isControlDown()) {
                         try {
-                            Desktop.getDesktop().browse(new URL("https://github.com/AttiliaTheHun/Songbook-Manager/wiki/English").toURI());
+                            Desktop.getDesktop().browse(new URI("https://github.com/AttiliaTheHun/Songbook-Manager/wiki/English"));
                         } catch (final Exception e) {
                             logger.error(e.getMessage(), e);
                         }
@@ -193,6 +209,9 @@ public class SongbookApplication extends Application {
                     if (keyEvent.isControlDown() && keyEvent.isAltDown()) {
                         AdminPanel.open();
                     }
+                }
+                case P -> {
+                    // previewButton.fire()
                 }
             }
         });

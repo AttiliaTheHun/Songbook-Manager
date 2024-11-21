@@ -157,16 +157,19 @@ public final class StandardCollectionManager extends CollectionManager {
         final Song song = s;
         song.setId(getNextId());
 
+        song.setManager(this);
+
         if (!new HTMLGenerator().generateSongFile(song)) {
             return null;
         }
-        song.setManager(this);
+
         collection.add(song);
         save();
         onSongAdded(s);
         CodeEditor.open(s, this);
-        //Environment.getInstance().refresh();
-        Environment.navigateWebViewToSong(collection.get(collection.size() - 1));
+        if (Environment.getInstance().getCollectionManager().equals(this)) {
+            Environment.navigateWebViewToSong(collection.getLast());
+        }
         return song;
     }
 
@@ -488,12 +491,12 @@ public final class StandardCollectionManager extends CollectionManager {
 
     @Override
     public CompletableFuture<Song> addSongDialog() {
-        Song s = getPlaceholderSong();
-        CompletableFuture<Song> output = new CompletableFuture<>();
-        CheckBox songActiveSwitch = new CheckBox("Active");
+        final Song s = getPlaceholderSong();
+        final CompletableFuture<Song> output = new CompletableFuture<>();
+        final CheckBox songActiveSwitch = new CheckBox("Active");
         songActiveSwitch.setSelected(s.isActive());
         songActiveSwitch.setTooltip(new Tooltip("When disabled, the song will not be included in the songbook."));
-        CompletableFuture<Pair<Integer, ArrayList<Node>>> dialogResult = new AlertDialog.Builder().setTitle("Add a song").setIcon(AlertDialog.Builder.Icon.CONFIRM)
+        final CompletableFuture<Pair<Integer, ArrayList<Node>>> dialogResult = new AlertDialog.Builder().setTitle("Add a song").setIcon(AlertDialog.Builder.Icon.CONFIRM)
                 .setParent(SongbookApplication.getMainWindow())
                 .addTextInput("Name:", s.name(), "Enter song name", "Name of the song. For example 'I Will Always Return'.")
                 .addTextInput("Author:", s.getAuthor(), "Enter song author", "Author or interpret of the song. For example 'Leonard Cohen'.")

@@ -237,7 +237,7 @@ public class AlertDialog extends Stage {
         final BorderPane root = new BorderPane();
         // We create the layout for the custom nodes
         GridPane customContentContainer = null;
-        if (nodes.size() != 0) {
+        if (!nodes.isEmpty()) {
             customContentContainer = new GridPane();
             GridPane.setHgrow(customContentContainer, Priority.ALWAYS);
             customContentContainer.setVgap(10d);

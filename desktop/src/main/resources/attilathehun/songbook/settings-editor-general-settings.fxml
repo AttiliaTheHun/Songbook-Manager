@@ -156,7 +156,7 @@
             </HBox>
             <HBox>
                <children>
-                  <Label text="Printable file name">
+                  <Label text="Print file name">
                      <HBox.margin>
                         <Insets right="5.0" top="3.0" />
                      </HBox.margin></Label>

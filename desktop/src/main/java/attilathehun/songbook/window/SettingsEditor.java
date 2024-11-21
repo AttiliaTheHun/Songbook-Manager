@@ -352,6 +352,8 @@ public final class SettingsEditor extends Stage {
             exportEnabledSwitch.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
                 SettingsManager.getInstance().set("EXPORT_ENABLED", newValue);
                 keepBrowserInstanceAliveSwitch.setDisable(oldValue);
+                browserExecutablePathField.setDisable(oldValue);
+                browseBrowserExecutablePathButton.setDisable(oldValue);
                 defaultExportFileNameField.setDisable(oldValue);
                 printableExportFileNameField.setDisable(oldValue);
                 singlepageExportFileNameField.setDisable(oldValue);
