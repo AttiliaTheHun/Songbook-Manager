@@ -55,28 +55,15 @@ if ($settings['preview']['enabled']) {
 ?>
 
 <ul>
-<?php
-if ($settings["plugin"]["Export"]["enabled"] == true) {
-    $temp = [
-        '/files/' . $settings["plugin"]["Export"]["defaultExportFileName"],
-        '/files/' . $settings["plugin"]["Export"]["singlepageExportFileName"],
-        '/files/' . $settings["plugin"]["Export"]["printableExportFileName"]
-    ];
-    echo "<h1><img width=\"24\" height=\"24\" src=\"https://img.icons8.com/sf-black/64/downloading-updates.png\" alt=\"downloading-updates\"/> Stáhnout</h1>\n";
-    echo "<li><a href=\"$temp[1]\" target=\"_blank\" download>{$strings['homepage']['download_singlepage_A4']}</a></li>\n
-          <li><a href=\"$temp[0]\" target=\"_blank\" download>{$strings['homepage']['download_default_A5']}</a></li>\n
-          <li><a href=\"$temp[2]\" target=\"_blank\" download>{$strings['homepage']['download_printable_A5']}</a></li>\n";
-}
-?>
+<h1><img width="24" height="24" src="https://img.icons8.com/sf-black/64/downloading-updates.png" alt="downloading-updates"/> Stáhnout</h1>
+<li><a href="" target="_blank" download>Zpěvník A4</a></li>
+<li><a href="" target="_blank" download>Zpěvník oboustraný tisk A5</a></li>
+
 <h1><img width="24" height="24" src="https://img.icons8.com/sf-black/64/hashtag.png" alt="hashtag"/> Další</h1>
-
-
-<li><a href="">Původní zpěvník (Zpěvník Pěšinek a Ostřížů)</a></li>
+<li><a href="./legacy/">Původní zpěvník (Zpěvník Pěšinek a Ostřížů)</a></li>
 
 
 <h1><img width="24" height="24" src="https://img.icons8.com/pastel-glyph/64/certificate.png" alt="certificate"/> <?php echo $strings['homepage']['licenses']; ?></h1>
-
-
 <li><a href="https://icons8.com"  target="_blank" >icons8</a></li>
 <li><a href="https://www.needpix.com/photo/download/522268/book-blank-hardcover-spread-pages-white-diary-free-pictures-free-photos"  target="_blank" >needpix</a></li>
 </ul>

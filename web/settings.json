@@ -6,7 +6,7 @@
     },
 	 "frontpage": {
 	    "enabled": true
-	    },
+	},
 	"dynamic_songlist": {
 	    "enabled": true
 	},

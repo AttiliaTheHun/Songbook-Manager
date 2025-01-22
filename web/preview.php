@@ -21,8 +21,7 @@ include_once(dirname(__FILE__) . '/lib/lib_strings.php');
 include_once(dirname(__FILE__) . '/lib/init_preview_session.php');
 include_once(dirname(__FILE__) . '/lib/lib_standard_collection.php');
 
-$provider = new StandardCollectionProvider();
-$_SESSION['PROVIDER'] = $provider;
+$_SESSION['PROVIDER'] = $_SESSION['providers'][StandardCollectionProvider::COLLECTION_NAME];
 
 $url = $_SESSION['SETTINGS']['url'];
 
@@ -59,17 +58,16 @@ if (count($params) == 1 && $params[0] == ".php") {
 
 // for empty parameters we go with standard collection beginning (default)
 if (count($params) == 0) {
-    $_SESSION['PROVIDER'] = $_SESSION['providers']['standard'];
+    $_SESSION['PROVIDER'] = $_SESSION['providers'][StandardCollectionProvider::COLLECTION_NAME];
     $song1_index = 0;
     $song2_index = 1;
 } else if (count($params) == 1) { // single param sets song1 of standard collection
-    $_SESSION['PROVIDER'] = $_SESSION['providers']['standard'];
+    $_SESSION['PROVIDER'] = $_SESSION['providers'][StandardCollectionProvider::COLLECTION_NAME];
     $song1_index = (int)$params[0];
     $song2_index = $song1_index + 1;
 } else {
     // apply params that were provided
     for ($x = 0; $x < count($params); $x++) {
-        echo $params[$x];
         switch ($params[$x]) {
             case 'print':
                 $nobuttons = true;
@@ -136,7 +134,7 @@ if ($song2_index < 0 || $song2_index >= $collection_size) {
 }
 
 // create the response HTML from the template
-// no decoration means the background, which is addded through a stylesheet
+// decoration means the background, which is addded through a stylesheet
 if (!$nodecoration) {
     $head_html = $head_html . PHP_EOL . "<link rel=\"stylesheet\" href=\"$url/resources/css/style_preview.css\">";
 }
@@ -178,7 +176,9 @@ if (abs($song2_index - $song1_index) === 1 || ($song1_index !== -1 && $song2_ind
         $navbar_html = str_replace($_SESSION['REPLACE_MARKS']['previous_song_button_text_replace_mark'], $strings['preview']['previous_song_button_text'], $navbar_html);
         $navbar_html = str_replace($_SESSION['REPLACE_MARKS']['next_song_button_text_replace_mark'], $strings['preview']['next_song_button_text'], $navbar_html);
         $template_html = str_replace($_SESSION['REPLACE_MARKS']['navbar_replace_mark'], $navbar_html, $template_html);
-    }
+    } else {
+		$template_html = str_replace($_SESSION['REPLACE_MARKS']['navbar_replace_mark'], "", $template_html);
+	}
     
     
     // replace next and previous page links inside the left and right arrow key press events and buttons
@@ -196,29 +196,28 @@ $template_html = str_replace($_SESSION['REPLACE_MARKS']['head_replace_mark'], $h
 // now we need to prepare the actual songs to be added to the template
 $song1_html = '<div class="song">' . $strings['preview']['no_song_found'] . '</div>';
 if ($song1_index != -1) {
-    $song1_id = $provider->get_collection()[$song1_index]['id'];
+    $song1_id = $_SESSION['PROVIDER']->get_collection()[$song1_index]['id'];
 }
 
 // -1 means the song does not exist, so we leave the shadow (empty) song as the HTML
-if ($song1_index != -1 && file_exists($provider->get_song_file_path($song1_id))) {
-    $song1_html = file_get_contents($provider->get_song_file_path($song1_id));
+if ($song1_index != -1 && file_exists($_SESSION['PROVIDER']->get_song_file_path($song1_id))) {
+    $song1_html = file_get_contents($_SESSION['PROVIDER']->get_song_file_path($song1_id));
 }
 
 $song2_html = '<div class="song"></div>';
 if ($song2_index != -1) {
-    $song2_id = $provider->get_collection()[$song2_index]['id'];
+    $song2_id = $_SESSION['PROVIDER']->get_collection()[$song2_index]['id'];
 }
 
 
 // -1 means the song does not exist, so we leave the shadow (empty) song as the HTML
-if ($song2_index != -1 && file_exists($provider->get_song_file_path($song2_id))) {
-    $song2_html = file_get_contents($provider->get_song_file_path($song2_id));
+if ($song2_index != -1 && file_exists($_SESSION['PROVIDER']->get_song_file_path($song2_id))) {
+    $song2_html = file_get_contents($_SESSION['PROVIDER']->get_song_file_path($song2_id));
 }
 
 // finally inject the song HTML
 $template_html = str_replace($_SESSION['REPLACE_MARKS']['song1_replace_mark'], $song1_html, $template_html);
 $template_html = str_replace($_SESSION['REPLACE_MARKS']['song2_replace_mark'], $song2_html, $template_html);
-
 
 echo $template_html;
 

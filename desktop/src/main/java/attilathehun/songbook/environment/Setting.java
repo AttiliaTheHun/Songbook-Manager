@@ -24,7 +24,7 @@ public final class Setting<T> implements Serializable {
 
     private final String name;
     private T value;
-    private final transient T def;
+    private final transient T def; // default value, default is a keyword in Java now :/
     private final transient int type;
     private final transient String description;
     @Deprecated

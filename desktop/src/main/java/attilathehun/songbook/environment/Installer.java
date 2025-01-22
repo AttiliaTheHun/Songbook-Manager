@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 public class Installer {
 
     private static final Logger logger = LogManager.getLogger(Installer.class);
-    private static final String REMOTE_RESOURCES_ZIP_FILE = "http://hrabozpevnik.clanweb.eu/resources.zip";
+    private static final String REMOTE_RESOURCES_ZIP_FILE = "https://github.com/AttiliaTheHun/Songbook-Manager/releases/download/v0.0.1/resources.zip";
     private static final String REMOTE_SCRIPTS_ZIP_FILE = "";
     private static final String RESOURCES_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/resources.zip").toString();
     private static final String SCRIPTS_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/scripts.zip").toString();
