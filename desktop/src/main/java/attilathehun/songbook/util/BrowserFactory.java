@@ -182,10 +182,7 @@ public class BrowserFactory {
             return defaultPath;
         }
         final String terminalPath = askTerminalForExecutableWindows();
-        if (terminalPath != null) {
-            return terminalPath;
-        }
-        return null;
+        return terminalPath;
     }
 
     /**

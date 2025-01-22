@@ -6,7 +6,7 @@
 
     <groupId>attilathehun.songbook</groupId>
     <artifactId>SongbookManager</artifactId>
-    <version>0.0.1-Alpha</version>
+    <version>0.0.2-Alpha</version>
     <name>SongbookManager</name>
     <packaging>jar</packaging>
     <description>Songbook management platform.</description>
@@ -30,17 +30,17 @@
         <dependency>
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>playwright</artifactId>
-            <version>1.46.0</version>
+            <version>1.49.0</version>
         </dependency>
         <dependency>
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>driver</artifactId>
-            <version>1.48.0</version>
+            <version>1.49.0</version>
         </dependency>
         <dependency>
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>driver-bundle</artifactId>
-            <version>1.48.0</version>
+            <version>1.49.0</version>
         </dependency>
 
         <dependency>
@@ -192,9 +192,6 @@
                             <mainClass>attilathehun.songbook.Main</mainClass>
                             <addClasspath>true</addClasspath>
                         </manifest>
-                        <manifestEntries>
-
-                        </manifestEntries>
                     </archive>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -204,6 +201,7 @@
             <plugin>
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
                 <artifactId>launch4j-maven-plugin</artifactId>
+                <version>2.5.2</version>
                 <executions>
                     <execution>
                         <id>l4j-cli</id>
