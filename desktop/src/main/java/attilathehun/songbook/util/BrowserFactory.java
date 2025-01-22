@@ -194,13 +194,13 @@ public class BrowserFactory {
      * @return windows browser executable path or null
      */
     private String resolveDefaultPathsWindows() {
-        final String[] defaultPaths = new String[]{
-                "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+        final String[] defaultPaths = new String[] {
                 "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
                 "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
                 "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
                 "C:\\Program Files (x86)\\Chromium\\Application\\chrome.exe",
-                "C:\\Program Files (x86)\\Chromium\\chrome.exe"
+                "C:\\Program Files (x86)\\Chromium\\chrome.exe",
+                "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe"
         };
         for (final String path : defaultPaths) {
             final File file = new File(path);
