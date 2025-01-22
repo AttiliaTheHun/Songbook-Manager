@@ -127,7 +127,7 @@ public final class StandardCollectionManager extends CollectionManager {
 
     @Override
     public ArrayList<Song> getDisplayCollection() {
-        ArrayList<Song> displayList = new ArrayList<Song>(new ArrayList<Song>(getSortedCollection().stream().filter(Song::isActive).collect(Collectors.toList())));
+        final ArrayList<Song> displayList = new ArrayList<Song>(new ArrayList<Song>(getSortedCollection().stream().filter(Song::isActive).collect(Collectors.toList())));
         return displayList;
     }
 
@@ -138,7 +138,7 @@ public final class StandardCollectionManager extends CollectionManager {
             formalList.add(CollectionManager.getFrontpageSong());
         }
         if (SettingsManager.getInstance().getValue("ENABLE_DYNAMIC_SONGLIST")) {
-            for (int i = 0; i < DynamicSonglist.generateSonglist(); i++) {
+            for (int i = 0; i < DynamicSonglist.getInstance().getListPages(); i++) {
                 formalList.add(CollectionManager.getSonglistSong(i));
             }
 

@@ -589,7 +589,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     }
 
     @Override
-    public void onCollectionManagerChanged(final CollectionManager m) {
+    public void onCollectionManagerChanged(final CollectionManager m, final CollectionManager old) {
 
     }
 

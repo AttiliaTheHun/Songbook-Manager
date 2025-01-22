@@ -7,6 +7,7 @@ import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.*;
 import attilathehun.songbook.util.BrowserFactory;
+import attilathehun.songbook.util.DynamicSonglist;
 import attilathehun.songbook.util.Shell;
 import attilathehun.songbook.util.TokenProvider;
 import attilathehun.songbook.vcs.RequestFileAssembler;
@@ -113,6 +114,7 @@ public class SongbookApplication extends Application {
         Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
         StandardCollectionManager.getInstance().init();
         EasterCollectionManager.getInstance().init();
+        DynamicSonglist.init();
         BrowserFactory.init();
         EnvironmentVerificator.automated();
 

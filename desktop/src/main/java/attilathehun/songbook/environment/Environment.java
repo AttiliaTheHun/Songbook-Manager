@@ -153,11 +153,11 @@ public final class Environment implements CollectionListener {
     }
 
     /**
-     * Sends out the {@link EnvironmentStateListener#onCollectionManagerChanged(CollectionManager)} event to the registered listeners.
+     * Sends out the {@link EnvironmentStateListener#onCollectionManagerChanged(CollectionManager, CollectionManager)} event to the registered listeners.
      */
-    private static void notifyOnCollectionManagerChanged(final CollectionManager m) {
+    private static void notifyOnCollectionManagerChanged(final CollectionManager m, final CollectionManager old) {
         for (final EnvironmentStateListener listener : Environment.getListeners()) {
-            listener.onCollectionManagerChanged(m);
+            listener.onCollectionManagerChanged(m, old);
         }
     }
 
@@ -257,11 +257,11 @@ public final class Environment implements CollectionListener {
         if (selectedCollectionManager != null) {
             selectedCollectionManager.removeListener(this);
         }
-
+        final CollectionManager oldManager = selectedCollectionManager;
         this.selectedCollectionManager = collectionManager;
         selectedCollectionManager.addListener(this);
         refresh();
-        notifyOnCollectionManagerChanged(selectedCollectionManager);
+        notifyOnCollectionManagerChanged(selectedCollectionManager, oldManager);
     }
 
     /**

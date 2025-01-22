@@ -302,7 +302,7 @@ class EnvironmentTest implements EnvironmentStateListener {
     }
 
     @Override
-    public void onCollectionManagerChanged(final CollectionManager m) {
+    public void onCollectionManagerChanged(final CollectionManager m, final CollectionManager old) {
         FLAG_MANAGER_CHANGED_EVENT_RECEIVED = true;
     }
 }

@@ -1,5 +1,6 @@
 #Desktop client
 desktop/temp/
+desktop/resources/
 desktop/vcs/
 desktop/target/
 desktop/data/
@@ -11,3 +12,4 @@ desktop/out/
 desktop/settings.json
 #Web server
 web/data/tokens.json
+web/data/
