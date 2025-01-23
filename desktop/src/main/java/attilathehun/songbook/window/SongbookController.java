@@ -103,6 +103,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     @FXML
     private void initialize() throws MalformedURLException {
         Environment.addListener(this);
+        Environment.getInstance().getCollectionManager().addListener(this);
         SettingsManager.addListener(this);
 
         initWebView();
@@ -506,32 +507,38 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         songTwoIdField.setText(SONG_TWO.getDisplayId());
     }
 
+    /**
+     * Reinitializes the displayed songs and refreshes the webview.
+     */
+    private void refresh() {
+        SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_ONE_INDEX);
+        SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
+        refreshWebView();
+    }
+
     @Override
     public void onSongRemoved(final Song s, final CollectionManager m) {
-        if (s.id() == SONG_ONE.id() || s.id() == SONG_TWO.id()) {
-            refreshWebView();
+        if (s.id() == SONG_ONE.id() || s.id() == SONG_TWO.id() || m.getFormalCollectionSongIndex(s) < SONG_ONE_INDEX) {
+            refresh();
         }
     }
 
     @Override
     public void onSongUpdated(final Song s, final CollectionManager m) {
-        if (s.id() == SONG_ONE.id() || s.id() == SONG_TWO.id()) {
-            refreshWebView();
+        if (s.id() == SONG_ONE.id() || s.id() == SONG_TWO.id() || m.getFormalCollectionSongIndex(s) < SONG_ONE_INDEX) {
+            refresh();
         }
     }
 
     @Override
     public void onSongAdded(final Song s, final CollectionManager m) {
-        refreshWebView();
+        refresh();
     }
 
     @Override
     public void onRefresh() {
         generator = new HTMLGenerator();
-        SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_ONE_INDEX);
-        SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
-        webview.getEngine().reload();
-        refreshWebView();
+        refresh();
     }
 
     @Override
@@ -594,7 +601,9 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
     @Override
     public void onCollectionManagerChanged(final CollectionManager m, final CollectionManager old) {
-
+        old.removeListener(this);
+        m.addListener(this);
+        refresh();
     }
 
     @Override
@@ -607,7 +616,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
                 printableSelection.setVisible(status);
             }
             case "ENABLE_FRONTPAGE", "ENABLE_DYNAMIC_SONGLIST" -> {
-                onRefresh();
+                refresh();
             }
         }
     }

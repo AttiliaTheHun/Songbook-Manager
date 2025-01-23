@@ -21,7 +21,7 @@ import java.util.*;
 
 import static javax.swing.JOptionPane.showMessageDialog;
 
-public final class Environment implements CollectionListener {
+public final class Environment {
     private static final Logger logger = LogManager.getLogger(Environment.class);
     public static final String SETTINGS_FILE_PATH = "settings.json";
     private static final String EASTER_EXE_FILE_PATH = "easter.exe";
@@ -255,12 +255,9 @@ public final class Environment implements CollectionListener {
             throw new IllegalArgumentException("manager is null");
         }
         if (selectedCollectionManager != null) {
-            selectedCollectionManager.removeListener(this);
         }
         final CollectionManager oldManager = selectedCollectionManager;
         this.selectedCollectionManager = collectionManager;
-        selectedCollectionManager.addListener(this);
-        refresh();
         notifyOnCollectionManagerChanged(selectedCollectionManager, oldManager);
     }
 
@@ -323,21 +320,6 @@ public final class Environment implements CollectionListener {
         logger.info("environment destroyed");
         Platform.exit();
         System.exit(0);
-    }
-
-    @Override
-    public void onSongRemoved(final Song s, final CollectionManager m) {
-        refresh();
-    }
-
-    @Override
-    public void onSongUpdated(final Song s, final CollectionManager m) {
-        refresh();
-    }
-
-    @Override
-    public void onSongAdded(final Song s, final CollectionManager m) {
-        refresh();
     }
 
 }
