@@ -16,6 +16,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * <p></p>This class manages the settings of the application. Internally, the settings are implemented as a {@link HashMap} of setting names paired to {@link Setting} objects. The settings are stored as a JSON file.</p>
+ * <p>From the user perspective, the settings can be modified manually in the file before program start-up or in a dedicated window, the {@link attilathehun.songbook.window.SettingsEditor}. Changing the setting
+ * should take effect immediately, but this is on the components affected by the setting in change to modify their behavior.</p>
+ * <p>From the program perspective, a setting can be read through the {@link #get(String)} and {@link #getValue(String)} methods, updated with the {@link #set(String, Object)} and {@link #setSilent(String, Object)}
+ * methods and any component that wants to react when a setting is changed can register itself using the {@link #addListener(SettingsListener)} method.</p>
+ */
 public final class SettingsManager {
     private static final Logger logger = LogManager.getLogger(SettingsManager.class);
     private static final List<SettingsListener> listeners = new ArrayList<SettingsListener>();
@@ -73,8 +80,13 @@ public final class SettingsManager {
      * @throws ClassCastException if the new value does not match the setting value type
      */
     public <T> void set(final String setting, final T value) {
+        if (settings.get(setting) == null) {
+            throw new IllegalArgumentException("setting cannot be null");
+        }
+        settings.get(setting).set(value);
+        logger.debug("{} set to {}", setting, value);
+        save();
         final Setting<?> current = settings.get(setting);
-        setSilent(setting, value);
         notifySettingChanged(setting, current, settings.get(setting));
     }
 
@@ -92,10 +104,10 @@ public final class SettingsManager {
      */
     public <T> void setSilent(final String setting, final T value) {
         if (settings.get(setting) == null) {
-            return;
+            throw new IllegalArgumentException("setting cannot be null");
         }
         settings.get(setting).set(value);
-        logger.debug(setting + " set to " + value);
+        logger.debug("{} set to {} silently", setting, value);
         save();
     }
 
@@ -223,7 +235,7 @@ public final class SettingsManager {
      * Sends the {@link SettingsListener#onSettingChanged(String, Setting, Setting)} event to all the registered listeners.
      *
      * @param name name of the setting affected
-     * @param old state of the setting begore update
+     * @param old state of the setting before update
      * @param _new state of the setting after update
      */
     private void notifySettingChanged(final String name, final Setting old, final Setting _new) {
