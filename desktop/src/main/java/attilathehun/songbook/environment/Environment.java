@@ -1,6 +1,5 @@
 package attilathehun.songbook.environment;
 
-import attilathehun.songbook.collection.CollectionListener;
 import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
@@ -19,8 +18,9 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.util.*;
 
-import static javax.swing.JOptionPane.showMessageDialog;
-
+/**
+ * This class represents the state of the application. It states the current {@link CollectionManager} in use and emits environment-related events.
+ */
 public final class Environment {
     private static final Logger logger = LogManager.getLogger(Environment.class);
     public static final String SETTINGS_FILE_PATH = "settings.json";
@@ -32,8 +32,6 @@ public final class Environment {
     private final Map<String, CollectionManager> collectionManagers = new HashMap<>();
 
     private CollectionManager selectedCollectionManager;
-    @Deprecated(forRemoval = true)
-    private String tokenInMemory = null;
 
     private Environment() {
     }
@@ -161,16 +159,6 @@ public final class Environment {
         }
     }
 
-    @Deprecated(forRemoval = true)
-    public String acquireToken() {
-        if (tokenInMemory != null) {
-            return tokenInMemory;
-        }
-
-
-       return null;
-    }
-
     /**
      * A soft refresh to ensure the environment is working with the latest sure-to-change data. This operation is relatively lightweight as it updates
      * only the components whose working data changes often during runtime, such as the webview source data. For a more thorough refresh use {@link #hardRefresh()}.
@@ -185,16 +173,15 @@ public final class Environment {
                 if (!f.delete() && !f.getName().endsWith(PDFGenerator.EXTENSION_PDF)) {
                     new AlertDialog.Builder().setTitle("Refreshing error").setIcon(AlertDialog.Builder.Icon.ERROR)
                                     .setMessage("Cannot clean temp folder!").addOkButton().build().open();
-                    //exit();
+
                 }
             }
-
-            logger.debug("environment soft refreshed");
         } catch (final NullPointerException npe) {
             logger.error(npe.getMessage(), npe);
         }
         HTMLGenerator.init();
         notifyOnRefresh();
+        logger.debug("environment soft refreshed");
     }
 
     /**
@@ -211,7 +198,6 @@ public final class Environment {
                     new AlertDialog.Builder().setTitle("Refreshing error").setIcon(AlertDialog.Builder.Icon.ERROR)
                             .setMessage("Cannot clean temp folder!").addOkButton().build().open();
                     logger.error("failed to clean temp folder on full refresh");
-                    //exit();
                 }
             }
         } catch (final NullPointerException e) {
@@ -230,7 +216,7 @@ public final class Environment {
         EnvironmentVerificator.automated();
         notifyOnRefresh();
 
-        logger.info("environment hard refreshed");
+        logger.debug("environment hard refreshed");
     }
 
     /**
@@ -254,8 +240,6 @@ public final class Environment {
         if (collectionManager == null) {
             throw new IllegalArgumentException("manager is null");
         }
-        if (selectedCollectionManager != null) {
-        }
         final CollectionManager oldManager = selectedCollectionManager;
         this.selectedCollectionManager = collectionManager;
         notifyOnCollectionManagerChanged(selectedCollectionManager, oldManager);
@@ -269,7 +253,7 @@ public final class Environment {
      */
     public void registerCollectionManager(final CollectionManager collectionManager) {
         if (collectionManager == null) {
-            throw new IllegalArgumentException("manager is null");
+            throw new IllegalArgumentException("manager cannot be null");
         }
         collectionManagers.put(collectionManager.getCollectionName(), collectionManager);
     }
@@ -281,7 +265,7 @@ public final class Environment {
      */
     public void unregisterCollectionManager(final CollectionManager collectionManager) {
         if (collectionManager == null) {
-            throw new IllegalArgumentException("manager is null");
+            throw new IllegalArgumentException("manager cannot null");
         }
         collectionManagers.remove(collectionManager.getCollectionName());
     }
@@ -293,13 +277,6 @@ public final class Environment {
      */
     public Map<String, CollectionManager> getRegisteredManagers() {
         return collectionManagers;
-    }
-
-    public void loadTokenToMemory(final String token) {
-        if (token == null || token.length() == 0) {
-            return;
-        }
-        tokenInMemory = token;
     }
 
     /**
