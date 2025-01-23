@@ -158,7 +158,11 @@ public class SongbookApplication extends Application {
                 }
                 case R -> { // refresh
                     if (keyEvent.isControlDown()) {
-                        Environment.getInstance().hardRefresh();
+                        if (keyEvent.isShiftDown()) {
+                            Environment.getInstance().hardRefresh();
+                        } else {
+                            Environment.getInstance().refresh();
+                        }
                     }
                 }
                 case S -> {
