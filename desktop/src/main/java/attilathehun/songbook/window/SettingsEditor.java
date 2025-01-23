@@ -255,7 +255,7 @@ public final class SettingsEditor extends Stage {
             songbookLanguageField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
                 if (!newValue) { // means focus lost
                     try {
-                        if (songbookLanguageField.getText().trim().length() == 0) {
+                        if (songbookLanguageField.getText().trim().isEmpty()) {
                             throw new Exception("a language set is necessary");
                         }
                         Locale.forLanguageTag(songbookLanguageField.getText().trim());
@@ -288,11 +288,11 @@ public final class SettingsEditor extends Stage {
             final Tooltip enableDynamicSonglistSwitchTooltip = new Tooltip();
             enableDynamicSonglistSwitchTooltip.setText(enableDynamicSonglistSetting.getDescription());
             enableDynamicSonglistSwitch.setTooltip(enableDynamicSonglistSwitchTooltip);
+            enableDynamicSonglistSwitch.setSelected(enableDynamicSonglistSetting.getValue());
             enableDynamicSonglistSwitch.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
                 SettingsManager.getInstance().set("ENABLE_DYNAMIC_SONGLIST", newValue);
                 dynamicSonglistSongsPerColumnField.setDisable(oldValue);
             });
-            enableDynamicSonglistSwitch.setSelected(enableDynamicSonglistSetting.getValue());
 
             final Setting<Integer> songsPerColumnSetting = (Setting<Integer>) SettingsManager.getInstance().get("DYNAMIC_SONGLIST_SONGS_PER_COLUMN");
             dynamicSonglistSongsPerColumnField.setText(String.valueOf(songsPerColumnSetting.getValue()));
@@ -349,6 +349,7 @@ public final class SettingsEditor extends Stage {
             final Tooltip enableExportSwitchTooltip = new Tooltip();
             enableExportSwitchTooltip.setText(enableExportSetting.getDescription());
             exportEnabledSwitch.setTooltip(enableExportSwitchTooltip);
+            exportEnabledSwitch.setSelected(enableDynamicSonglistSetting.getValue());
             exportEnabledSwitch.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
                 SettingsManager.getInstance().set("EXPORT_ENABLED", newValue);
                 keepBrowserInstanceAliveSwitch.setDisable(oldValue);
@@ -358,7 +359,6 @@ public final class SettingsEditor extends Stage {
                 printableExportFileNameField.setDisable(oldValue);
                 singlepageExportFileNameField.setDisable(oldValue);
             });
-            exportEnabledSwitch.setSelected(enableDynamicSonglistSetting.getValue());
 
             final Setting<Boolean> keepBworserInstanceAliveSetting = (Setting<Boolean>) SettingsManager.getInstance().get("EXPORT_KEEP_BROWSER_INSTANCE");
             final Tooltip keepBrowserInstanceAliveSwitchTooltip = new Tooltip();
@@ -816,6 +816,7 @@ public final class SettingsEditor extends Stage {
             final Tooltip remoteSaveLoadDataSwitchTooltip = new Tooltip();
             remoteSaveLoadDataSwitchTooltip.setText(enableVCSSetting.getDescription());
             remoteSaveLoadSwitch.setTooltip(remoteSaveLoadDataSwitchTooltip);
+            remoteSaveLoadSwitch.setSelected(enableVCSSetting.getValue());
             remoteSaveLoadSwitch.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
                 SettingsManager.getInstance().set("REMOTE_SAVE_LOAD_ENABLED", newValue);
                 remoteDataURLField.setDisable(oldValue);
@@ -825,7 +826,7 @@ public final class SettingsEditor extends Stage {
                 browseVCSCachePathButton.setDisable(oldValue);
                 VCSThreadCountField.setDisable(oldValue);
             });
-            remoteSaveLoadSwitch.setSelected(enableVCSSetting.getValue());
+
 
             final Setting<String> remoteDownloadSetting = (Setting<String>) SettingsManager.getInstance().get("REMOTE_DATA_URL");
             remoteDataURLField.setText(remoteDownloadSetting.getValue());

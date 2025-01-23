@@ -85,7 +85,7 @@ public final class StandardCollectionManager extends CollectionManager {
             song.setManager(this);
         }
 
-        logger.info("StandardCollectionManager initialized");
+        logger.debug("StandardCollectionManager initialized");
     }
 
     @Override

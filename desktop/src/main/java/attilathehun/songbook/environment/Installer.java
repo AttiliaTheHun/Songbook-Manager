@@ -26,7 +26,6 @@ public class Installer {
      * Checks the existence of resource and script folders and in the case of their absence attempts to download and extract them.
      */
     public static void runDiagnostics() {
-        logger.info("Running installer diagnostics...");
         final Installer installer = new Installer();
         final EnvironmentVerificator verificator = new EnvironmentVerificator();
         installer.initTemp();
@@ -36,6 +35,7 @@ public class Installer {
         if (!verificator.verifyScripts()) {
             installer.installScripts();
         }*/
+        logger.debug("finished installer tasks");
     }
 
     /**

@@ -81,7 +81,7 @@ public class SongbookApplication extends Application {
                 }
 
             });
-        } catch (NativeHookException e) {
+        } catch (final NativeHookException e) {
             logger.error(e.getMessage(), e);
         }
         logger.debug("Native Hook registered");
@@ -139,7 +139,7 @@ public class SongbookApplication extends Application {
         stage.show();
         // beware of memory leaks
         mainWindow = stage;
-        logger.debug("Application started successfully");
+        logger.info("Application started successfully");
     }
 
     /**

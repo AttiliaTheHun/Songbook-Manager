@@ -193,7 +193,7 @@ public final class VCSAdmin {
             agent = a;
         }
 
-        String token = Environment.getInstance().acquireToken();
+        String token = "";
         if (token == null || token.length() == 0) {
             token = requestOneTimeToken();
             if (token == null || token.length() == 0) {
@@ -375,7 +375,7 @@ public final class VCSAdmin {
             agent = a;
         }
 
-        String token = Environment.getInstance().acquireToken();
+        String token = "";
         if (token == null || token.length() == 0) {
             token = requestOneTimeToken();
             if (token == null || token.length() == 0) {

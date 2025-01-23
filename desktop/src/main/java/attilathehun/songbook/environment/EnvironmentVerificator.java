@@ -50,7 +50,7 @@ public class EnvironmentVerificator {
      */
     public static void automated() {
         new EnvironmentVerificator(true);
-        logger.info("Environment verification successful");
+        logger.debug("environment verification successful");
     }
 
     /**

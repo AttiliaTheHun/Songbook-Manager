@@ -93,7 +93,7 @@ public final class EasterCollectionManager extends CollectionManager {
                             .addOkButton().setParent(SongbookApplication.getMainWindow()).build().open();
             return;
         }
-        logger.info("initialized");
+        logger.debug("EasterCollectionManager initialized");
     }
 
     @Override

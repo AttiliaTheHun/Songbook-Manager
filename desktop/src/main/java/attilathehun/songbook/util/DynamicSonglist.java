@@ -57,7 +57,7 @@ public class DynamicSonglist implements EnvironmentStateListener, CollectionList
             startIndex += MAX_SONGS_PER_PAGE;
             endIndex = Math.min(endIndex + MAX_SONGS_PER_PAGE, Environment.getInstance().getCollectionManager().getDisplayCollection().size());
         }
-        logger.debug("Dynamic songlist generated");
+        logger.debug("dynamic songlist generated");
         current_list_pages = songlistParts;
     }
 
