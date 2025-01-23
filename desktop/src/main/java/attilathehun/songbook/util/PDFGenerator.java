@@ -15,7 +15,6 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -97,38 +96,93 @@ public final class PDFGenerator {
     }
 
     /**
-     * Generates a preview portrait-oriented PDF file with a single song to the temp folder.
+     * Generates a preview portrait-oriented PDF file with a single song to the temp folder. Creates a notification dialog to show to the user
+     * while the work is done on a background thread.
      *
      * @param s target song
      * @return path to the PDF file
-     * @throws Exception idk
      */
-    public String generatePreview(final Song s) throws Exception {
-        final Browser browser = BrowserFactory.getDefaultBrowserInstance();
-        final Page page = browser.newPage();
-        final String HTMLSegmentFilePath = new HTMLGenerator().generatePrintableSongFile(s, PREVIEW_SEGMENT_NUMBER);
-        page.navigate(HTMLSegmentFilePath);
-        final String outputPath = HTMLSegmentFilePath.replace(EXTENSION_HTML, EXTENSION_PDF);
-        page.pdf(BrowserFactory.getPrintOptionsPortrait().setPath(Paths.get(outputPath)));
-        return outputPath;
+    public String generatePreview(final Song s)  {
+        final AlertDialog dialog = createPreviewDialog();
+        final CompletableFuture<String> path = new CompletableFuture<>();
+
+        new Thread(() -> {
+            final Browser browser = BrowserFactory.getDefaultBrowserInstance();
+            final Page page = browser.newPage();
+            final String HTMLSegmentFilePath = new HTMLGenerator().generatePrintableSongFile(s, PREVIEW_SEGMENT_NUMBER);
+            page.navigate(HTMLSegmentFilePath);
+            final String outputPath = HTMLSegmentFilePath.replace(EXTENSION_HTML, EXTENSION_PDF);
+            page.pdf(BrowserFactory.getPrintOptionsPortrait().setPath(Paths.get(outputPath)));
+            path.complete(outputPath);
+            Platform.runLater(dialog::close);
+        }).start();
+        String result = null;
+        dialog.open();
+        try {
+            result = path.get();
+        } catch (final Exception e) {
+            logger.error("Failed to wait for result", e);
+        }
+        return result;
     }
 
     /**
-     * Generates a preview landscape-oriented PDF file with a page of the songbook (technically any two songs) to the temp folder.
+     * Generates a preview landscape-oriented PDF file with a page of the songbook (technically any two songs) to the temp folder. Creates a notification dialog to
+     * show while the work is done on a background thread.
      *
      * @param s1 song one (on the left)
      * @param s2 song two (on the right)
      * @return path to the PDF file
-     * @throws Exception
      */
-    public String generatePreview(final Song s1, final Song s2) throws Exception {
-        final Browser browser = BrowserFactory.getDefaultBrowserInstance();
-        final Page page = browser.newPage();
-        final String HTMLSegmentFilePath = new HTMLGenerator().generateSegmentFile(s1, s2, PREVIEW_SEGMENT_NUMBER);
-        page.navigate(HTMLSegmentFilePath);
-        final String outputPath = HTMLSegmentFilePath.replace(EXTENSION_HTML, EXTENSION_PDF);
-        page.pdf(BrowserFactory.getPrintOptionsLandscape().setPath(Paths.get(outputPath)));
-        return outputPath;
+    public String generatePreview(final Song s1, final Song s2) {
+        final AlertDialog dialog = createPreviewDialog();
+        final CompletableFuture<String> path = new CompletableFuture<>();
+
+        new Thread(() -> {
+                final Browser browser = BrowserFactory.getDefaultBrowserInstance();
+                final Page page = browser.newPage();
+                final String HTMLSegmentFilePath = new HTMLGenerator().generateSegmentFile(s1, s2, PREVIEW_SEGMENT_NUMBER);
+                page.navigate(HTMLSegmentFilePath);
+                final String outputPath = HTMLSegmentFilePath.replace(EXTENSION_HTML, EXTENSION_PDF);
+                page.pdf(BrowserFactory.getPrintOptionsLandscape().setPath(Paths.get(outputPath)));
+                path.complete(outputPath);
+                Platform.runLater(dialog::close);
+        }).start();
+        String result = null;
+        dialog.open();
+        try {
+            result = path.get();
+        } catch (final Exception e) {
+            logger.error("Failed to wait for result", e);
+        }
+        return result;
+    }
+
+    private AlertDialog createPreviewDialog() {
+
+        final GridPane container = new GridPane();
+        container.setVgap(10d);
+        container.setPadding(new Insets(8, 8, 8, 8)); //top right bottom left
+        // make the first column of fixed size for vertical alignment
+        final ColumnConstraints columnConstraints = new ColumnConstraints();
+        columnConstraints.setPercentWidth(30d);
+        columnConstraints.setHalignment(HPos.LEFT); // center the content, just a visual improvement
+        container.getColumnConstraints().add(columnConstraints);
+        // fill rest of the width with the second column
+        final ColumnConstraints columnConstraints2 = new ColumnConstraints();
+        columnConstraints2.setPercentWidth(70d);
+        columnConstraints2.setHalignment(HPos.LEFT); // center the content, just a visual improvement
+        container.getColumnConstraints().add(columnConstraints2);
+
+        final ProgressIndicator progressThingy = new ProgressIndicator();
+        final Label label = new Label("Generating preview...");
+
+        container.add(progressThingy, 0, 0);
+        container.add(label, 1, 0);
+        HBox.setHgrow(label, Priority.ALWAYS);
+
+        return new AlertDialog.Builder().setTitle("Exporting").setCancelable(false).setParent(SongbookApplication.getMainWindow())
+                .addContentNode(container).build();
     }
 
     /**
@@ -138,7 +192,7 @@ public final class PDFGenerator {
      * @param option export option
      */
     private void exec(final int option) {
-        final Thread th = new Thread(new Worker(manager, option));
+        final Thread th = new Thread(new ExportWorker(manager, option));
         th.setDaemon(true);
         th.start();
     }
@@ -146,14 +200,14 @@ public final class PDFGenerator {
     /**
      * A {@link Runnable} implementation to execute the actual export work on a background thread.
      */
-    private static class Worker extends Task<Void> {
+    private static class ExportWorker extends Task<Void> {
         final AlertDialog dialog;
         final CollectionManager manager;
         final int option;
         String outputPath;
 
 
-        public Worker(final CollectionManager m, final int option) {
+        public ExportWorker(final CollectionManager m, final int option) {
             manager = m;
             this.option = option;
 
@@ -300,11 +354,11 @@ public final class PDFGenerator {
 
                 segmentNumber++;
             }
-            // The number of songs will usually not give us a break by being divisible by 4
+
             final int extraSongs = collection.size() % 4;
 
             if (extraSongs == 1) {
-                final String HTMLSegmentFilePath = generator.generateSegmentFile(CollectionManager.getShadowSong(), collection.get(collection.size() - 1), segmentNumber);
+                final String HTMLSegmentFilePath = generator.generateSegmentFile(CollectionManager.getShadowSong(), collection.getLast(), segmentNumber);
                 page.navigate(HTMLSegmentFilePath);
                 page.pdf(BrowserFactory.getPrintOptionsLandscape().setPath(Paths.get(HTMLSegmentFilePath.replace(EXTENSION_HTML, EXTENSION_PDF))));
                 segmentNumber++;
@@ -313,7 +367,7 @@ public final class PDFGenerator {
                 page.navigate(HTMLSegmentFilePath);
                 page.pdf(BrowserFactory.getPrintOptionsLandscape().setPath(Paths.get(HTMLSegmentFilePath.replace(EXTENSION_HTML, EXTENSION_PDF))));
 
-                HTMLSegmentFilePath = generator.generateSegmentFile(collection.get(collection.size() - 1), CollectionManager.getShadowSong(), ++segmentNumber);
+                HTMLSegmentFilePath = generator.generateSegmentFile(collection.getLast(), CollectionManager.getShadowSong(), ++segmentNumber);
                 page.navigate(HTMLSegmentFilePath);
                 page.pdf(BrowserFactory.getPrintOptionsLandscape().setPath(Paths.get(HTMLSegmentFilePath.replace(EXTENSION_HTML, EXTENSION_PDF))));
 
@@ -323,7 +377,7 @@ public final class PDFGenerator {
                 page.navigate(HTMLSegmentFilePath);
                 page.pdf(BrowserFactory.getPrintOptionsLandscape().setPath(Paths.get(HTMLSegmentFilePath.replace(EXTENSION_HTML, EXTENSION_PDF))));
 
-                HTMLSegmentFilePath = generator.generateSegmentFile(collection.get(collection.size() - 2), collection.get(collection.size() - 1), ++segmentNumber);
+                HTMLSegmentFilePath = generator.generateSegmentFile(collection.get(collection.size() - 2), collection.getLast(), ++segmentNumber);
                 page.navigate(HTMLSegmentFilePath);
                 page.pdf(BrowserFactory.getPrintOptionsLandscape().setPath(Paths.get(HTMLSegmentFilePath.replace(EXTENSION_HTML, EXTENSION_PDF))));
 
