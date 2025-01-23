@@ -103,6 +103,7 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     @FXML
     private void initialize() throws MalformedURLException {
         Environment.addListener(this);
+        SettingsManager.addListener(this);
 
         initWebView();
 
@@ -338,11 +339,14 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
         editSongTwoHTML.setFocusTraversable(false);
 
         exportButton.showingProperty().addListener((event) -> {
+            if (!exportButton.isShowing()) {
+                return;
+            }
             if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
                 new AlertDialog.Builder().setTitle("Exporting disabled").setIcon(AlertDialog.Builder.Icon.WARNING)
                         .setMessage("It seems like exporting is disabled. You can enabled it in settings.")
                         .setParent(SongbookApplication.getMainWindow()).addOkButton().build().open();
-                return;
+                exportButton.hide();
             }
         });
         exportButton.setFocusTraversable(false);
@@ -595,13 +599,11 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
     @Override
     public void onSettingChanged(final String name, final Setting old, final Setting _new) {
-        if (!name.equals("EXPORT_ENABLED")) {
-            return;
+        if (name.equals("EXPORT_ENABLED")) {
+            final boolean status = (Boolean) _new.getValue();
+            singlepageSelection.setVisible(status);
+            defaultSelection.setVisible(status);
+            printableSelection.setVisible(status);
         }
-        // TODO: this does nothing in fact, fix it!
-        final boolean status = (Boolean) _new.getValue();
-        singlepageSelection.setVisible(status);
-        defaultSelection.setVisible(status);
-        printableSelection.setVisible(status);
     }
 }
