@@ -1,15 +1,19 @@
 package attilathehun.songbook;
 
+import attilathehun.songbook.util.LoggerOutputStream;
 import attilathehun.songbook.util.Shell;
 import attilathehun.songbook.window.SongbookApplication;
-import javafx.application.Application;
+import org.apache.logging.log4j.LogManager;
 
 import java.awt.*;
+import java.io.PrintStream;
 
 public class Main {
 
+
     static {
         System.setProperty("log4j2.configurationFile", Main.class.getResource("log4j2.yaml").toString());
+        System.setErr(new PrintStream(new LoggerOutputStream(LogManager.getLogger(Main.class)))); // redirect standard error to log file
     }
 
     public static void main(final String[] args) {
