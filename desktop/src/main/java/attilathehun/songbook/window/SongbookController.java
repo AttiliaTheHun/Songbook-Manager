@@ -528,9 +528,9 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
     @Override
     public void onRefresh() {
         generator = new HTMLGenerator();
-        webview.getEngine().reload();
         SONG_ONE = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_ONE_INDEX);
         SONG_TWO = Environment.getInstance().getCollectionManager().getFormalCollection().get(SONG_TWO_INDEX);
+        webview.getEngine().reload();
         refreshWebView();
     }
 
@@ -599,11 +599,16 @@ public class SongbookController implements CollectionListener, EnvironmentStateL
 
     @Override
     public void onSettingChanged(final String name, final Setting old, final Setting _new) {
-        if (name.equals("EXPORT_ENABLED")) {
-            final boolean status = (Boolean) _new.getValue();
-            singlepageSelection.setVisible(status);
-            defaultSelection.setVisible(status);
-            printableSelection.setVisible(status);
+        switch (name) {
+            case "EXPORT_ENABLED" -> {
+                final boolean status = (Boolean) _new.getValue();
+                singlepageSelection.setVisible(status);
+                defaultSelection.setVisible(status);
+                printableSelection.setVisible(status);
+            }
+            case "ENABLE_FRONTPAGE", "ENABLE_DYNAMIC_SONGLIST" -> {
+                onRefresh();
+            }
         }
     }
 }
