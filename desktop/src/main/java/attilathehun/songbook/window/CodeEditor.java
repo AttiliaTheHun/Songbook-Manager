@@ -156,7 +156,7 @@ public class CodeEditor extends Stage implements CollectionListener {
      * @return true if an editor instance is open
      */
     public static boolean hasInstanceOpen() {
-        return instances.size() > 0;
+        return !instances.isEmpty();
     }
 
     /**
@@ -196,6 +196,8 @@ public class CodeEditor extends Stage implements CollectionListener {
                         destroy();
                     }
                 });
+            } else {
+                destroy();
             }
         });
     }
