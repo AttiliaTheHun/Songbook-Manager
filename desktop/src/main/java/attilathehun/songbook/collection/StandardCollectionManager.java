@@ -271,14 +271,16 @@ public final class StandardCollectionManager extends CollectionManager {
         try {
             final String songHTML = String.join("\n", Files.readAllLines(Paths.get(getSongFilePath(s.id()))));
             final Document document = Jsoup.parse(songHTML);
+            document.outputSettings().indentAmount(0).prettyPrint(false);
             final Element element = document.select(".song-title").first();
             element.text(s.name());
             FileOutputStream out = new FileOutputStream(getSongFilePath(s));
-            out.write(document.toString().getBytes(StandardCharsets.UTF_8));
+            out.write(document.select(".song").first().toString().replace("<pre class=\"song-text-formatting\"><span class=\"verse\"", "<pre class=\"song-text-formatting\">\n\n<span class=\"verse\"")
+                    .getBytes(StandardCharsets.UTF_8));
             out.flush();
             out.close();
 
-        } catch (final IOException e) {
+        } catch (final Exception e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage(String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()))
@@ -294,18 +296,20 @@ public final class StandardCollectionManager extends CollectionManager {
         try {
             final String songHTML = String.join("\n", Files.readAllLines(Path.of(getSongFilePath(s))));
             final Document document = Jsoup.parse(songHTML);
+            document.outputSettings().indentAmount(0).prettyPrint(false);
             Element element = document.select("meta[name=url]").first();
             element.attr("value", s.getUrl());
             element = document.select("meta[name=active]").first();
             element.attr("value", String.valueOf(s.isActive()));
 
             final FileOutputStream out = new FileOutputStream(getSongFilePath(s));
-            out.write(document.toString().getBytes(StandardCharsets.UTF_8));
+            out.write(document.select(".song").first().toString().replace("<pre class=\"song-text-formatting\"><span class=\"verse\"", "<pre class=\"song-text-formatting\">\n\n<span class=\"verse\"")
+                    .getBytes(StandardCharsets.UTF_8));
             out.flush();
             out.close();
 
         } catch (final Exception e) {
-            logger.error(String.format("Target song: %d", s.id()));
+            logger.error("Target song: {}", s.id());
             logger.error(e.getMessage(), e);
         }
     }

@@ -286,26 +286,27 @@ public final class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
-    // TODO
     public void updateSongHTMLFromRecord(final Song s) {
         if (!CollectionManager.isValidId(s.id())) {
             throw new IllegalArgumentException();
         }
         try {
-            String songHTML = String.join("\n", Files.readAllLines(Path.of(getSongFilePath(s))));
-            Document document = Jsoup.parse(songHTML);
+            final String songHTML = String.join("\n", Files.readAllLines(Path.of(getSongFilePath(s))));
+            final Document document = Jsoup.parse(songHTML);
+            document.outputSettings().indentAmount(0).prettyPrint(false);
             Element element = document.select("meta[name=url]").first();
             element.attr("value", s.getUrl());
             element = document.select("meta[name=active]").first();
             element.attr("value", String.valueOf(s.isActive()));
 
-            FileOutputStream out = new FileOutputStream(getSongFilePath(s));
-            out.write(document.toString().getBytes(StandardCharsets.UTF_8));
+            final FileOutputStream out = new FileOutputStream(getSongFilePath(s));
+            out.write(document.select(".song").first().toString().replace("<pre class=\"song-text-formatting\"><span class=\"verse\"", "<pre class=\"song-text-formatting\">\n\n<span class=\"verse\"")
+                    .getBytes(StandardCharsets.UTF_8));
             out.flush();
             out.close();
 
         } catch (final Exception e) {
-            logger.error(String.format("Target song: %d", s.id()));
+            logger.error("Target song: {}", s.id());
             logger.error(e.getMessage(), e);
         }
     }
