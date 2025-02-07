@@ -17,7 +17,10 @@ import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import com.google.gson.Gson;
+import com.sun.javafx.application.LauncherImpl;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.application.Preloader;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -41,6 +44,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 
 public class SongbookApplication extends Application {
@@ -54,7 +58,66 @@ public class SongbookApplication extends Application {
 
 
     public static void main(final String[] args) {
-        Application.launch(SongbookApplication.class, args);
+        LauncherImpl.launchApplication(SongbookApplication.class, ApplicationPreloader.class, args);
+    }
+
+    @Override
+    public void init() throws Exception {
+        SettingsManager.init();
+        notifyPreloader(new Preloader.ProgressNotification(0.1d));
+        notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Installing resources..."));
+        Installer.runDiagnostics();
+        final EnvironmentVerificator verificator = new EnvironmentVerificator();
+        verificator.verifyTemp();
+        notifyPreloader(new Preloader.ProgressNotification(0.4d));
+        notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Initializing collections..."));
+        Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
+        StandardCollectionManager.getInstance().init();
+        EasterCollectionManager.getInstance().init();
+        DynamicSonglist.init();
+        notifyPreloader(new Preloader.ProgressNotification(0.7d));
+        notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Initializing headless browser..."));
+        BrowserFactory.init();
+        notifyPreloader(new Preloader.ProgressNotification(0.8d));
+        notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Verifying installation..."));
+        EnvironmentVerificator.automated();
+        registerNativeHook();
+        notifyPreloader(new Preloader.ProgressNotification(0.9d));
+        notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Launching user interface..."));
+        Thread.sleep(1500);
+    }
+
+    /**
+     * JavaFX main method. UI thread entry point. Initializes the environment and loads the main window.
+     *
+     * @param stage the main stage
+     * @throws IOException
+     */
+    @Override
+    public void start(final Stage stage) throws IOException {
+
+        stage.setOnCloseRequest(t -> {
+            if (!CodeEditor.hasInstanceOpen()) {
+                mainWindow = null;
+                Environment.getInstance().exit();
+            }
+        });
+
+        final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("songbook-view.fxml"));
+
+        final HBox root = fxmlLoader.load();
+        stage.setMaximized(true);
+        final Scene scene = new Scene(root, 1000, 800);
+
+        stage.setTitle("SongbookManager");
+        stage.setScene(scene);
+        initKeyboardShortcuts(stage);
+
+        // beware of memory leaks
+        mainWindow = stage;
+
+        stage.show();
+        logger.info("Application started successfully");
     }
 
     private static void registerNativeHook() {
@@ -81,10 +144,10 @@ public class SongbookApplication extends Application {
                 }
 
             });
+            logger.debug("Native Hook registered");
         } catch (final NativeHookException e) {
             logger.error(e.getMessage(), e);
         }
-        logger.debug("Native Hook registered");
     }
 
     public static boolean isControlPressed() {
@@ -97,49 +160,6 @@ public class SongbookApplication extends Application {
 
     public static Stage getMainWindow() {
         return mainWindow;
-    }
-
-    /**
-     * JavaFX main method. UI thread entry point. Initializes the environment and loads the main window.
-     *
-     * @param stage the main stage
-     * @throws IOException
-     */
-    @Override
-    public void start(final Stage stage) throws IOException {
-        SettingsManager.init();
-        Installer.runDiagnostics();
-        final EnvironmentVerificator verificator = new EnvironmentVerificator();
-        verificator.verifyTemp();
-        Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
-        StandardCollectionManager.getInstance().init();
-        EasterCollectionManager.getInstance().init();
-        DynamicSonglist.init();
-        BrowserFactory.init();
-        EnvironmentVerificator.automated();
-
-        stage.setOnCloseRequest(t -> {
-            if (!CodeEditor.hasInstanceOpen()) {
-                mainWindow = null;
-                Environment.getInstance().exit();
-            }
-        });
-
-
-        final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("songbook-view.fxml"));
-        final HBox root = fxmlLoader.load();
-        stage.setMaximized(true);
-        final Scene scene = new Scene(root, 1000, 800);
-
-        registerNativeHook();
-
-        stage.setTitle("SongbookManager");
-        stage.setScene(scene);
-        initKeyboardShortcuts(stage);
-        stage.show();
-        // beware of memory leaks
-        mainWindow = stage;
-        logger.info("Application started successfully");
     }
 
     /**
