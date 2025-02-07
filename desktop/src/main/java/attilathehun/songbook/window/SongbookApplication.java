@@ -1,36 +1,21 @@
 package attilathehun.songbook.window;
 
 import attilathehun.songbook.Main;
-import attilathehun.songbook.collection.CollectionManager;
 import attilathehun.songbook.collection.EasterCollectionManager;
-import attilathehun.songbook.collection.Song;
 import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.environment.*;
 import attilathehun.songbook.util.BrowserFactory;
 import attilathehun.songbook.util.DynamicSonglist;
-import attilathehun.songbook.util.Shell;
-import attilathehun.songbook.util.TokenProvider;
-import attilathehun.songbook.vcs.RequestFileAssembler;
-import attilathehun.songbook.vcs.VCSAgent;
 import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
-import com.google.gson.Gson;
 import com.sun.javafx.application.LauncherImpl;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.application.Preloader;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 import java.awt.Desktop;
 
@@ -41,10 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 
 public class SongbookApplication extends Application {
@@ -188,11 +170,7 @@ public class SongbookApplication extends Application {
                 case S -> {
                     if (keyEvent.isControlDown()) {
                         if (keyEvent.isAltDown()) {
-                            if (keyEvent.isShiftDown()) {
-                                Shell.start();
-                            } else {
-                                SettingsEditor.open(); // open settings
-                            }
+                            SettingsEditor.open(); // open settings
                         } else {
                             EnvironmentManager.getInstance().save(); // save
                         }
