@@ -349,7 +349,15 @@ public final class SettingsEditor extends Stage {
             final Tooltip enableExportSwitchTooltip = new Tooltip();
             enableExportSwitchTooltip.setText(enableExportSetting.getDescription());
             exportEnabledSwitch.setTooltip(enableExportSwitchTooltip);
-            exportEnabledSwitch.setSelected(enableDynamicSonglistSetting.getValue());
+            exportEnabledSwitch.setSelected(enableExportSetting.getValue());
+            if (!exportEnabledSwitch.isSelected()) {
+                keepBrowserInstanceAliveSwitch.setDisable(false);
+                browserExecutablePathField.setDisable(false);
+                browseBrowserExecutablePathButton.setDisable(false);
+                defaultExportFileNameField.setDisable(false);
+                printableExportFileNameField.setDisable(false);
+                singlepageExportFileNameField.setDisable(false);
+            }
             exportEnabledSwitch.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
                 SettingsManager.getInstance().set("EXPORT_ENABLED", newValue);
                 keepBrowserInstanceAliveSwitch.setDisable(oldValue);
@@ -817,6 +825,14 @@ public final class SettingsEditor extends Stage {
             remoteSaveLoadDataSwitchTooltip.setText(enableVCSSetting.getDescription());
             remoteSaveLoadSwitch.setTooltip(remoteSaveLoadDataSwitchTooltip);
             remoteSaveLoadSwitch.setSelected(enableVCSSetting.getValue());
+            if (!remoteSaveLoadSwitch.isSelected()) {
+                remoteDataURLField.setDisable(false);
+                remoteDataIndexURLField.setDisable(false);
+                remoteDataVersionTimestampField.setDisable(false);
+                VCSCachePathField.setDisable(false);
+                browseVCSCachePathButton.setDisable(false);
+                VCSThreadCountField.setDisable(false);
+            }
             remoteSaveLoadSwitch.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
                 SettingsManager.getInstance().set("REMOTE_SAVE_LOAD_ENABLED", newValue);
                 remoteDataURLField.setDisable(oldValue);

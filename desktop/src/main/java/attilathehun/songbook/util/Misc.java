@@ -3,6 +3,15 @@ package attilathehun.songbook.util;
 import attilathehun.songbook.window.AlertDialog;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.stage.Window;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,8 +19,6 @@ import java.io.*;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.FileTime;
-import java.util.List;
-import java.util.MissingResourceException;
 import java.util.Random;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -118,6 +125,42 @@ public class Misc {
         }
         final JsonObject jsonObject = new Gson().fromJson(jsonString, JsonObject.class);
         return gson.toJson(jsonObject);
+    }
+
+    public static AlertDialog createProgressIndicatorDialog(final String title, final String message) {
+        return createProgressIndicatorDialog(title, message, null);
+    }
+
+    public static AlertDialog createProgressIndicatorDialog(String title, String message, final Window window) {
+        if (title == null) {
+            title = "";
+        }
+        if (message == null) {
+            message = "";
+        }
+        final GridPane container = new GridPane();
+        container.setVgap(10d);
+        container.setPadding(new Insets(8, 8, 8, 8)); //top right bottom left
+        // make the first column of fixed size for vertical alignment
+        final ColumnConstraints columnConstraints = new ColumnConstraints();
+        columnConstraints.setPercentWidth(30d);
+        columnConstraints.setHalignment(HPos.LEFT); // center the content, just a visual improvement
+        container.getColumnConstraints().add(columnConstraints);
+        // fill rest of the width with the second column
+        final ColumnConstraints columnConstraints2 = new ColumnConstraints();
+        columnConstraints2.setPercentWidth(70d);
+        columnConstraints2.setHalignment(HPos.LEFT); // center the content, just a visual improvement
+        container.getColumnConstraints().add(columnConstraints2);
+
+        final ProgressIndicator progressThingy = new ProgressIndicator();
+        final Label label = new Label(message);
+
+        container.add(progressThingy, 0, 0);
+        container.add(label, 1, 0);
+        HBox.setHgrow(label, Priority.ALWAYS);
+
+        return new AlertDialog.Builder().setTitle(title).setCancelable(false).setParent(window)
+                .addContentNode(container).build();
     }
 
 }

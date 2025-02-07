@@ -288,7 +288,7 @@ public final class Environment {
         for (final CollectionManager m : getRegisteredManagers().values()) {
             m.save();
         }
-        BrowserFactory.close();
+        BrowserFactory.finish();
         CollectionEditor.getInstance().close();
         SettingsEditor.getInstance().close();
         if (SongbookApplication.getMainWindow() != null) {

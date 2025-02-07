@@ -1,7 +1,10 @@
 package attilathehun.songbook.util;
 
+import attilathehun.songbook.environment.Setting;
+import attilathehun.songbook.environment.SettingsListener;
 import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.window.AlertDialog;
+import attilathehun.songbook.window.SettingsEditor;
 import attilathehun.songbook.window.SongbookApplication;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserType;
@@ -33,33 +36,54 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 // TODO work this out for Linux (shell search and chromium download)
-public class BrowserFactory {
+public class BrowserFactory implements SettingsListener, AutoCloseable {
     private static final Logger logger = LogManager.getLogger(BrowserFactory.class);
     public static final String OS_WINDOWS = "Windows";
     public static final String OS_LINUX = "Linux";
     private static final String CHROMIUM_WINDOWS_DOWNLOAD_LINK = "https://storage.googleapis.com/chromium-browser-snapshots/Win_x64/1308506/chrome-win.zip";
     private static final String CHROMIUM_LINUX_DOWNLOAD_LINK = "";
 
-    private static Playwright playwright;
-    private static Browser browserInstance;
+    private static final BrowserFactory instance = new BrowserFactory(true);
+
+    private final boolean IS_DEFAULT;
+
+    private Playwright playwright;
+    private Browser browserInstance;
     private final String os = getOS();
 
-    public BrowserFactory() {
+    static {
+        SettingsManager.addListener(instance);
+    }
 
+    private BrowserFactory() {
+        IS_DEFAULT = false;
+        browserInstance = createBrowserInstance();
+    }
+
+    private BrowserFactory(final boolean d) {
+        IS_DEFAULT = true;
+    }
+
+    public static BrowserFactory getInstance() {
+        if ((Boolean) SettingsManager.getInstance().getValue("EXPORT_KEEP_BROWSER_INSTANCE")) {
+            return instance;
+        } else {
+            return new BrowserFactory();
+        }
     }
 
     /**
      * Initializes the current installation and settings for the runtime. The class will not work properly until this method is called.
      */
     public static void init() {
-        final BrowserFactory factory = new BrowserFactory();
         if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
             return;
         }
 
-        final String path = factory.resolve();
+        final String path = instance.resolve();
+
         if (path == null) {
-            if (!factory.requestInstallChromium()) {
+            if (!instance.requestInstallChromium()) {
                 SettingsManager.getInstance().set("EXPORT_ENABLED", false);
                 new AlertDialog.Builder().setTitle("Installation aborted").setMessage("The installation has been cancelled and exporting has been deactivated.")
                         .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open();
@@ -67,13 +91,10 @@ public class BrowserFactory {
             }
         }
         logger.info("chromium browser executable found at {}", path);
+        instance.playwright = instance.getPlaywright();
         if ((Boolean) SettingsManager.getInstance().getValue("EXPORT_KEEP_BROWSER_INSTANCE")) {
-            playwright = factory.getPlaywright();
-            browserInstance = factory.getBrowserInstance(playwright);
+            instance.browserInstance = instance.createBrowserInstance();
             logger.debug("default browser instance initialised");
-        } else if (browserInstance != null) {
-            browserInstance.close();
-            browserInstance = null;
         }
     }
 
@@ -82,7 +103,7 @@ public class BrowserFactory {
      *
      * @return Playwright instance or null
      */
-    public Playwright getPlaywright() {
+    private Playwright getPlaywright() {
         final HashMap<String, String> playwrightEnv = new HashMap<>();
         playwrightEnv.put("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
         try {
@@ -95,32 +116,28 @@ public class BrowserFactory {
 
     /**
      * Creates a headless {@link Browser} instance bound to the chromium browser executable available to the program. The Browser is created upon the
-     * given {@link Playwright} object and lives within the same scope (especially thread-wise).
+     * {@link Playwright} object of the default instance and lives within the same scope (especially thread-wise).
      *
-     * @param playwright parent Playwright instance to the browser (non-null)
      * @return a Browser instance
      */
-    public Browser getBrowserInstance(final Playwright playwright) {
-        if (playwright == null) {
+    private Browser createBrowserInstance() {
+        if (instance.playwright == null) {
             throw new IllegalArgumentException("playwright can not be null");
         }
 
         final BrowserType.LaunchOptions options = new BrowserType.LaunchOptions().setHeadless(true)
                 .setExecutablePath(Path.of((String) SettingsManager.getInstance().getValue("EXPORT_BROWSER_EXECUTABLE_PATH")));
 
-        return playwright.chromium().launch(options);
+        return instance.playwright.chromium().launch(options);
     }
 
     /**
-     * Returns the static {@link Browser} instance if one exists, creates a new instance if it does not. This method should NEVER be called from a separate thread.
+     * Returns the {@link Browser} instance of this factory.
      *
      * @return a Browser instance
      */
-    public static Browser getDefaultBrowserInstance() {
-        if (playwright == null) {
-            BrowserFactory.playwright = new BrowserFactory().getPlaywright();
-        }
-        return (browserInstance == null) ? new BrowserFactory().getBrowserInstance(playwright) : browserInstance;
+    public Browser getBrowserInstance() {
+        return browserInstance;
     }
 
     /**
@@ -130,7 +147,7 @@ public class BrowserFactory {
      */
     public static Page.PdfOptions getPrintOptionsLandscape() {
         return new Page.PdfOptions().setDisplayHeaderFooter(false).setLandscape(true)
-                .setMargin(new Margin().setRight("0").setTop("0").setBottom("0").setLeft("0")).setPrintBackground(false).setFormat("A4");
+                .setMargin(new Margin().setRight("0").setTop("0.1in").setBottom("0").setLeft("0")).setPrintBackground(false).setFormat("A4");
     }
 
     /**
@@ -231,7 +248,7 @@ public class BrowserFactory {
 
             for (final String executable : EXECUTABLE_NAMES) {
                 String commandString = String.join("where", executable);
-                logger.debug("Executing: " + commandString);
+                logger.debug("Executing: {}", commandString);
                 stdin.write(commandString);
                 stdin.newLine();
                 stdin.flush();
@@ -239,7 +256,7 @@ public class BrowserFactory {
 
             for (final String[] command : COMMANDS) {
                 String commandString = String.join(" ", command);
-                logger.debug("Executing: " + commandString);
+                logger.debug("Executing: {}", commandString);
                 stdin.write(commandString);
                 stdin.newLine();
                 stdin.flush();
@@ -280,11 +297,11 @@ public class BrowserFactory {
                 path = path.trim();
 
                 // now we check if the path we got exists
-                if (path != null && path.length() != 0) {
+                if (path != null && !path.isEmpty()) {
                     final File file = new File(path);
                     if (file.exists()) {
                         path = file.getAbsolutePath();
-                        logger.info("chromium browser path found " + path);
+                        logger.info("chromium browser path found {}", path);
                         stdout.close();
                         return path;
                     }
@@ -499,11 +516,25 @@ public class BrowserFactory {
     /**
      * Frees up any resources that may have been allocated.
      */
-    public static void close() {
+    @Override
+    public void close() {
+        if (IS_DEFAULT) {
+            return; // default instance should be closed only when export is disabled in settings
+        }
+        closeResources();
+    }
+
+    private void closeResources() {
         if (browserInstance != null) {
             browserInstance.close();
+        }
+        if (playwright != null) {
             playwright.close();
         }
+    }
+
+    public static void finish() {
+        instance.closeResources();
     }
 
 
@@ -518,5 +549,43 @@ public class BrowserFactory {
             return OS_WINDOWS;
         }
         return OS_LINUX;
+    }
+
+    @Override
+    public void onSettingChanged(final String name, final Setting old, final Setting _new) {
+        switch (name) {
+            case "EXPORT_ENABLED" -> {
+                if (_new.getValue().equals(Boolean.TRUE)) {
+                    final AlertDialog dialog = Misc.createProgressIndicatorDialog("Loading", "Creating Playwright instance...", SettingsEditor.getInstance());
+                    final CompletableFuture<Void> future = new CompletableFuture<>();
+
+                    new Thread(() -> {
+                        init();
+                        future.complete(null);
+                        Platform.runLater(dialog::close);
+                    }).start();
+                    dialog.open();
+                    try {
+                        future.get();
+                    } catch (final Exception e) {
+                        logger.error(e.getMessage(), e);
+                    }
+                } else {
+                    closeResources();
+                }
+            }
+            case "EXPORT_KEEP_BROWSER_INSTANCE" -> {
+                if (_new.getValue().equals(Boolean.TRUE)) {
+                    browserInstance = createBrowserInstance();
+                } else {
+                    browserInstance.close();
+                    browserInstance = null;
+                }
+            }
+            case "EXPORT_BROWSER_EXECUTABLE_PATH" -> {
+                instance.closeResources();
+                init();
+            }
+        }
     }
 }
