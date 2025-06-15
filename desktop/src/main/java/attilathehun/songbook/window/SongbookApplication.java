@@ -173,7 +173,7 @@ public class SongbookApplication extends Application {
                 }
 
             });
-            logger.debug("Native Hook registered");
+            logger.debug("NativeHook registered");
         } catch (final NativeHookException e) {
             logger.error(e.getMessage(), e);
         }
