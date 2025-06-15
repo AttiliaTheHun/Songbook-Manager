@@ -1,5 +1,6 @@
 package attilathehun.songbook.collection;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
@@ -67,7 +68,26 @@ public abstract class CollectionManager {
     }
 
     /**
-     * Initializes the collection. Should be called in advance to any collection-related logic.
+     * Checks whether the collection files are present. If so, it is safe to attempt to load the collection.
+     *
+     * @return true if the collection can be loaded; false otherwise
+     */
+    public boolean canLoad() {
+        final File collectionJSONFile = new File(getCollectionFilePath());
+        if (!collectionJSONFile.exists()) {
+            return false;
+        }
+        final File songDataFolder = new File(getSongDataFilePath());
+        return songDataFolder.exists() && songDataFolder.isDirectory();
+    }
+
+    /**
+     * Loads the collection. Should be called in advance to any collection-related logic.
+     */
+    public abstract void load();
+
+    /**
+     * Initializes the collection or repairs it if necessary. Should ask the user for confirmation on any actions.
      */
     public abstract void init();
 

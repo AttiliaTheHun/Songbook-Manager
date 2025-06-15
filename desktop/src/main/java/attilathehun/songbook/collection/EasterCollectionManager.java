@@ -3,6 +3,7 @@ package attilathehun.songbook.collection;
 import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.HTMLGenerator;
+import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.vcs.CacheManager;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.CodeEditor;
@@ -34,7 +35,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-// TODO
+// TODO: code clean up
+// TODO: move the dialog windows to Platform#runLater()
 public final class EasterCollectionManager extends CollectionManager {
     private static final Logger logger = LogManager.getLogger(EasterCollectionManager.class);
     private final String collectionName = "easter";
@@ -57,42 +59,39 @@ public final class EasterCollectionManager extends CollectionManager {
     }
 
     @Override
+    public void load() {
+        if (!Environment.IS_IT_EASTER_ALREADY) {
+            return;
+        }
+        Environment.getInstance().registerCollectionManager(this);
+        final File collectionJSONFile = new File(getCollectionFilePath());
+        collection = Misc.loadObjectFromFileInJSON(new TypeToken<ArrayList<Song>>(){}, collectionJSONFile);
+
+        if (collection == null) {
+            Environment.getInstance().exit();
+        }
+
+        for (final Song song : collection) {
+            song.setManager(this);
+        }
+
+        logger.debug("EasterCollectionManager loaded");
+
+    }
+
+    @Override
     public void init() {
         if (!Environment.IS_IT_EASTER_ALREADY) {
             return;
         }
-
-        try {
-            final File collectionJSONFile = new File(getCollectionFilePath());
-
-            if (!collectionJSONFile.exists()) {
-                final File songDataFolder = new File(getSongDataFilePath());
-                if (songDataFolder.exists() && songDataFolder.isDirectory()) {
-                    repairCollectionDialog();
-                } else {
-                    createCollectionDialog();
-                    return;
-                }
-            }
-
-            Environment.getInstance().registerCollectionManager(this);
-
-            final String json = String.join("", Files.readAllLines(collectionJSONFile.toPath()));
-
-            final Type targetClassType = new TypeToken<ArrayList<Song>>(){}.getType();
-            collection = new Gson().fromJson(json, targetClassType);
-
-            for (final Song song : collection) {
-                song.setManager(this);
-            }
-
-        } catch (final IOException e) {
-            logger.error(e.getMessage(), e);
-            new AlertDialog.Builder().setTitle("Easter Collection Initialisation error").setIcon(AlertDialog.Builder.Icon.ERROR)
-                            .setMessage("Can not load the easter song collection, for complete error message view the log file. If the problem persists, try reformatting or deleting the collection file.")
-                            .addOkButton().setParent(SongbookApplication.getMainWindow()).build().open();
+        final File songDataFolder = new File(getSongDataFilePath());
+        if (songDataFolder.exists() && songDataFolder.isDirectory()) {
+            repairCollectionDialog();
+        } else {
+            createCollectionDialog();
             return;
         }
+        load();
         logger.debug("EasterCollectionManager initialized");
     }
 
@@ -113,7 +112,7 @@ public final class EasterCollectionManager extends CollectionManager {
             final FileWriter writer = new FileWriter(getCollectionFilePath());
             gson.toJson(collection, writer);
             writer.close();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage("Can not save the easter song collection, for complete error message view the log file.")

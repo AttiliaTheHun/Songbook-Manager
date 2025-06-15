@@ -26,11 +26,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayDeque;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 
 
 public class SongbookApplication extends Application {
     private static final Logger logger = LogManager.getLogger(SongbookApplication.class);
+    private final Queue<Task> taskQueue = new ArrayDeque<>();
 
     private static boolean CONTROL_PRESSED = false;
     private static boolean SHIFT_PRESSED = false;
@@ -45,38 +48,82 @@ public class SongbookApplication extends Application {
 
     @Override
     public void init() throws Exception {
-        SettingsManager.init();
-        notifyPreloader(new Preloader.ProgressNotification(0.1d));
-        notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Installing resources..."));
-        Installer.runDiagnostics();
-        final EnvironmentVerificator verificator = new EnvironmentVerificator();
-        verificator.verifyTemp();
-        notifyPreloader(new Preloader.ProgressNotification(0.4d));
-        notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Initializing collections..."));
-        Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
-        StandardCollectionManager.getInstance().init();
-        EasterCollectionManager.getInstance().init();
-        DynamicSonglist.init();
-        notifyPreloader(new Preloader.ProgressNotification(0.7d));
-        notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Initializing headless browser..."));
-        BrowserFactory.init();
-        notifyPreloader(new Preloader.ProgressNotification(0.8d));
-        notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Verifying installation..."));
-        EnvironmentVerificator.automated();
-        registerNativeHook();
-        notifyPreloader(new Preloader.ProgressNotification(0.9d));
-        notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Launching user interface..."));
-        Thread.sleep(1500);
+        try {
+            SettingsManager.init();
+            notifyPreloader(new Preloader.ProgressNotification(0.1d));
+            notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Installing resources..."));
+            try {
+                Installer.runTasks();
+            } catch (final Exception e) {
+                taskQueue.add(new Task() {
+                    @Override
+                    public void run() {
+                        new AlertDialog.Builder().setTitle("Installation error").setMessage(e.getMessage()).setIcon(AlertDialog.Builder.Icon.ERROR).setCancelable(false)
+                                .addOkButton().build().awaitResult();
+                        Environment.getInstance().exit();
+                    }
+                });
+                return; // missing resources would cause a cascade of crashes from there on
+            }
+            notifyPreloader(new Preloader.ProgressNotification(0.4d));
+            notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Initializing collections..."));
+            Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
+            if (StandardCollectionManager.getInstance().canLoad()) {
+                StandardCollectionManager.getInstance().load();
+            } else {
+                taskQueue.add(new Task() {
+                    @Override
+                    public void run() {
+                        StandardCollectionManager.getInstance().init();
+                    }
+                });
+            }
+
+            if (EasterCollectionManager.getInstance().canLoad()) {
+                EasterCollectionManager.getInstance().load();
+            } else {
+                taskQueue.add(new Task() {
+                    @Override
+                    public void run() {
+                        EasterCollectionManager.getInstance().init();
+                    }
+                });
+            }
+            notifyPreloader(new Preloader.ProgressNotification(0.7d));
+            notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Initializing headless browser..."));
+            BrowserFactory.init();
+            notifyPreloader(new Preloader.ProgressNotification(0.8d));
+            notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Verifying installation..."));
+            EnvironmentVerificator.automated();
+            registerNativeHook();
+            notifyPreloader(new Preloader.ProgressNotification(0.9d));
+            notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Launching user interface..."));
+            Thread.sleep(1500);
+        } catch (final Exception e) {
+            taskQueue.add(new Task() {
+                @Override
+                public void run() {
+                    new AlertDialog.Builder().setTitle("Initialisation error").setMessage(e.getMessage()).setIcon(AlertDialog.Builder.Icon.ERROR).setCancelable(false)
+                            .addOkButton().build().awaitResult();
+                    Environment.getInstance().exit();
+                }
+            });
+        }
     }
 
     /**
-     * JavaFX main method. UI thread entry point. Initializes the environment and loads the main window.
+     * JavaFX main method. UI thread entry point. Loads the main window.
      *
      * @param stage the main stage
      * @throws IOException
      */
     @Override
     public void start(final Stage stage) throws IOException {
+        for (final Task task : taskQueue) {
+            task.run();
+        }
+        taskQueue.clear();
+        DynamicSonglist.init();
 
         stage.setOnCloseRequest(t -> {
             if (!CodeEditor.hasInstanceOpen()) {
@@ -225,8 +272,8 @@ public class SongbookApplication extends Application {
      * Lets the user open links associated with the song on the currently open page of the songbook.
      */
     private void openAssociatedLink() {
-        final boolean songOneHasURL = !SongbookController.getSongOne().getUrl().equals("");
-        final boolean songTwoHasURL = !SongbookController.getSongTwo().getUrl().equals("");
+        final boolean songOneHasURL = !SongbookController.getSongOne().getUrl().isEmpty();
+        final boolean songTwoHasURL = !SongbookController.getSongTwo().getUrl().isEmpty();
         // both song have a link
         if (songOneHasURL && songTwoHasURL) {
             final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Open associated link?").setMessage("Both of the songs have an associated link, which one do you want to open? You can manage the links in the Collection Editor.")
@@ -292,6 +339,9 @@ public class SongbookApplication extends Application {
                     CollectionEditor.open();
                     return true;
                 }).build().open();
+    }
+    private static abstract class Task {
+        public abstract void run();
     }
 
 }

@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 public class Installer {
 
     private static final Logger logger = LogManager.getLogger(Installer.class);
-    private static final String REMOTE_RESOURCES_ZIP_FILE = "https://github.com/AttiliaTheHun/Songbook-Manager/releases/download/v0.0.1/resources.zip";
+    private static final String REMOTE_RESOURCES_ZIP_FILE = "https://github.com/AttiliaTheHun/Songbook-Manager/releases/download/v0.0.3-alpha/resources.zip";
     private static final String REMOTE_SCRIPTS_ZIP_FILE = "";
     private static final String RESOURCES_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/resources.zip").toString();
     private static final String SCRIPTS_ZIP_FILE_PATH = Paths.get(System.getProperty("user.dir") + "/scripts.zip").toString();
@@ -25,7 +25,7 @@ public class Installer {
     /**
      * Checks the existence of resource and script folders and in the case of their absence attempts to download and extract them.
      */
-    public static void runDiagnostics() {
+    public static void runTasks() {
         final Installer installer = new Installer();
         final EnvironmentVerificator verificator = new EnvironmentVerificator();
         installer.initTemp();
@@ -42,13 +42,11 @@ public class Installer {
      * Attempts to install resources either from local or remote archive file.
      */
     private void installResources() {
-        logger.info("Installing resources....");
+        logger.info("installing resources");
         try {
             if (!new File(RESOURCES_ZIP_FILE_PATH).exists()) {
                 if (REMOTE_RESOURCES_ZIP_FILE.equals("")) {
-                    new AlertDialog.Builder().setTitle("Installation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
-                            .setMessage("Please provide a 'resources.zip' file!").addOkButton().build().open();
-                    System.exit(0);
+                    throw new RuntimeException("Please provide a 'resources.zip' file!");
                 }
                 IS_TEMP_RESOURCES_ZIP_FILE = true;
                 downloadRemoteFile(REMOTE_RESOURCES_ZIP_FILE, "resources.zip");
@@ -57,12 +55,10 @@ public class Installer {
             if (IS_TEMP_RESOURCES_ZIP_FILE) {
                 new File(RESOURCES_ZIP_FILE_PATH).delete();
             }
-            logger.info("Finished installing resources");
+            logger.info("finished installing resources");
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
-            new AlertDialog.Builder().setTitle("Installation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
-                    .setMessage("Cannot install resources!").addOkButton().build().open();
-            System.exit(0);
+            throw new RuntimeException("Cannot install resources");
         }
     }
 
@@ -70,13 +66,11 @@ public class Installer {
      * Attempts to install scripts either from local or remote archive file.
      */
     private void installScripts() {
-        logger.info("Installing scripts....");
+        logger.info("installing scripts");
         try {
             if (!new File(SCRIPTS_ZIP_FILE_PATH).exists()) {
                 if (REMOTE_SCRIPTS_ZIP_FILE.equals("")) {
-                    new AlertDialog.Builder().setTitle("Installation Error").setIcon(AlertDialog.Builder.Icon.WARNING)
-                            .setMessage("Please provide a 'scripts.zip' file!").addOkButton().build().open();
-                    return;
+                    //throw new RuntimeException("Installation error: Please provide a 'scripts.zip' file!");
                 }
                 IS_TEMP_SCRIPTS_ZIP_FILE = true;
                 downloadRemoteFile(REMOTE_SCRIPTS_ZIP_FILE, "scripts.zip");
@@ -84,11 +78,10 @@ public class Installer {
             if (IS_TEMP_SCRIPTS_ZIP_FILE) {
                 ZipBuilder.extract(SCRIPTS_ZIP_FILE_PATH, SettingsManager.getInstance().getValue("SCRIPTS_FILE_PATH"));
             }
-            logger.info("Finished installing scripts");
-        } catch (IOException e) {
+            logger.info("finished installing scripts");
+        } catch (final IOException e) {
             logger.error(e.getMessage(), e);
-            new AlertDialog.Builder().setTitle("Installation Error").setIcon(AlertDialog.Builder.Icon.ERROR)
-                    .setMessage("Cannot install scripts!").addOkButton().build().open();
+            throw new RuntimeException("Cannot install scripts.");
         }
     }
 
@@ -114,7 +107,4 @@ public class Installer {
             return Files.copy(in, Paths.get(fileName));
         }
     }
-
 }
-
-

@@ -61,20 +61,9 @@ public final class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public void init() {
+    public void load() {
         Environment.getInstance().registerCollectionManager(this);
-
         final File collectionJSONFile = new File(getCollectionFilePath());
-        if (!collectionJSONFile.exists()) {
-            final File songDataFolder = new File(getSongDataFilePath());
-            if (songDataFolder.exists() && songDataFolder.isDirectory()) {
-                repairSongbookDialog();
-            } else {
-                createSongbookDialog();
-                return;
-            }
-        }
-
         collection = Misc.loadObjectFromFileInJSON(new TypeToken<ArrayList<Song>>(){}, collectionJSONFile);
 
         if (collection == null) {
@@ -85,6 +74,20 @@ public final class StandardCollectionManager extends CollectionManager {
             song.setManager(this);
         }
 
+        logger.debug("StandardCollectionManager loaded");
+    }
+
+    @Override
+    public void init() {
+        final File songDataFolder = new File(getSongDataFilePath());
+        if (songDataFolder.exists() && songDataFolder.isDirectory()) {
+            repairSongbookDialog();
+        } else {
+            createSongbookDialog();
+            return;
+        }
+
+        load();
         logger.debug("StandardCollectionManager initialized");
     }
 
@@ -598,11 +601,11 @@ public final class StandardCollectionManager extends CollectionManager {
             element = document.select("meta[name=url]").first();
             String songURL = (element != null) ? element.attr("value") : "";
             element = document.select("meta[name=active]").first();
-            boolean songActiveStatus = (element != null) ? Boolean.parseBoolean(element.attr("value")) : true;
+            boolean songActiveStatus = element == null || Boolean.parseBoolean(element.attr("value"));
 
             return new Song(songId, songName, songActiveStatus, songURL);
-        } catch (Exception e) {
-            logger.error(String.format("Target song: %d %s", songId, songName));
+        } catch (final Exception e) {
+            logger.error("Target song: {} {}", songId, songName);
             logger.error(e.getMessage(), e);
         }
 

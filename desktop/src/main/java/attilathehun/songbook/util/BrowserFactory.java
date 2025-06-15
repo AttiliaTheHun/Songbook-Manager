@@ -35,7 +35,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-// TODO work this out for Linux (shell search and chromium download)
+// TODO: work this out for Linux (shell search and chromium download)
+// TODO: move out from directly creating UI windows
 public class BrowserFactory implements SettingsListener, AutoCloseable {
     private static final Logger logger = LogManager.getLogger(BrowserFactory.class);
     public static final String OS_WINDOWS = "Windows";
@@ -79,14 +80,12 @@ public class BrowserFactory implements SettingsListener, AutoCloseable {
         if (!(Boolean) SettingsManager.getInstance().getValue("EXPORT_ENABLED")) {
             return;
         }
-
         final String path = instance.resolve();
-
         if (path == null) {
             if (!instance.requestInstallChromium()) {
                 SettingsManager.getInstance().set("EXPORT_ENABLED", false);
-                new AlertDialog.Builder().setTitle("Installation aborted").setMessage("The installation has been cancelled and exporting has been deactivated.")
-                        .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open();
+                Platform.runLater(() -> new AlertDialog.Builder().setTitle("Installation aborted").setMessage("The installation has been cancelled and exporting has been deactivated.")
+                        .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open());
                 return;
             }
         }
@@ -124,10 +123,8 @@ public class BrowserFactory implements SettingsListener, AutoCloseable {
         if (instance.playwright == null) {
             throw new IllegalArgumentException("playwright can not be null");
         }
-
         final BrowserType.LaunchOptions options = new BrowserType.LaunchOptions().setHeadless(true)
                 .setExecutablePath(Path.of((String) SettingsManager.getInstance().getValue("EXPORT_BROWSER_EXECUTABLE_PATH")));
-
         return instance.playwright.chromium().launch(options);
     }
 
@@ -187,7 +184,7 @@ public class BrowserFactory implements SettingsListener, AutoCloseable {
         }
         final File file2 = new File(path);
         if (file2.exists() && !file2.isDirectory()) {
-            SettingsManager.getInstance().set("EXPORT_BROWSER_EXECUTABLE_PATH", path);
+            SettingsManager.getInstance().setSilent("EXPORT_BROWSER_EXECUTABLE_PATH", path);
             return file2.toString();
         }
         return path;
@@ -232,7 +229,7 @@ public class BrowserFactory implements SettingsListener, AutoCloseable {
      */
     private String askTerminalForExecutableWindows() {
         final String SHELL_LOCATION_WINDOWS = "C:/Windows/System32/cmd.exe";
-        final String SHELL_DELIMETER_WINDOWS = ">";
+        final String SHELL_DELIMITER_WINDOWS = ">";
         final String[] EXECUTABLE_NAMES = new String[] { "chrome.exe", "msedge.exe" };
         final String[][] COMMANDS = new String[][] {
                 {"reg", "query", "HKEY_CLASSES_ROOT\\ChromeHTML\\shell\\open\\command"},
@@ -248,7 +245,7 @@ public class BrowserFactory implements SettingsListener, AutoCloseable {
 
             for (final String executable : EXECUTABLE_NAMES) {
                 String commandString = String.join("where", executable);
-                logger.debug("Executing: {}", commandString);
+                logger.debug("executing: {}", commandString);
                 stdin.write(commandString);
                 stdin.newLine();
                 stdin.flush();
@@ -256,7 +253,7 @@ public class BrowserFactory implements SettingsListener, AutoCloseable {
 
             for (final String[] command : COMMANDS) {
                 String commandString = String.join(" ", command);
-                logger.debug("Executing: {}", commandString);
+                logger.debug("executing: {}", commandString);
                 stdin.write(commandString);
                 stdin.newLine();
                 stdin.flush();
@@ -276,7 +273,7 @@ public class BrowserFactory implements SettingsListener, AutoCloseable {
             while (stdout.hasNextLine()) {
                 extracted = false;
                 path = stdout.nextLine();
-                if (path.contains(SHELL_DELIMETER_WINDOWS)) { // means this is the line that executed the command (this is actually our input from before)
+                if (path.contains(SHELL_DELIMITER_WINDOWS)) { // means this is the line that executed the command (this is actually our input from before)
                     continue;
                 }
 
@@ -311,7 +308,7 @@ public class BrowserFactory implements SettingsListener, AutoCloseable {
             stdout.close();
 
         } catch (final IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+            logger.error(e.getMessage(), e);
         }
 
         return null;
@@ -355,7 +352,7 @@ public class BrowserFactory implements SettingsListener, AutoCloseable {
 
     private String askTerminalForExecutableLinux() {
         final String SHELL_LOCATION_LINUX = "/bin/bash";
-        final String SHELL_DELIMETER_LINUX = "$"; // if this thing runs as su, we better deploy some ransomware
+        final String SHELL_DELIMITER_LINUX = "$"; // if this thing runs as su, we better deploy some ransomware
         final String[] EXECUTABLE_NAMES = new String[] { "google-chrome", "google-chrome-stable", "microsoft-edge", "microsoft-edge-stable", "chromium", "chromium-browser" };
 
         try {
@@ -366,13 +363,13 @@ public class BrowserFactory implements SettingsListener, AutoCloseable {
 
             for (final String executable : EXECUTABLE_NAMES) {
                 String commandString = String.join("whereis", executable);
-                logger.debug("Executing: " + commandString);
+                logger.debug("executing: " + commandString);
                 stdin.write(commandString);
                 stdin.newLine();
                 stdin.flush();
 
                 commandString = String.join("locate", executable);
-                logger.debug("Executing: " + commandString);
+                logger.debug("executing: " + commandString);
                 stdin.write(commandString);
                 stdin.newLine();
                 stdin.flush();
@@ -501,14 +498,12 @@ public class BrowserFactory implements SettingsListener, AutoCloseable {
                     new AlertDialog.Builder().setTitle("Download failed").setMessage("Something happened while downloading. Check the log for more information!").setIcon(AlertDialog.Builder.Icon.ERROR)
                             .addOkButton().setCancelable(true).build().open();
                 } else {
-                    new AlertDialog.Builder().setTitle("Download finished").setMessage("It appears that hte download was successful!").setIcon(AlertDialog.Builder.Icon.INFO)
+                    new AlertDialog.Builder().setTitle("Download finished").setMessage("It appears that the download was successful!").setIcon(AlertDialog.Builder.Icon.INFO)
                             .addOkButton().setCancelable(true).build().open();
                 }
 
             });
         }).start();
-
-
 
         return output.get();
     }

@@ -24,9 +24,9 @@ public class EnvironmentVerificator {
     }
 
     /**
-     * Internal constructor that performs automatic verification upon instantiation.
+     * Internal constructor that performs automatic verification upon instantiation. In case of the verification not passing, exception is thrown.
      */
-    private EnvironmentVerificator(boolean b) {
+    private EnvironmentVerificator(final boolean b) {
         this.automated = true;
 
         verifyResources();
@@ -39,10 +39,9 @@ public class EnvironmentVerificator {
 
         verifyTemp();
 
-        verifyCollection();
+        //verifyCollection();
 
-        verifyData();
-
+        //verifyData();
     }
 
     /**
@@ -59,10 +58,10 @@ public class EnvironmentVerificator {
      * @param message the message to displayed to the user
      */
     private static void verificationFail(final String message) {
-        new AlertDialog.Builder().setTitle("Environment Verification Failed").setIcon(AlertDialog.Builder.Icon.ERROR)
-                .setMessage(message).addOkButton().build().open();
-        logger.error("Environment verification failed: {}", message);
-        Environment.getInstance().exit();
+        //new AlertDialog.Builder().setTitle("Environment Verification Failed").setIcon(AlertDialog.Builder.Icon.ERROR)
+               // .setMessage(message).addOkButton().build().open();
+        logger.error("environment verification failed: {}", message);
+        throw new RuntimeException("Environment verification failed: " + message);
     }
 
     /**
@@ -146,21 +145,14 @@ public class EnvironmentVerificator {
      * @return true if the script folder is alright
      */
     public boolean verifyScripts() {
-        if (!(new File((String) SettingsManager.getInstance().getValue("SCRIPTS_FILE_PATH")).exists() && new File((String) SettingsManager.getInstance().getValue("SCRIPTS_FILE_PATH")).isDirectory())) {
-            if (automated) {
-                new AlertDialog.Builder().setTitle("Warning").setIcon(AlertDialog.Builder.Icon.WARNING)
-                        .setMessage("Scripts folder not found. Some features might not work!").addOkButton().build().open();
-            }
-            return false;
-        }
-        return true;
+        return new File((String) SettingsManager.getInstance().getValue("SCRIPTS_FILE_PATH")).exists() && new File((String) SettingsManager.getInstance().getValue("SCRIPTS_FILE_PATH")).isDirectory();
     }
 
     /**
      * Verifies the presence of temp folder.
      */
     public boolean verifyTemp() {
-        if (!new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).exists() && new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).isDirectory()) {
+        if (!(new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).exists() && new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).isDirectory())) {
             if (automated) {
                 verificationFail("Temp folder does not exist");
             }

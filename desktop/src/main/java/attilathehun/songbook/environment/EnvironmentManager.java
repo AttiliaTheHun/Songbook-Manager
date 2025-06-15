@@ -33,19 +33,19 @@ public final class EnvironmentManager {
             VCSAdmin.getInstance().pull();
             return;
         }
-        logger.info("Importing a local data zip file...");
+        logger.info("importing a local data zip file...");
         if (!new File((String) SettingsManager.getInstance().getValue("DATA_ZIP_FILE_PATH")).exists()) {
-            logger.info("Import aborted: file not found!");
+            logger.info("import aborted: file not found!");
             new AlertDialog.Builder().setTitle("Error").setMessage("Could not find a local data zip file. Make sure it is in the same directory as the program.")
-            .setIcon(AlertDialog.Builder.Icon.WARNING).addOkButton().build().open();
+            .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open();
             return;
         }
         if (!extractLocalDataFile()) {
-            logger.info("Import failed!");
+            logger.info("import failed!");
             return;
         }
         Environment.getInstance().hardRefresh();
-        logger.info("Import successful!");
+        logger.info("import successful!");
         new AlertDialog.Builder().setTitle("Success").setMessage("Data loaded successfully.")
                 .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
     }
@@ -62,7 +62,7 @@ public final class EnvironmentManager {
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setMessage("Could not extract the data. For complete error message view the log file.")
-                    .setIcon(AlertDialog.Builder.Icon.WARNING).addOkButton().build().open();
+                    .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open();
             return false;
         }
         return true;
@@ -80,10 +80,10 @@ public final class EnvironmentManager {
         }
         logger.info("Exporting data to local zip file...");
         if (!archiveDataToLocalFile()) {
-            logger.info("Export failed!");
+            logger.info("export failed!");
             return;
         }
-        logger.info("Export successful!");
+        logger.info("export successful!");
         new AlertDialog.Builder().setTitle("Success").setMessage("Data saved successfully to " + SettingsManager.getInstance().getValue("DATA_ZIP_FILE_PATH"))
                 .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton().build().open();
     }
@@ -147,7 +147,7 @@ public final class EnvironmentManager {
             return;
         }
         if (!extractLocalDataFile()) {
-            logger.debug("Songbook loading failed");
+            logger.debug("songbook loading failed");
             Platform.exit();
             return;
         }
