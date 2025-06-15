@@ -1,9 +1,12 @@
 package attilathehun.songbook.collection;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.PDFGenerator;
 
 /**
@@ -331,20 +334,26 @@ public abstract class CollectionManager {
      *
      * @return collection file path
      */
-    public abstract String getCollectionFilePath();
+    public String getCollectionFilePath() {
+        return Paths.get(SettingsManager.getInstance().getValue("DATA_FILE_PATH"), String.format(COLLECTION_FILE_NAME, getCollectionName())).toString();
+    }
 
     /**
      * Returns relative path to collection songs. Used for example in archives
      *
      * @return relative collection file path
      */
-    public abstract String getRelativeFilePath();
+    public String getRelativeFilePath() {
+        return Paths.get(String.format(RELATIVE_DATA_FILE_NAME, getCollectionName())).toString();
+    }
 
     /**
      * Returns the path where the collection song html files are stored.
      *
      * @return collection song data file path
      */
-    public abstract String getSongDataFilePath();
+    public String getSongDataFilePath() {
+        return Paths.get(SettingsManager.getInstance().getValue("SONGS_FILE_PATH"), getCollectionName()).toString();
+    }
 
 }

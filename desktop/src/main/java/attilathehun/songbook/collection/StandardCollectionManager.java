@@ -482,21 +482,6 @@ public final class StandardCollectionManager extends CollectionManager {
     }
 
     @Override
-    public String getCollectionFilePath() {
-        return Paths.get(SettingsManager.getInstance().getValue("DATA_FILE_PATH"), String.format(CollectionManager.COLLECTION_FILE_NAME, collectionName)).toString();
-    }
-
-    @Override
-    public String getRelativeFilePath() {
-        return Paths.get(String.format(CollectionManager.RELATIVE_DATA_FILE_NAME, collectionName)).toString();
-    }
-
-    @Override
-    public String getSongDataFilePath() {
-        return Paths.get(SettingsManager.getInstance().getValue("SONGS_FILE_PATH"),collectionName).toString();
-    }
-
-    @Override
     public CompletableFuture<Song> addSongDialog() {
         final Song s = getPlaceholderSong();
         final CompletableFuture<Song> output = new CompletableFuture<>();
