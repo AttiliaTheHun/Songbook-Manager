@@ -6,7 +6,6 @@ import attilathehun.songbook.collection.StandardCollectionManager;
 import attilathehun.songbook.util.BrowserFactory;
 import attilathehun.songbook.util.HTMLGenerator;
 import attilathehun.songbook.util.PDFGenerator;
-import attilathehun.songbook.vcs.CacheManager;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.CollectionEditor;
 import attilathehun.songbook.window.SettingsEditor;
@@ -192,29 +191,20 @@ public final class Environment {
      */
     public void hardRefresh() {
         SettingsManager.getInstance().load();
-        try {
-            for (final File f : new File((String) SettingsManager.getInstance().getValue("TEMP_FILE_PATH")).listFiles()) {
-                if (!f.delete()) {
-                    new AlertDialog.Builder().setTitle("Refreshing error").setIcon(AlertDialog.Builder.Icon.ERROR)
-                            .setMessage("Cannot clean temp folder!").addOkButton().build().open();
-                    logger.error("failed to clean temp folder on full refresh");
-                }
-            }
-        } catch (final NullPointerException e) {
-            logger.error(e.getMessage(), e);
-        }
 
         for (final CollectionManager manager : collectionManagers.values()) {
-            manager.init();
+            if (manager.canLoad()) {
+                manager.load();
+            } else {
+                manager.init();
+            }
         }
 
         SettingsEditor.refresh();
-        HTMLGenerator.init();
         CollectionEditor.refresh();
-        CacheManager.getInstance().clearCache();
         BrowserFactory.init();
         EnvironmentVerificator.automated();
-        notifyOnRefresh();
+        refresh();
 
         logger.debug("environment hard refreshed");
     }

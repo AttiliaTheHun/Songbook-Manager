@@ -20,6 +20,11 @@ public class TestCollectionManager extends CollectionManager {
     }
 
     @Override
+    public void load() {
+
+    }
+
+    @Override
     public void init() {
 
     }

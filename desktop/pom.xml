@@ -6,7 +6,7 @@
 
     <groupId>attilathehun.songbook</groupId>
     <artifactId>SongbookManager</artifactId>
-    <version>0.0.4-Alpha</version>
+    <version>0.0.5-Alpha</version>
     <name>SongbookManager</name>
     <packaging>jar</packaging>
     <description>Songbook management platform.</description>

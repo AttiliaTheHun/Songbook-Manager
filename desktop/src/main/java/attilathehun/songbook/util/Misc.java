@@ -1,5 +1,6 @@
 package attilathehun.songbook.util;
 
+import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.window.AlertDialog;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
@@ -42,6 +43,22 @@ public class Misc {
 
     public static boolean fileExists(final String path) {
         return new File(path).exists();
+    }
+
+    public static boolean clearFolder(final String path) {
+        final File folder = new File(path);
+        if (!folder.exists() || !folder.isDirectory()) {
+            return false;
+        }
+        for (final File f : folder.listFiles()) {
+            if (f.isDirectory()) {
+                clearFolder(f.getPath());
+            }
+            if (!f.delete()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static void saveObjectToFileInJSON(final Serializable s, final File target) {

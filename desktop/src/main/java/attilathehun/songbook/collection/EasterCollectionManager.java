@@ -4,7 +4,6 @@ import attilathehun.songbook.environment.Environment;
 import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.HTMLGenerator;
 import attilathehun.songbook.util.Misc;
-import attilathehun.songbook.vcs.CacheManager;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.CodeEditor;
 import attilathehun.songbook.window.SongbookApplication;
@@ -89,9 +88,8 @@ public final class EasterCollectionManager extends CollectionManager {
             repairCollectionDialog();
         } else {
             createCollectionDialog();
-            return;
         }
-        load();
+        //load();
         logger.debug("EasterCollectionManager initialized");
     }
 
@@ -574,6 +572,7 @@ public final class EasterCollectionManager extends CollectionManager {
         result.thenAccept(dialogResult -> {
             if (dialogResult == AlertDialog.RESULT_OK) {
                 repairMissingCollectionFile();
+                load();
             } else if (dialogResult == AlertDialog.RESULT_CLOSE) {
                 createNewCollection();
             }
@@ -608,12 +607,8 @@ public final class EasterCollectionManager extends CollectionManager {
                     collection.add(createSongRecordFromLocalFile(songId));
                 }
             }
-            // cache it before the collection file is created so its last modified date does not get cached
-            CacheManager.getInstance().cacheSongbookVersionTimestamp();
 
             save();
-            // no changes were done by creating the collection file, so we do not want to make the VCS think we changed something
-            new File(getCollectionFilePath()).setLastModified(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
 
             logger.info("Success!");
         } catch (final IOException e) {
@@ -625,6 +620,7 @@ public final class EasterCollectionManager extends CollectionManager {
         try {
             final File songDataFolder = new File(getSongDataFilePath());
             songDataFolder.mkdirs();
+            Misc.clearFolder(getSongDataFilePath());
             final File collectionJSONFile = new File(getCollectionFilePath());
             collectionJSONFile.createNewFile();
             collection = new ArrayList<Song>();

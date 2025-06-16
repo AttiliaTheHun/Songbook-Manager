@@ -6,7 +6,6 @@ import attilathehun.songbook.environment.SettingsManager;
 import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.util.DynamicSonglist;
 import attilathehun.songbook.util.HTMLGenerator;
-import attilathehun.songbook.vcs.CacheManager;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.CodeEditor;
 import attilathehun.songbook.window.SongbookApplication;
@@ -84,10 +83,9 @@ public final class StandardCollectionManager extends CollectionManager {
             repairSongbookDialog();
         } else {
             createSongbookDialog();
-            return;
         }
 
-        load();
+        //load();
         logger.debug("StandardCollectionManager initialized");
     }
 
@@ -254,7 +252,7 @@ public final class StandardCollectionManager extends CollectionManager {
             }
 
         } catch (final IOException e) {
-            logger.error(String.format("song id: %s", s.id()));
+            logger.error("song id: {}", s.id());
             logger.error(e.getMessage(), e);
             new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR)
                     .setMessage(String.format("A song record could not be updated! Song: %s id: %d", s.name(), s.id()))
@@ -604,6 +602,7 @@ public final class StandardCollectionManager extends CollectionManager {
         result.thenAccept(dialogResult -> {
             if (dialogResult == AlertDialog.RESULT_OK) {
                 repairMissingCollectionFile();
+                load();
             } else if (dialogResult == AlertDialog.RESULT_CLOSE) {
                 EnvironmentManager.getInstance().createNewSongbook();
             } else if (dialogResult == AlertDialog.RESULT_EXTRA) {
@@ -627,7 +626,7 @@ public final class StandardCollectionManager extends CollectionManager {
     }
 
     private void repairMissingCollectionFile() {
-        logger.info("Repairing standard collection");
+        logger.info("repairing standard collection");
         collection = new ArrayList<>();
         try (final DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(getSongDataFilePath()))) {
             for (final Path path : stream) {
@@ -643,14 +642,10 @@ public final class StandardCollectionManager extends CollectionManager {
                     collection.add(createSongRecordFromLocalFile(songId));
                 }
             }
-            // cache it before the collection file is created so its last modified date does not get cached
-            CacheManager.getInstance().cacheSongbookVersionTimestamp();
 
             save();
-            // no changes were done by creating the collection file, so we do not want to make the VCS think we changed something
-            new File(getCollectionFilePath()).setLastModified(CacheManager.getInstance().getCachedSongbookVersionTimestamp());
 
-            logger.info("Success!");
+            logger.info("success!");
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
         }

@@ -42,7 +42,7 @@ public class Installer {
      * Attempts to install resources either from local or remote archive file.
      */
     private void installResources() {
-        logger.info("installing resources");
+        logger.info("installing resources...");
         try {
             if (!new File(RESOURCES_ZIP_FILE_PATH).exists()) {
                 if (REMOTE_RESOURCES_ZIP_FILE.equals("")) {
@@ -66,7 +66,7 @@ public class Installer {
      * Attempts to install scripts either from local or remote archive file.
      */
     private void installScripts() {
-        logger.info("installing scripts");
+        logger.info("installing scripts...");
         try {
             if (!new File(SCRIPTS_ZIP_FILE_PATH).exists()) {
                 if (REMOTE_SCRIPTS_ZIP_FILE.equals("")) {

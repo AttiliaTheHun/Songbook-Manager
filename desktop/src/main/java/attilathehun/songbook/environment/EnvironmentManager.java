@@ -1,8 +1,9 @@
 package attilathehun.songbook.environment;
 
+import attilathehun.songbook.collection.EasterCollectionManager;
 import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.util.Misc;
 import attilathehun.songbook.util.ZipBuilder;
-import attilathehun.songbook.vcs.VCSAdmin;
 import attilathehun.songbook.window.AlertDialog;
 import attilathehun.songbook.window.SongbookApplication;
 import javafx.application.Platform;
@@ -25,14 +26,10 @@ public final class EnvironmentManager {
 
     /**
      * The platform API method for performing data loading. Based on the REMOTE_SAVE_LOAD_ENABLED setting either tries to contact the VCS server via
-     * {@link VCSAdmin} or tries to load a local zip archive file. This method provides visual feedback through {@link AlertDialog}s and so is not
+     *  or tries to load a local zip archive file. This method provides visual feedback through {@link AlertDialog}s and so is not
      * a good pick for background work.
      */
     public void load() {
-        if ((Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
-            VCSAdmin.getInstance().pull();
-            return;
-        }
         logger.info("importing a local data zip file...");
         if (!new File((String) SettingsManager.getInstance().getValue("DATA_ZIP_FILE_PATH")).exists()) {
             logger.info("import aborted: file not found!");
@@ -70,14 +67,10 @@ public final class EnvironmentManager {
 
     /**
      * The platform API method for performing data saving. Based on the REMOTE_SAVE_LOAD_ENABLED setting either tries to contact the VCS server via
-     * {@link VCSAdmin} or attempts to save the data into a local zip archive file. This method provides visual feedback through {@link AlertDialog}s and so is not
+     *  or attempts to save the data into a local zip archive file. This method provides visual feedback through {@link AlertDialog}s and so is not
      * a good pick for background work.
      */
     public void save() {
-        if ((Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
-            VCSAdmin.getInstance().push();
-            return;
-        }
         logger.info("Exporting data to local zip file...");
         if (!archiveDataToLocalFile()) {
             logger.info("export failed!");
@@ -115,11 +108,16 @@ public final class EnvironmentManager {
         try {
             final File songDataFolder = new File(StandardCollectionManager.getInstance().getSongDataFilePath());
             songDataFolder.mkdirs();
+            Misc.clearFolder(songDataFolder.getPath());
             final File collectionJSONFile = new File(StandardCollectionManager.getInstance().getCollectionFilePath());
             collectionJSONFile.createNewFile();
             final PrintWriter printWriter = new PrintWriter(new FileWriter(collectionJSONFile));
             printWriter.write("[]");
             printWriter.close();
+            Environment.getInstance().registerCollectionManager(StandardCollectionManager.getInstance());
+            Environment.getInstance().registerCollectionManager(EasterCollectionManager.getInstance());
+            Environment.navigateWebViewToSong(Environment.getInstance().getCollectionManager().getFormalCollection().getFirst());
+            Environment.getInstance().hardRefresh();
             new AlertDialog.Builder().setTitle("Add a song").setMessage("Do you want to add your first song?").setIcon(AlertDialog.Builder.Icon.CONFIRM)
                     .setParent(SongbookApplication.getMainWindow())
                     .addOkButton("Add")
@@ -142,15 +140,14 @@ public final class EnvironmentManager {
      * some additional initialization. The method opens {@link AlertDialog}s to notify the user. Upon failure, it closes the program. For regular data loading use {@link #load()}.
      */
     public void loadSongbook() {
-        if ((Boolean) SettingsManager.getInstance().getValue("REMOTE_SAVE_LOAD_ENABLED")) {
-            VCSAdmin.getInstance().pull();
-            return;
-        }
         if (!extractLocalDataFile()) {
             logger.debug("songbook loading failed");
             Platform.exit();
             return;
         }
+        Environment.getInstance().registerCollectionManager(StandardCollectionManager.getInstance());
+        Environment.getInstance().registerCollectionManager(EasterCollectionManager.getInstance());
+        Environment.navigateWebViewToSong(Environment.getInstance().getCollectionManager().getFormalCollection().getFirst());
         Environment.getInstance().hardRefresh();
         new AlertDialog.Builder().setTitle("Success").setIcon(AlertDialog.Builder.Icon.INFO)
                 .setMessage("Songbook loaded successfully.")
