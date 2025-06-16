@@ -109,10 +109,11 @@ public class DynamicSonglist implements EnvironmentStateListener, CollectionList
             old.removeListener(this);
         }
         if (m == null) {
-            logger.error("Supplied a null manager, highly unexpected");
+            logger.error("supplied a null manager, highly unexpected");
             return;
         }
         m.addListener(this);
+        generateSonglist();
     }
 
     @Override
