@@ -1,0 +1,378 @@
+package attilathehun.songbook.window;
+
+import attilathehun.songbook.Main;
+import attilathehun.songbook.collection.EasterCollectionManager;
+import attilathehun.songbook.collection.StandardCollectionManager;
+import attilathehun.songbook.environment.*;
+import attilathehun.songbook.util.BrowserFactory;
+import attilathehun.songbook.util.DynamicSonglist;
+import com.github.kwhat.jnativehook.GlobalScreen;
+import com.github.kwhat.jnativehook.NativeHookException;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
+//import com.sun.javafx.application.LauncherImpl;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.application.Preloader;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
+import java.awt.Desktop;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.swing.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayDeque;
+import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
+
+
+public class SongbookApplication extends Application {
+    private static final Logger logger = LogManager.getLogger(SongbookApplication.class);
+    private final Queue<Task> taskQueue = new ArrayDeque<>();
+
+    private static boolean CONTROL_PRESSED = false;
+    private static boolean SHIFT_PRESSED = false;
+    private static SongbookController controller = null;
+
+    private static Stage mainWindow;
+
+
+    public static void main(final String[] args) {
+       // LauncherImpl.launchApplication(SongbookApplication.class, ApplicationPreloader.class, args);
+        System.setProperty("javafx.preloader", ApplicationPreloader.class.getCanonicalName());
+        launch(args);
+    }
+
+    @Override
+    public void init() throws Exception {
+        try {
+            SettingsManager.init();
+            notifyPreloader(new Preloader.ProgressNotification(0.1d));
+            notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Installing resources..."));
+            try {
+                Installer.runTasks();
+            } catch (final Exception e) {
+                logger.error(e.getMessage(), e);
+                taskQueue.add(new Task() {
+                    @Override
+                    public void run() {
+                        new AlertDialog.Builder().setTitle("Installation error").setMessage(e.getMessage()).setIcon(AlertDialog.Builder.Icon.ERROR).setCancelable(false)
+                                .addOkButton().build().awaitResult();
+                        Environment.getInstance().exit();
+                    }
+                });
+                return; // missing resources would cause a cascade of crashes from there on
+            }
+            notifyPreloader(new Preloader.ProgressNotification(0.4d));
+            notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Initializing collections..."));
+            Environment.getInstance().setCollectionManager(StandardCollectionManager.getInstance());
+            if (StandardCollectionManager.getInstance().canLoad()) {
+                StandardCollectionManager.getInstance().load();
+            } else {
+                taskQueue.add(new Task() {
+                    @Override
+                    public void run() {
+                        StandardCollectionManager.getInstance().init();
+                    }
+                });
+            }
+
+            if (EasterCollectionManager.getInstance().canLoad()) {
+                EasterCollectionManager.getInstance().load();
+            } else {
+                taskQueue.add(new Task() {
+                    @Override
+                    public void run() {
+                        EasterCollectionManager.getInstance().init();
+                    }
+                });
+            }
+            notifyPreloader(new Preloader.ProgressNotification(0.7d));
+            notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Initializing headless browser..."));
+            BrowserFactory.init();
+            notifyPreloader(new Preloader.ProgressNotification(0.8d));
+            notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Verifying installation..."));
+            EnvironmentVerificator.automated();
+            registerNativeHook();
+            notifyPreloader(new Preloader.ProgressNotification(0.9d));
+            notifyPreloader(new ApplicationPreloader.ProgressMessageNotification("Launching user interface..."));
+            Thread.sleep(1500);
+        } catch (final Exception e) {
+            logger.error(e.getMessage(), e);
+            taskQueue.add(new Task() {
+                @Override
+                public void run() {
+                    new AlertDialog.Builder().setTitle("Initialisation error").setMessage(e.getMessage()).setIcon(AlertDialog.Builder.Icon.ERROR).setCancelable(false)
+                            .addOkButton().build().awaitResult();
+                    Environment.getInstance().exit();
+                }
+            });
+        }
+    }
+
+    /**
+     * JavaFX main method. UI thread entry point. Loads the main window.
+     *
+     * @param stage the main stage
+     * @throws IOException
+     */
+    @Override
+    public void start(final Stage stage) {
+        try {
+
+            for (final Task task : taskQueue) {
+                task.run();
+            }
+            taskQueue.clear();
+            DynamicSonglist.init();
+
+            stage.setOnCloseRequest(t -> {
+                if (!CodeEditor.hasInstanceOpen()) {
+                    mainWindow = null;
+                    Environment.getInstance().exit();
+                }
+            });
+
+            final FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("songbook-view.fxml"));
+
+            final HBox root = fxmlLoader.load();
+            stage.setMaximized(true);
+            final Scene scene = new Scene(root, 1000, 800);
+
+            stage.setTitle("SongbookManager");
+            stage.setScene(scene);
+            initKeyboardShortcuts(stage);
+
+            // beware of memory leaks
+            mainWindow = stage;
+
+            stage.show();
+            logger.info("Application started successfully");
+        } catch (final Exception e) {
+            logger.error(e.getMessage(), e);
+            Environment.getInstance().exit();
+        }
+    }
+
+    private static void registerNativeHook() {
+        try {
+            GlobalScreen.registerNativeHook();
+            GlobalScreen.addNativeKeyListener(new NativeKeyListener() {
+
+                @Override
+                public void nativeKeyReleased(NativeKeyEvent nativeEvent) {
+                    if (nativeEvent.getKeyCode() == NativeKeyEvent.VC_CONTROL) {
+                        CONTROL_PRESSED = false;
+                    } else if (nativeEvent.getKeyCode() == NativeKeyEvent.VC_SHIFT) {
+                        SHIFT_PRESSED = false;
+                    }
+                }
+
+                @Override
+                public void nativeKeyPressed(NativeKeyEvent nativeEvent) {
+                    if (nativeEvent.getKeyCode() == NativeKeyEvent.VC_CONTROL) {
+                        CONTROL_PRESSED = true;
+                    } else if (nativeEvent.getKeyCode() == NativeKeyEvent.VC_SHIFT) {
+                        SHIFT_PRESSED = true;
+                    }
+                }
+
+            });
+            logger.debug("NativeHook registered");
+        } catch (final NativeHookException e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    public static boolean isControlPressed() {
+        return CONTROL_PRESSED;
+    }
+
+    public static boolean isShiftPressed() {
+        return SHIFT_PRESSED;
+    }
+
+    public static Stage getMainWindow() {
+        return mainWindow;
+    }
+
+    /**
+     * Initializes the keyboard shortcuts on the main stage.
+     *
+     * @param stage the main stage
+     */
+    private void initKeyboardShortcuts(final Stage stage) {
+        stage.getScene().setOnKeyPressed(keyEvent -> {
+            switch (keyEvent.getCode()) {
+                case LEFT, PAGE_DOWN -> {
+                    Environment.notifyOnPageTurnedBack();
+                }
+                case RIGHT, PAGE_UP -> {
+                    Environment.notifyOnPageTurnedForward();
+                }
+                case R -> { // refresh
+                    if (keyEvent.isControlDown()) {
+                        if (keyEvent.isShiftDown()) {
+                            Environment.getInstance().hardRefresh();
+                        } else {
+                            Environment.getInstance().refresh();
+                        }
+                    }
+                }
+                case S -> {
+                    if (keyEvent.isControlDown()) {
+                        if (keyEvent.isAltDown()) {
+                            SettingsEditor.open(); // open settings
+                        } else {
+                            EnvironmentManager.getInstance().save(); // save
+                        }
+                    }
+                }
+                case L -> {
+                    if (keyEvent.isControlDown()) {
+                        if (keyEvent.isAltDown()) { // open log
+                            System.out.println("opening log");
+                            // unless wrapped in this, it hangs the entire app on Linux with bad desktop config, do not change to Platform#runLater()!!!
+                            SwingUtilities.invokeLater(() -> {
+                                try {
+                                    Desktop.getDesktop().open(new File((String) SettingsManager.getInstance().getValue("LOG_FILE_PATH")));
+                                } catch (final Exception e) {
+                                    logger.error(e.getMessage(), e);
+                                    Platform.runLater(() -> Platform.runLater(() -> new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR).setMessage(e.getLocalizedMessage()).setParent(SongbookApplication.getMainWindow()).addOkButton().build().open()));
+                                }
+                            });
+                        } else {
+                            EnvironmentManager.getInstance().load(); // load
+                        }
+
+                    }
+                }
+                case H -> { // help
+                    if (keyEvent.isControlDown()) {
+                        SwingUtilities.invokeLater(() -> {
+                            try {
+                                Desktop.getDesktop().browse(new URI("https://github.com/AttiliaTheHun/Songbook-Manager/wiki/English"));
+                            } catch (final Exception e) {
+                                logger.error(e.getMessage(), e);
+                                Platform.runLater(() -> Platform.runLater(() -> new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR).setMessage(e.getLocalizedMessage()).setParent(SongbookApplication.getMainWindow()).addOkButton().build().open()));
+                            }
+                        });
+                    }
+                }
+                case O -> { // open song link
+                    if (keyEvent.isControlDown()) {
+                        openAssociatedLink();
+                    }
+                }
+                case N -> { // add new song
+                    if (keyEvent.isControlDown()) {
+                        Environment.getInstance().getCollectionManager().addSongDialog();
+                    }
+                }
+                case P -> {
+                    // TODO:  previewButton.fire()
+                }
+            }
+        });
+    }
+
+    /**
+     * Lets the user open links associated with the song on the currently open page of the songbook.
+     */
+    private void openAssociatedLink() {
+        final boolean songOneHasURL = !SongbookController.getSongOne().getUrl().isEmpty();
+        final boolean songTwoHasURL = !SongbookController.getSongTwo().getUrl().isEmpty();
+        // both song have a link
+        if (songOneHasURL && songTwoHasURL) {
+            final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Open associated link?").setMessage("Both of the songs have an associated link, which one do you want to open? You can manage the links in the Collection Editor.")
+                    .addOkButton(SongbookController.getSongOne().name()).addCloseButton(SongbookController.getSongTwo().name())
+                    .build().awaitResult();
+            result.thenAccept(dialogResult -> {
+                        SwingUtilities.invokeLater(() -> {
+                            try {
+                                if (dialogResult == AlertDialog.RESULT_OK) {
+                                    Desktop.getDesktop().browse(new URI(SongbookController.getSongOne().getUrl()));
+                                } else if (dialogResult == AlertDialog.RESULT_CLOSE) {
+                                    Desktop.getDesktop().browse(new URI(SongbookController.getSongTwo().getUrl()));
+                                }
+                            } catch (final IOException e) {
+                                logger.error(e.getMessage(), e);
+                                Platform.runLater(() -> new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR).setMessage("Something went wrong. Read the application log for more information.").setParent(SongbookApplication.getMainWindow()).addOkButton().build().open());
+                            } catch (final Exception e) {
+                                logger.error(e.getMessage(), e);
+                                Platform.runLater(() -> new AlertDialog.Builder().setTitle("Error").setMessage("Could not open the associated link, maybe there is a typo.")
+                                        .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open());
+                            }
+                        });
+            });
+            return;
+        }
+        // only song one has a link
+        if (songOneHasURL) {
+            final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Open associated link?")
+                    .setMessage(String.format("Do you want to open the link associated to song '%s' (id: %d)?. You can manage the links in the Collection Editor.", SongbookController.getSongOne().name(), SongbookController.getSongOne().id()))
+                    .addOkButton("Open link").addCloseButton("Cancel")
+                    .build().awaitResult();
+            result.thenAccept(dialogResult -> {
+                if (dialogResult == AlertDialog.RESULT_OK) {
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            Desktop.getDesktop().browse(new URI(SongbookController.getSongOne().getUrl()));
+                        } catch (final IOException e) {
+                            logger.error(e.getMessage(), e);
+                            Platform.runLater(() -> new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR).setMessage("Something went wrong. Read the application log for more information.").setParent(SongbookApplication.getMainWindow()).addOkButton().build().open());
+                        } catch (final Exception e) {
+                            logger.error(e.getMessage(), e);
+                            Platform.runLater(() -> new AlertDialog.Builder().setTitle("Error").setMessage("Could not open the associated link, maybe there is a typo.")
+                                    .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open());
+                        }
+
+                    });
+                }
+                });
+            return;
+        }
+
+        // only song two has a link
+        if (songTwoHasURL) {
+            final CompletableFuture<Integer> result = new AlertDialog.Builder().setTitle("Open associated link?")
+                    .setMessage(String.format("Do you want to open the link associated to song '%s' (id: %d)?. You can manage the links in the Collection Editor.", SongbookController.getSongTwo().name(), SongbookController.getSongTwo().id()))
+                    .addOkButton("Open link").addCloseButton("Cancel")
+                    .build().awaitResult();
+            result.thenAccept(dialogResult -> {
+                if (dialogResult == AlertDialog.RESULT_OK) {
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            Desktop.getDesktop().browse(new URI(SongbookController.getSongTwo().getUrl()));
+                        } catch (final IOException e) {
+                            logger.error(e.getMessage(), e);
+                            Platform.runLater(() -> new AlertDialog.Builder().setTitle("Error").setIcon(AlertDialog.Builder.Icon.ERROR).setMessage("Something went wrong. Read the application log for more information.").setParent(SongbookApplication.getMainWindow()).addOkButton().build().open());
+                        } catch (final Exception e) {
+                            logger.error(e.getMessage(), e);
+                            Platform.runLater(() -> new AlertDialog.Builder().setTitle("Error").setMessage("Could not open the associated link, maybe there is a typo.")
+                                    .setIcon(AlertDialog.Builder.Icon.ERROR).addOkButton().build().open());
+                        }
+                    });
+                }
+            });
+            return;
+        }
+        // none of the songs has a link
+        new AlertDialog.Builder().setTitle("SongbookManager").setMessage("Neither of the songs has an associated link. You can manage the links in the Collection Editor.")
+                .setIcon(AlertDialog.Builder.Icon.INFO).addOkButton("Close").addCloseButton("Open Collection Editor", (result) -> {
+                    CollectionEditor.open();
+                    return true;
+                }).build().open();
+    }
+    private static abstract class Task {
+        public abstract void run();
+    }
+
+}
